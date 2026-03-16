@@ -27,6 +27,7 @@ export interface GamePlayer {
 
 // Persist in globalThis so Next.js hot-reload doesn't wipe state
 declare global {
+  // eslint-disable-next-line no-var
   var __mafiaStore:
     | {
         games: Map<string, Game>;
@@ -206,7 +207,8 @@ export function startGame(token: string): { success: boolean; error?: string } {
   if (game.status !== "lobby") return { success: false, error: "Gra już trwa" };
 
   const players = store.playersByGameId.get(player.gameId) ?? [];
-  if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy" };
+  if (players.length < 4)
+    return { success: false, error: "Potrzeba minimum 4 graczy" };
 
   const n = players.length;
   const mafiaCount = Math.ceil(n / 3);
@@ -233,4 +235,3 @@ export function startGame(token: string): { success: boolean; error?: string } {
 
   return { success: true };
 }
-// test
