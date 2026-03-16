@@ -319,7 +319,13 @@ export default function GameClient() {
   const isPlaying = game.status === "playing";
   const isFinished = game.status === "finished";
   const phase = game.phase;
-  const myAction = state.myAction;
+  const [changingDecision, setChangingDecision] = useState(false);
+  const myAction = changingDecision ? null : state.myAction;
+
+  // Reset changingDecision when phase changes
+  useEffect(() => {
+    setChangingDecision(false);
+  }, [phase, game.round]);
 
   const actionTargets = players.filter((p) => p.isAlive && !p.isYou && !p.isHost);
   const nonHostPlayers = players.filter((p) => !p.isHost);
@@ -518,8 +524,12 @@ export default function GameClient() {
             myAction={myAction}
             pending={actionPending}
             error={actionError}
-            onAction={handleAction}
+            onAction={(type, targetId) => {
+              setChangingDecision(false);
+              handleAction(type, targetId);
+            }}
             roleHidden={!roleVisible}
+            onChangeDecision={() => setChangingDecision(true)}
           />
         )}
 
@@ -530,7 +540,11 @@ export default function GameClient() {
             myAction={myAction}
             pending={actionPending}
             error={actionError}
-            onVote={handleVote}
+            onVote={(targetId) => {
+              setChangingDecision(false);
+              handleVote(targetId);
+            }}
+            onChangeDecision={() => setChangingDecision(true)}
           />
         )}
 
@@ -841,6 +855,7 @@ function NightActionPanel({
   error,
   onAction,
   roleHidden = false,
+  onChangeDecision,
 }: {
   role: string | null;
   targets: PublicPlayer[];
@@ -849,6 +864,7 @@ function NightActionPanel({
   error: string;
   onAction: (type: string, targetId: string) => void;
   roleHidden?: boolean;
+  onChangeDecision: () => void;
 }) {
   const actionMap: Record<string, { type: string; label: string; icon: string; color: string }> = {
     mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
@@ -912,6 +928,13 @@ function NightActionPanel({
         {roleHidden && (
           <p className="text-slate-600 text-xs mt-1">Odkryj rolę by zobaczyć szczegóły</p>
         )}
+        <button
+          onClick={() => onChangeDecision()}
+          className="mt-3 w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-slate-200 font-typewriter uppercase tracking-wider text-xs transition-all"
+        >
+          <span className="material-symbols-outlined text-[14px]">edit</span>
+          Zmień decyzję
+        </button>
       </div>
     );
   }
@@ -1004,12 +1027,14 @@ function VotePanel({
   pending,
   error,
   onVote,
+  onChangeDecision,
 }: {
   targets: PublicPlayer[];
   myAction: { actionType: string; targetPlayerId: string | null } | null;
   pending: boolean;
   error: string;
   onVote: (targetId: string) => void;
+  onChangeDecision: () => void;
 }) {
   if (myAction) {
     const targetName = targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ?? myAction.targetPlayerId;
@@ -1021,6 +1046,13 @@ function VotePanel({
         <p className="text-slate-300 text-sm">
           <span className="text-white font-medium">{targetName}</span>
         </p>
+        <button
+          onClick={() => onChangeDecision()}
+          className="mt-3 w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-slate-200 font-typewriter uppercase tracking-wider text-xs transition-all"
+        >
+          <span className="material-symbols-outlined text-[14px]">edit</span>
+          Zmień głos
+        </button>
       </div>
     );
   }

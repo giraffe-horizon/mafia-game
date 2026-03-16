@@ -698,15 +698,6 @@ export async function submitAction(
     return { success: false, error: "Akcje można składać tylko w nocy lub podczas głosowania" };
   }
 
-  // Prevent duplicate action in same phase
-  const existing = await db
-    .prepare(
-      "SELECT id FROM game_actions WHERE game_id = ? AND player_id = ? AND round = ? AND phase = ?"
-    )
-    .bind(playerRow.game_id, playerRow.player_id, gameRow.round, phase)
-    .first<{ id: string }>();
-  if (existing) return { success: false, error: "Już złożyłeś akcję w tej fazie" };
-
   // Validate target
   if (targetPlayerId) {
     const target = await db
@@ -717,6 +708,20 @@ export async function submitAction(
       .first<{ is_alive: number }>();
     if (!target) return { success: false, error: "Cel nie istnieje" };
     if (!target.is_alive) return { success: false, error: "Cel jest już wyeliminowany" };
+  }
+
+  // Allow changing decision — delete old action if exists, then insert new
+  const existing = await db
+    .prepare(
+      "SELECT id FROM game_actions WHERE game_id = ? AND player_id = ? AND round = ? AND phase = ?"
+    )
+    .bind(playerRow.game_id, playerRow.player_id, gameRow.round, phase)
+    .first<{ id: string }>();
+  if (existing) {
+    await db
+      .prepare("DELETE FROM game_actions WHERE id = ?")
+      .bind(existing.id)
+      .run();
   }
 
   await db
