@@ -395,12 +395,21 @@ export default function GameClient() {
 
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-800">
-        <button
-          onClick={() => router.push("/")}
-          className="size-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
-        >
-          <span className="material-symbols-outlined text-[22px]">arrow_back</span>
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => router.push("/")}
+            className="size-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+          </button>
+          <button
+            onClick={() => router.push(`/ranking?token=${token}`)}
+            className="size-10 flex items-center justify-center text-slate-500 hover:text-amber-400 transition-colors"
+            title="Ranking sesji"
+          >
+            <span className="material-symbols-outlined text-[20px]">leaderboard</span>
+          </button>
+        </div>
         <div className="text-center">
           <h2 className="font-typewriter text-primary text-base font-bold tracking-widest drop-shadow-[0_0_6px_rgba(218,11,11,0.5)]">
             MAFIA
