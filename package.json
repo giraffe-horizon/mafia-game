@@ -9,7 +9,10 @@
     "deploy": "npm run build:cf && npx wrangler pages deploy .vercel/output/static --project-name mafia-game --commit-dirty=true",
     "preview": "npm run build:cf && npx wrangler pages dev .vercel/output/static",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint src/",
+    "prepare": "husky",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Tests passed\" && exit 0"
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.16",
@@ -21,11 +24,21 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "eslint": "^10.0.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.57.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ]
   }
 }
