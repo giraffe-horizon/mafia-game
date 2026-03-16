@@ -90,6 +90,9 @@ export default function GameClient() {
   const [starting, setStarting] = useState(false);
   const [mafiaCount, setMafiaCount] = useState(0); // 0 = auto
 
+  // Decision changing (must be before conditional returns!)
+  const [changingDecision, setChangingDecision] = useState(false);
+
   // MG: message form
   const [msgTarget, setMsgTarget] = useState("");
   const [msgContent, setMsgContent] = useState("");
@@ -346,7 +349,6 @@ export default function GameClient() {
   const isPlaying = game.status === "playing";
   const isFinished = game.status === "finished";
   const phase = game.phase;
-  const [changingDecision, setChangingDecision] = useState(false);
   const myAction = changingDecision ? null : state.myAction;
 
   // Reset changingDecision when phase changes
