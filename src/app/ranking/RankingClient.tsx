@@ -151,11 +151,7 @@ export default function RankingClient() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  {r.role && (
-                    <span className={`text-xs font-['Special_Elite'] ${ROLE_COLORS[r.role] ?? "text-slate-500"}`}>
-                      {ROLE_LABELS[r.role] ?? r.role}
-                    </span>
-                  )}
+                  
                   {r.missionsTotal > 0 && (
                     <span className="text-slate-600 text-xs">
                       📋 {r.missionsDone}/{r.missionsTotal}
