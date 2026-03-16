@@ -510,12 +510,13 @@ export default function GameClient() {
         {/* ── NIGHT: action panel for players ── */}
         {isPlaying && !isHost && phase === "night" && currentPlayer.isAlive && (
           <NightActionPanel
-            role={currentPlayer.role}
+            role={roleVisible ? currentPlayer.role : null}
             targets={actionTargets}
             myAction={myAction}
             pending={actionPending}
             error={actionError}
             onAction={handleAction}
+            roleHidden={!roleVisible}
           />
         )}
 
@@ -836,6 +837,7 @@ function NightActionPanel({
   pending,
   error,
   onAction,
+  roleHidden = false,
 }: {
   role: string | null;
   targets: PublicPlayer[];
@@ -843,6 +845,7 @@ function NightActionPanel({
   pending: boolean;
   error: string;
   onAction: (type: string, targetId: string) => void;
+  roleHidden?: boolean;
 }) {
   const actionMap: Record<string, { type: string; label: string; icon: string; color: string }> = {
     mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
@@ -892,16 +895,19 @@ function NightActionPanel({
 
   if (myAction) {
     const targetName = targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ?? myAction.targetPlayerId;
-    const actionLabel = ACTION_CONFIRMED[myAction.actionType] ?? "Akcja złożona";
+    const actionLabel = roleHidden ? "Akcja wykonana" : (ACTION_CONFIRMED[myAction.actionType] ?? "Akcja wykonana");
     return (
       <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-green-900/40">
         <p className="text-green-400 text-xs font-typewriter uppercase tracking-widest mb-1">
           {actionLabel}
         </p>
-        {myAction.targetPlayerId && (
+        {myAction.targetPlayerId && !roleHidden && (
           <p className="text-slate-300 text-sm">
             <span className="text-white font-medium">{targetName}</span>
           </p>
+        )}
+        {roleHidden && (
+          <p className="text-slate-600 text-xs mt-1">Odkryj rolę by zobaczyć szczegóły</p>
         )}
       </div>
     );
@@ -953,6 +959,11 @@ function NightActionPanel({
         <p className="text-slate-500 font-typewriter uppercase tracking-widest text-xs">
           Noc — czekaj na rozkazy
         </p>
+        {roleHidden && (
+          <p className="text-primary/60 text-xs mt-2 font-typewriter">
+            ↑ Odkryj rolę aby wykonać akcję nocną
+          </p>
+        )}
       </div>
     );
   }
