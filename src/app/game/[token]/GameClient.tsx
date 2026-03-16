@@ -868,6 +868,7 @@ export default function GameClient() {
             onCompleteMission={handleCompleteMission}
             onDeleteMission={handleDeleteMission}
             hostActions={state.hostActions}
+            voteTally={state.voteTally}
             onGmAction={handleGmAction}
             transferGmPending={transferGmPending}
             transferGmError={transferGmError}
@@ -1323,6 +1324,7 @@ function MGPanel({
   onCompleteMission,
   onDeleteMission,
   hostActions,
+  voteTally,
   onGmAction,
   transferGmPending,
   transferGmError,
@@ -1360,6 +1362,7 @@ function MGPanel({
   onCompleteMission: (id: string) => void;
   onDeleteMission: (id: string) => void;
   hostActions?: GameStateResponse["hostActions"];
+  voteTally?: GameStateResponse["voteTally"];
   onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
   transferGmPending: boolean;
   transferGmError: string;
@@ -1421,14 +1424,21 @@ function MGPanel({
         {tab === "phase" && (
           <div>
             {nextPhase ? (
-              <button
-                onClick={() => onPhase(nextPhase.phase)}
-                disabled={phasePending}
-                className="flex w-full items-center justify-center gap-2 rounded-lg h-12 bg-primary hover:bg-primary/90 text-white font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.3)] active:scale-[0.98] disabled:opacity-50 font-typewriter uppercase tracking-wider text-sm"
-              >
-                <span className="material-symbols-outlined text-[18px]">{nextPhase.icon}</span>
-                {phasePending ? "Czekaj..." : nextPhase.label}
-              </button>
+              <>
+                <button
+                  onClick={() => onPhase(nextPhase.phase)}
+                  disabled={phasePending || (phase === "voting" && !!voteTally && voteTally.votedCount < voteTally.totalVoters)}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg h-12 bg-primary hover:bg-primary/90 text-white font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.3)] active:scale-[0.98] disabled:opacity-50 font-typewriter uppercase tracking-wider text-sm"
+                >
+                  <span className="material-symbols-outlined text-[18px]">{nextPhase.icon}</span>
+                  {phasePending ? "Czekaj..." : nextPhase.label}
+                </button>
+                {phase === "voting" && voteTally && voteTally.votedCount < voteTally.totalVoters && (
+                  <p className="text-slate-500 text-xs font-typewriter text-center mt-2">
+                    Czekaj na głosy ({voteTally.votedCount}/{voteTally.totalVoters})
+                  </p>
+                )}
+              </>
             ) : (
               <p className="text-slate-500 text-sm font-typewriter text-center">
                 Brak dostępnych przejść
