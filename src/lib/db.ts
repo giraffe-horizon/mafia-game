@@ -995,6 +995,8 @@ export async function rematch(
 
   await db.batch([
     db.prepare("DELETE FROM missions WHERE game_id = ?").bind(playerRow.game_id),
+    db.prepare("DELETE FROM game_actions WHERE game_id = ?").bind(playerRow.game_id),
+    db.prepare("DELETE FROM messages WHERE game_id = ?").bind(playerRow.game_id),
     db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1, winner = NULL, config = ? WHERE id = ?")
       .bind(JSON.stringify({ mode: effectiveMode }), playerRow.game_id),
     db.prepare("UPDATE game_players SET role = 'gm', is_alive = 1 WHERE game_id = ? AND player_id = ?")
