@@ -79,7 +79,7 @@ interface MissionRow {
 // Public types
 // ---------------------------------------------------------------------------
 export type GameStatus = "lobby" | "playing" | "finished";
-export type GamePhase = "lobby" | "night" | "day" | "voting" | "ended";
+export type GamePhase = "lobby" | "night" | "day" | "voting" | "review" | "ended";
 export type Role = "mafia" | "detective" | "doctor" | "civilian";
 
 export interface PublicPlayer {
@@ -537,7 +537,7 @@ export async function changePhase(
   db: D1Database,
   token: string,
   newPhase: GamePhase
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; pendingMissions?: { id: string; description: string; nickname: string }[] }> {
   const playerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
     .bind(token)
@@ -582,6 +582,30 @@ export async function changePhase(
   // Check win conditions after elimination
   const winner = await checkWinConditions(db, playerRow.game_id);
   if (winner) {
+    // Check for unrated missions before ending
+    const { results: pendingMissions } = await db
+      .prepare(
+        "SELECT m.id, m.description, gp.nickname FROM missions m JOIN game_players gp ON gp.game_id = m.game_id AND gp.player_id = m.player_id WHERE m.game_id = ? AND m.is_completed = 0"
+      )
+      .bind(playerRow.game_id)
+      .all<{ id: string; description: string; nickname: string }>();
+
+    if (pendingMissions.length > 0) {
+      // Don't end yet — set phase to 'review' so GM can rate missions
+      await db
+        .prepare("UPDATE games SET phase = 'review', round = ? WHERE id = ?")
+        .bind(round, playerRow.game_id)
+        .run();
+      return {
+        success: true,
+        pendingMissions: pendingMissions.map((m) => ({
+          id: m.id,
+          description: m.description,
+          nickname: m.nickname,
+        })),
+      };
+    }
+
     await db
       .prepare("UPDATE games SET status = 'finished', phase = 'ended', winner = ? WHERE id = ?")
       .bind(winner, playerRow.game_id)
@@ -1013,6 +1037,43 @@ export async function rematch(
 // ---------------------------------------------------------------------------
 // deleteMission  (host only)
 // ---------------------------------------------------------------------------
+// Finalize game after mission review
+export async function finalizeGame(
+  db: D1Database,
+  token: string
+): Promise<{ success: boolean; error?: string }> {
+  const playerRow = await db
+    .prepare("SELECT * FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<GamePlayerRow>();
+  if (!playerRow?.is_host) return { success: false, error: "Tylko MG może zakończyć grę" };
+
+  const gameRow = await db
+    .prepare("SELECT * FROM games WHERE id = ?")
+    .bind(playerRow.game_id)
+    .first<GameRow>();
+  if (!gameRow || gameRow.phase !== "review") return { success: false, error: "Gra nie jest w fazie przeglądu misji" };
+
+  const winner = await checkWinConditions(db, playerRow.game_id);
+
+  await db
+    .prepare("UPDATE games SET status = 'finished', phase = 'ended', winner = ? WHERE id = ?")
+    .bind(winner ?? "town", playerRow.game_id)
+    .run();
+
+  const endMsg = winner === "mafia"
+    ? "Mafia wygrała! Przejęli kontrolę nad miastem."
+    : "Miasto wygrało! Wszyscy mafiosi zostali wyeliminowani.";
+  await db
+    .prepare(
+      "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, NULL, ?, 0, ?)"
+    )
+    .bind(nanoid(), playerRow.game_id, playerRow.player_id, endMsg, now())
+    .run();
+
+  return { success: true };
+}
+
 export async function deleteMission(
   db: D1Database,
   token: string,
