@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #da0b0b;
+  --color-background-light: #f8f5f5;
+  --color-background-dark: #1a0c0c;
+  --font-display: "Be Vietnam Pro", sans-serif;
+  --font-typewriter: "Special Elite", monospace;
+  --radius: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+}
+
+@layer base {
+  body {
+    min-height: max(844px, 100dvh);
+  }
+}
