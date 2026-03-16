@@ -1,7 +1,8 @@
 export const runtime = "edge";
 
 import { NextRequest, NextResponse } from "next/server";
-import { joinGame } from "@/lib/store";
+import { getRequestContext } from "@cloudflare/next-on-pages";
+import { joinGame, type D1Database } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,14 +13,16 @@ export async function POST(req: NextRequest) {
     if (!nickname || typeof nickname !== "string" || nickname.trim().length < 1) {
       return NextResponse.json({ error: "Podaj imię" }, { status: 400 });
     }
-    const result = joinGame(code, nickname.trim());
+    const { env } = getRequestContext();
+    const db = (env as unknown as { DB: D1Database }).DB;
+    const result = await joinGame(db, code, nickname);
     if (!result) {
       return NextResponse.json(
         { error: "Nie znaleziono gry lub gra już się toczy" },
         { status: 404 }
       );
     }
-    return NextResponse.json({ token: result.player.token });
+    return NextResponse.json({ token: result.token });
   } catch {
     return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
   }
