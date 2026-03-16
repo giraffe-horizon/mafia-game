@@ -1,5 +1,7 @@
 node_modules/
 .next/
+.worker-next/
+.open-next/
 out/
 .env
 .env.local
