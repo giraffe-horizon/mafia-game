@@ -2,26 +2,17 @@ export const runtime = "edge";
 
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestContext } from "@cloudflare/next-on-pages";
-import { rematch, type D1Database } from "@/lib/db";
+import { deleteMission, type D1Database } from "@/lib/db";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ token: string; missionId: string }> }
 ) {
-  const { token } = await params;
+  const { token, missionId } = await params;
   try {
     const { env } = getRequestContext();
     const db = (env as unknown as { DB: D1Database }).DB;
-
-    let mafiaCount: number | undefined;
-    try {
-      const body = await req.json();
-      if (typeof body?.mafiaCount === "number" && body.mafiaCount > 0) {
-        mafiaCount = body.mafiaCount;
-      }
-    } catch { /* no body */ }
-
-    const result = await rematch(db, token, mafiaCount);
+    const result = await deleteMission(db, token, missionId);
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }

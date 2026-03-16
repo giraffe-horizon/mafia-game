@@ -112,8 +112,11 @@ export default function GameClient() {
   // MG: rematch
   const [rematchPending, setRematchPending] = useState(false);
 
+  // MG: settings (persists between rounds — mafia count for next rematch)
+  const [mafiaCountSetting, setMafiaCountSetting] = useState(0); // 0 = auto
+
   // MG panel tab
-  const [mgTab, setMgTab] = useState<"phase" | "message" | "mission" | "actions" | "gm">("phase");
+  const [mgTab, setMgTab] = useState<"phase" | "message" | "mission" | "actions" | "gm" | "settings">("phase");
 
   // ---------------------------------------------------------------------------
   // Polling
@@ -284,12 +287,23 @@ export default function GameClient() {
   async function handleRematch() {
     setRematchPending(true);
     try {
-      const res = await fetch(`/api/game/${token}/rematch`, { method: "POST" });
+      const body = mafiaCountSetting > 0 ? JSON.stringify({ mafiaCount: mafiaCountSetting }) : undefined;
+      const res = await fetch(`/api/game/${token}/rematch`, {
+        method: "POST",
+        ...(body ? { headers: { "Content-Type": "application/json" }, body } : {}),
+      });
       const data = await res.json();
       if (!res.ok) setError(data.error ?? "Błąd");
       else await fetchState();
     } catch { setError("Błąd połączenia"); }
     finally { setRematchPending(false); }
+  }
+
+  async function handleDeleteMission(missionId: string) {
+    try {
+      await fetch(`/api/game/${token}/mission/${missionId}`, { method: "DELETE" });
+      await fetchState();
+    } catch { /* ignore */ }
   }
 
   function copyCode() {
@@ -613,18 +627,23 @@ export default function GameClient() {
               {missions.map((m) => (
                 <div
                   key={m.id}
-                  className="p-3 rounded-lg bg-black/40 border border-yellow-900/40"
+                  className={`p-3 rounded-lg border ${m.isCompleted ? "bg-green-950/20 border-green-900/40 opacity-70" : "bg-black/40 border-yellow-900/40"}`}
                 >
                   <div className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-yellow-500 mt-0.5 shrink-0">
-                      {m.isSecret ? "lock" : "task"}
+                    <span className={`material-symbols-outlined text-[18px] mt-0.5 shrink-0 ${m.isCompleted ? "text-green-400" : "text-yellow-500"}`}>
+                      {m.isCompleted ? "check_circle" : m.isSecret ? "lock" : "task"}
                     </span>
-                    <p className="text-white text-sm flex-1">{m.description}</p>
-                    {m.points > 0 && (
-                      <span className="text-yellow-400 text-xs font-typewriter font-bold shrink-0">
-                        +{m.points}pkt
+                    <p className={`text-sm flex-1 ${m.isCompleted ? "text-slate-400 line-through" : "text-white"}`}>{m.description}</p>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {m.points > 0 && (
+                        <span className={`text-xs font-typewriter font-bold ${m.isCompleted ? "text-green-400" : "text-yellow-400"}`}>
+                          +{m.points}pkt
+                        </span>
+                      )}
+                      <span className={`text-[10px] font-typewriter uppercase tracking-wider ${m.isCompleted ? "text-green-500" : "text-slate-600"}`}>
+                        {m.isCompleted ? "✓ wykonana" : "⏳ w trakcie"}
                       </span>
-                    )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -651,6 +670,8 @@ export default function GameClient() {
             isHost={isHost}
             rematchPending={rematchPending}
             onRematch={handleRematch}
+            hostMissions={state.hostMissions}
+            mafiaCountSetting={mafiaCountSetting}
           />
         )}
 
@@ -683,11 +704,16 @@ export default function GameClient() {
             onMsnPointsChange={setMsnPoints}
             onMsnPresetChange={setMsnPreset}
             onCreateMission={handleCreateMission}
+            hostMissions={state.hostMissions}
+            onCompleteMission={handleCompleteMission}
+            onDeleteMission={handleDeleteMission}
             hostActions={state.hostActions}
             onGmAction={handleGmAction}
             transferGmPending={transferGmPending}
             transferGmError={transferGmError}
             onTransferGm={handleTransferGm}
+            mafiaCountSetting={mafiaCountSetting}
+            onMafiaCountSettingChange={setMafiaCountSetting}
           />
         )}
 
@@ -1155,16 +1181,21 @@ function MGPanel({
   onMsnPointsChange,
   onMsnPresetChange,
   onCreateMission,
+  hostMissions,
+  onCompleteMission,
+  onDeleteMission,
   hostActions,
   onGmAction,
   transferGmPending,
   transferGmError,
   onTransferGm,
+  mafiaCountSetting,
+  onMafiaCountSettingChange,
 }: {
   phase: string;
   players: PublicPlayer[];
-  tab: "phase" | "message" | "mission" | "actions" | "gm";
-  onTabChange: (t: "phase" | "message" | "mission" | "actions" | "gm") => void;
+  tab: "phase" | "message" | "mission" | "actions" | "gm" | "settings";
+  onTabChange: (t: "phase" | "message" | "mission" | "actions" | "gm" | "settings") => void;
   phasePending: boolean;
   onPhase: (p: string) => void;
   msgTarget: string;
@@ -1187,11 +1218,16 @@ function MGPanel({
   onMsnPointsChange: (v: 1 | 2 | 3) => void;
   onMsnPresetChange: (v: string) => void;
   onCreateMission: () => void;
+  hostMissions?: GameStateResponse["hostMissions"];
+  onCompleteMission: (id: string) => void;
+  onDeleteMission: (id: string) => void;
   hostActions?: GameStateResponse["hostActions"];
   onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
   transferGmPending: boolean;
   transferGmError: string;
   onTransferGm: (playerId: string) => void;
+  mafiaCountSetting: number;
+  onMafiaCountSettingChange: (n: number) => void;
 }) {
   const nextPhaseMap: Record<string, { label: string; phase: string; icon: string }> = {
     night: { label: "Przejdź do Dnia", phase: "day", icon: "wb_sunny" },
@@ -1203,9 +1239,10 @@ function MGPanel({
   const TABS = [
     { id: "phase" as const, icon: "swap_horiz", label: "Faza" },
     { id: "message" as const, icon: "mail", label: "Wiad." },
-    { id: "mission" as const, icon: "task", label: "Misja" },
+    { id: "mission" as const, icon: "task", label: "Misje" },
     { id: "actions" as const, icon: "visibility", label: "Akcje" },
     { id: "gm" as const, icon: "manage_accounts", label: "GM" },
+    { id: "settings" as const, icon: "settings", label: "Ustaw." },
   ];
 
   // Handle preset selection
@@ -1299,6 +1336,67 @@ function MGPanel({
         {/* Mission tab */}
         {tab === "mission" && (
           <div className="flex flex-col gap-3">
+            {/* Active missions list */}
+            {hostMissions && hostMissions.length > 0 && (
+              <div className="flex flex-col gap-2 mb-1">
+                <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
+                  Aktywne misje
+                </p>
+                {hostMissions.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`p-3 rounded-lg border ${m.isCompleted ? "bg-green-950/20 border-green-900/30 opacity-60" : "bg-black/30 border-slate-700"}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className={`text-[10px] font-typewriter font-bold uppercase ${m.isCompleted ? "text-green-500" : "text-slate-500"}`}>
+                            {m.playerNickname}
+                          </span>
+                          <span className="text-slate-700 text-[10px]">·</span>
+                          <span className="text-yellow-600 text-[10px] font-typewriter">+{m.points}pkt</span>
+                          {m.isSecret && <span className="material-symbols-outlined text-[10px] text-slate-600">lock</span>}
+                          {m.isCompleted && <span className="text-green-500 text-[10px]">✓</span>}
+                        </div>
+                        <p className={`text-xs ${m.isCompleted ? "text-slate-500 line-through" : "text-slate-300"}`}>
+                          {m.description}
+                        </p>
+                      </div>
+                      <div className="flex gap-1 shrink-0 mt-0.5">
+                        {!m.isCompleted && (
+                          <button
+                            onClick={() => onCompleteMission(m.id)}
+                            title="Oznacz jako wykonaną"
+                            className="w-7 h-7 flex items-center justify-center rounded bg-green-900/30 hover:bg-green-900/60 border border-green-800/40 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[14px] text-green-400">check</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onDeleteMission(m.id)}
+                          title="Usuń misję"
+                          className="w-7 h-7 flex items-center justify-center rounded bg-red-950/30 hover:bg-red-950/60 border border-red-900/30 transition-all"
+                        >
+                          <span className="material-symbols-outlined text-[14px] text-red-500">delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {hostMissions && hostMissions.length === 0 && (
+              <p className="text-slate-600 text-xs font-typewriter text-center py-2">
+                Brak misji — utwórz poniżej
+              </p>
+            )}
+
+            <div className="border-t border-slate-800 pt-3">
+              <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
+                Nowa misja
+              </p>
+            </div>
+
             <select
               value={msnTarget}
               onChange={(e) => onMsnTargetChange(e.target.value)}
@@ -1410,6 +1508,46 @@ function MGPanel({
             </div>
           </div>
         )}
+
+        {/* Settings tab */}
+        {tab === "settings" && (
+          <div>
+            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-1">
+              Liczba mafii — następna runda
+            </p>
+            <p className="text-slate-600 text-xs mb-3">
+              Ta wartość zostanie użyta przy kolejnym remacie.
+            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => onMafiaCountSettingChange(0)}
+                className={`px-3 py-2 rounded-lg text-sm font-typewriter uppercase tracking-wider border transition-all ${
+                  mafiaCountSetting === 0
+                    ? "bg-primary/20 border-primary/50 text-primary"
+                    : "border-slate-700 text-slate-400 hover:border-slate-500"
+                }`}
+              >
+                Auto ({players.length <= 5 ? 1 : players.length <= 8 ? 2 : players.length <= 11 ? 3 : 4})
+              </button>
+              {Array.from({ length: Math.max(1, players.length - 3) }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => onMafiaCountSettingChange(n)}
+                  className={`w-10 h-10 rounded-lg text-sm font-bold font-typewriter border transition-all ${
+                    mafiaCountSetting === n
+                      ? "bg-primary/20 border-primary/50 text-primary"
+                      : "border-slate-700 text-slate-400 hover:border-slate-500"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <p className="text-slate-600 text-xs mt-2">
+              + 1 policjant, 1 lekarz, reszta cywile
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1471,6 +1609,8 @@ function EndScreen({
   isHost,
   rematchPending,
   onRematch,
+  hostMissions,
+  mafiaCountSetting,
 }: {
   game: GameStateResponse["game"];
   players: PublicPlayer[];
@@ -1478,6 +1618,8 @@ function EndScreen({
   isHost: boolean;
   rematchPending: boolean;
   onRematch: () => void;
+  hostMissions?: GameStateResponse["hostMissions"];
+  mafiaCountSetting?: number;
 }) {
   const winnerLabel = game.winner === "mafia" ? "Mafia wygrała!" : "Miasto wygrało!";
   const winnerIcon = game.winner === "mafia" ? "masks" : "groups";
@@ -1486,6 +1628,18 @@ function EndScreen({
   const isWinner =
     (game.winner === "mafia" && currentPlayer.role === "mafia") ||
     (game.winner === "town" && currentPlayer.role !== "mafia");
+
+  // Build per-player mission summary for host
+  const missionSummary = hostMissions && hostMissions.length > 0
+    ? Object.values(
+        hostMissions.reduce<Record<string, { nickname: string; completed: number; total: number; points: number }>>((acc, m) => {
+          if (!acc[m.playerId]) acc[m.playerId] = { nickname: m.playerNickname, completed: 0, total: 0, points: 0 };
+          acc[m.playerId].total++;
+          if (m.isCompleted) { acc[m.playerId].completed++; acc[m.playerId].points += m.points; }
+          return acc;
+        }, {})
+      )
+    : [];
 
   return (
     <div className="mx-5 mt-5">
@@ -1502,16 +1656,46 @@ function EndScreen({
           </p>
         )}
         {isHost && (
-          <button
-            onClick={onRematch}
-            disabled={rematchPending}
-            className="mt-4 flex items-center justify-center gap-2 mx-auto px-6 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider text-sm transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-50"
-          >
-            <span className="material-symbols-outlined text-[18px]">replay</span>
-            {rematchPending ? "Resetuję..." : "NASTĘPNA RUNDA"}
-          </button>
+          <div className="mt-4 flex flex-col gap-2">
+            {mafiaCountSetting !== undefined && mafiaCountSetting > 0 && (
+              <p className="text-slate-600 text-xs font-typewriter text-center">
+                Następna runda: {mafiaCountSetting} {mafiaCountSetting === 1 ? "mafioz" : "mafiozy/ów"}
+              </p>
+            )}
+            <button
+              onClick={onRematch}
+              disabled={rematchPending}
+              className="flex items-center justify-center gap-2 mx-auto px-6 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider text-sm transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-[18px]">replay</span>
+              {rematchPending ? "Resetuję..." : "NASTĘPNA RUNDA"}
+            </button>
+          </div>
         )}
       </div>
+
+      {/* Mission summary for host */}
+      {isHost && missionSummary.length > 0 && (
+        <div className="mt-5">
+          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3 pl-1">
+            Podsumowanie misji
+          </p>
+          <div className="flex flex-col gap-2">
+            {missionSummary.map((s) => (
+              <div key={s.nickname} className="flex items-center gap-3 p-3 rounded-lg border border-slate-800 bg-black/20">
+                <span className="material-symbols-outlined text-[18px] text-slate-500">person</span>
+                <span className="text-white text-sm flex-1">{s.nickname}</span>
+                <span className="text-slate-400 text-xs font-typewriter">
+                  {s.completed}/{s.total} misji
+                </span>
+                {s.points > 0 && (
+                  <span className="text-yellow-400 text-xs font-typewriter font-bold">+{s.points}pkt</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mt-5 mb-3 pl-1">
         Role graczy

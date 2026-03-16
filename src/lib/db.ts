@@ -137,6 +137,16 @@ export interface GameStateResponse {
     targetPlayerId: string | null;
     targetNickname: string | null;
   }[];
+  // Host only: all missions in game
+  hostMissions?: {
+    id: string;
+    playerId: string;
+    playerNickname: string;
+    description: string;
+    isSecret: boolean;
+    isCompleted: boolean;
+    points: number;
+  }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -263,10 +273,10 @@ export async function getGameState(
     );
   }
 
-  // Get active (non-completed) missions for this player
+  // Get all missions for this player (including completed so player can see status)
   const { results: missionRows } = await db
     .prepare(
-      "SELECT * FROM missions WHERE game_id = ? AND player_id = ? AND is_completed = 0 ORDER BY created_at ASC"
+      "SELECT * FROM missions WHERE game_id = ? AND player_id = ? ORDER BY created_at ASC"
     )
     .bind(playerRow.game_id, playerRow.player_id)
     .all<MissionRow>();
@@ -318,6 +328,26 @@ export async function getGameState(
       actionType: a.action_type,
       targetPlayerId: a.target_player_id,
       targetNickname: a.target_player_id ? (playerNicknameMap.get(a.target_player_id) ?? null) : null,
+    }));
+  }
+
+  // For host: fetch all missions in the game with player nicknames
+  let hostMissions: GameStateResponse["hostMissions"] = undefined;
+  if (isHost) {
+    const { results: allMissions } = await db
+      .prepare(
+        "SELECT m.id, m.player_id, m.description, m.is_secret, m.is_completed, m.points, gp.nickname FROM missions m JOIN game_players gp ON gp.game_id = m.game_id AND gp.player_id = m.player_id WHERE m.game_id = ? ORDER BY m.created_at ASC"
+      )
+      .bind(playerRow.game_id)
+      .all<{ id: string; player_id: string; description: string; is_secret: number; is_completed: number; points: number; nickname: string }>();
+    hostMissions = allMissions.map((m) => ({
+      id: m.id,
+      playerId: m.player_id,
+      playerNickname: m.nickname,
+      description: m.description,
+      isSecret: m.is_secret === 1,
+      isCompleted: m.is_completed === 1,
+      points: m.points,
     }));
   }
 
@@ -375,6 +405,7 @@ export async function getGameState(
       : null,
     mafiaTeamActions: await getMafiaTeamActions(db, playerRow, gameRow, allPlayers),
     hostActions,
+    hostMissions,
   };
 }
 
@@ -904,7 +935,8 @@ export async function transferGm(
 // ---------------------------------------------------------------------------
 export async function rematch(
   db: D1Database,
-  token: string
+  token: string,
+  customMafiaCount?: number
 ): Promise<{ success: boolean; error?: string }> {
   const playerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
@@ -928,13 +960,15 @@ export async function rematch(
   if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy (nie licząc MG)" };
 
   const n = players.length;
-  const roles = buildRoles(n);
+  const roles = buildRoles(n, customMafiaCount);
   for (let i = roles.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [roles[i], roles[j]] = [roles[j], roles[i]];
   }
 
   await db.batch([
+    // Clear missions from previous round
+    db.prepare("DELETE FROM missions WHERE game_id = ?").bind(playerRow.game_id),
     db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1, winner = NULL WHERE id = ?")
       .bind(playerRow.game_id),
     db.prepare("UPDATE game_players SET role = 'gm', is_alive = 1 WHERE game_id = ? AND player_id = ?")
@@ -945,6 +979,30 @@ export async function rematch(
     ),
   ]);
 
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// deleteMission  (host only)
+// ---------------------------------------------------------------------------
+export async function deleteMission(
+  db: D1Database,
+  token: string,
+  missionId: string
+): Promise<{ success: boolean; error?: string }> {
+  const playerRow = await db
+    .prepare("SELECT * FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<GamePlayerRow>();
+  if (!playerRow?.is_host) return { success: false, error: "Tylko MG może usuwać misje" };
+
+  const mission = await db
+    .prepare("SELECT id FROM missions WHERE id = ? AND game_id = ?")
+    .bind(missionId, playerRow.game_id)
+    .first<{ id: string }>();
+  if (!mission) return { success: false, error: "Misja nie istnieje" };
+
+  await db.prepare("DELETE FROM missions WHERE id = ?").bind(missionId).run();
   return { success: true };
 }
 
