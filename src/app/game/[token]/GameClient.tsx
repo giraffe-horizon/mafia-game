@@ -463,8 +463,29 @@ export default function GameClient() {
                     {copied ? "Skopiowano" : "Kopiuj"}
                   </button>
                 </div>
+                {/* Share link button */}
+                <button
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: "Dołącz do Mafii!",
+                        text: `Dołącz do gry Mafia! Kod: ${game.code}`,
+                        url: joinUrl,
+                      }).catch(() => {});
+                    } else {
+                      navigator.clipboard.writeText(joinUrl);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white text-sm font-typewriter uppercase tracking-wider transition-all"
+                >
+                  <span className="material-symbols-outlined text-[18px]">share</span>
+                  Udostępnij link
+                </button>
+
                 {/* QR Code */}
-                <div className="flex flex-col items-center gap-2 pt-3 border-t border-slate-800">
+                <div className="flex flex-col items-center gap-2 pt-3 border-t border-slate-800 mt-3">
                   <p className="text-slate-600 text-xs font-typewriter uppercase tracking-widest mb-1">
                     Zeskanuj aby dołączyć
                   </p>
