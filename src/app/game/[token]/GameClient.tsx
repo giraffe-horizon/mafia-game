@@ -711,7 +711,7 @@ export default function GameClient() {
                 >
                   <div className="flex items-start gap-2">
                     <span className={`material-symbols-outlined text-[18px] mt-0.5 shrink-0 ${m.isCompleted ? "text-green-400" : "text-yellow-500"}`}>
-                      {m.isCompleted ? "check_circle" : m.isSecret ? "lock" : "task"}
+                      {m.isCompleted ? "check_circle" : "task"}
                     </span>
                     <p className={`text-sm flex-1 ${m.isCompleted ? "text-slate-400 line-through" : "text-white"}`}>{m.description}</p>
                     <div className="flex flex-col items-end gap-1 shrink-0">
@@ -1467,7 +1467,6 @@ function MGPanel({
                           </span>
                           <span className="text-slate-700 text-[10px]">·</span>
                           <span className="text-yellow-600 text-[10px] font-typewriter">+{m.points}pkt</span>
-                          {m.isSecret && <span className="material-symbols-outlined text-[10px] text-slate-600">lock</span>}
                           {m.isCompleted && <span className="text-green-500 text-[10px]">✓</span>}
                         </div>
                         <p className={`text-xs ${m.isCompleted ? "text-slate-500 line-through" : "text-slate-300"}`}>
@@ -1544,15 +1543,6 @@ function MGPanel({
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm font-typewriter placeholder:text-slate-600 focus:outline-none focus:border-primary/50 resize-none"
             />
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={msnSecret}
-                  onChange={(e) => onMsnSecretChange(e.target.checked)}
-                  className="accent-primary"
-                />
-                <span className="text-slate-400 text-sm font-typewriter">Tajna</span>
-              </label>
               <div className="flex items-center gap-1 ml-auto">
                 {([1, 2, 3] as const).map((pts) => (
                   <button
