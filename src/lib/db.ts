@@ -572,6 +572,10 @@ export async function changePhase(
     await resolveNight(db, gameRow, playerRow);
   } else if (currentPhase === "voting") {
     await resolveVoting(db, gameRow, playerRow);
+  }
+
+  // New round starts when transitioning to night (except first night which is round 1)
+  if (newPhase === "night" && currentPhase === "voting") {
     round++;
   }
 
