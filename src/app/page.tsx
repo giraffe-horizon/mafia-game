@@ -1,8 +1,101 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useGameStore } from "@/stores/gameStore";
+
+function CodeInput({
+  value,
+  onChange,
+  onComplete,
+  length,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onComplete: () => void;
+  length: number;
+}) {
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const chars = value.padEnd(length, "").split("").slice(0, length);
+
+  const handleChange = useCallback(
+    (index: number, char: string) => {
+      const cleaned = char.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      if (!cleaned) return;
+      const newChars = [...chars];
+      newChars[index] = cleaned[0];
+      const newValue = newChars.join("").replace(/ /g, "");
+      onChange(newValue);
+      if (index < length - 1) {
+        inputRefs.current[index + 1]?.focus();
+      }
+      if (newValue.length === length) {
+        setTimeout(() => onComplete(), 50);
+      }
+    },
+    [chars, onChange, onComplete, length]
+  );
+
+  const handleKeyDown = useCallback(
+    (index: number, e: React.KeyboardEvent) => {
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        const newChars = [...chars];
+        if (chars[index] && chars[index] !== " ") {
+          newChars[index] = " ";
+          onChange(newChars.join("").trimEnd());
+        } else if (index > 0) {
+          newChars[index - 1] = " ";
+          onChange(newChars.join("").trimEnd());
+          inputRefs.current[index - 1]?.focus();
+        }
+      } else if (e.key === "Enter" && value.length === length) {
+        onComplete();
+      }
+    },
+    [chars, onChange, onComplete, value, length]
+  );
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      e.preventDefault();
+      const pasted = e.clipboardData
+        .getData("text")
+        .replace(/[^A-Za-z0-9]/g, "")
+        .toUpperCase()
+        .slice(0, length);
+      onChange(pasted);
+      const focusIdx = Math.min(pasted.length, length - 1);
+      setTimeout(() => inputRefs.current[focusIdx]?.focus(), 50);
+      if (pasted.length === length) {
+        setTimeout(() => onComplete(), 100);
+      }
+    },
+    [onChange, onComplete, length]
+  );
+
+  return (
+    <div className="flex gap-2 justify-center">
+      {Array.from({ length }, (_, i) => (
+        <input
+          key={i}
+          ref={(el) => { inputRefs.current[i] = el; }}
+          type="text"
+          inputMode="text"
+          autoComplete="one-time-code"
+          maxLength={1}
+          value={chars[i]?.trim() || ""}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onPaste={handlePaste}
+          onFocus={(e) => e.target.select()}
+          autoFocus={i === 0}
+          className="w-12 h-14 text-center text-xl font-bold font-typewriter uppercase rounded-lg bg-black/40 border border-primary/30 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function Home() {
   const router = useRouter();
@@ -159,27 +252,17 @@ export default function Home() {
           </label>
 
           {joinMode && (
-            <label className="flex flex-col w-full group/input">
-              <p className="text-slate-400 text-sm font-typewriter leading-normal pb-2 uppercase tracking-widest pl-1 transition-colors group-focus-within/input:text-primary">
+            <div className="flex flex-col w-full">
+              <p className="text-slate-400 text-sm font-typewriter leading-normal pb-2 uppercase tracking-widest pl-1">
                 Kod sesji
               </p>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-slate-500">
-                  <span className="material-symbols-outlined text-[20px]">
-                    tag
-                  </span>
-                </span>
-                <input
-                  className="flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/30 bg-black/40 backdrop-blur-sm h-14 placeholder:text-slate-600 pl-12 pr-4 text-lg font-medium uppercase tracking-widest transition-all"
-                  placeholder="MAFIA-XXXX"
-                  type="text"
-                  value={sessionCode}
-                  onChange={(e) => setSessionCode(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-                  autoFocus
-                />
-              </div>
-            </label>
+              <CodeInput
+                value={sessionCode}
+                onChange={setSessionCode}
+                onComplete={handleJoin}
+                length={6}
+              />
+            </div>
           )}
 
           {error && (
