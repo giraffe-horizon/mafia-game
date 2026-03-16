@@ -123,6 +123,12 @@ export interface GameStateResponse {
     round: number;
   } | null;
   myAction: { actionType: string; targetPlayerId: string | null } | null;
+  // Mafia only: team votes in current phase (night kill targets + voting)
+  mafiaTeamActions?: {
+    nickname: string;
+    targetPlayerId: string | null;
+    targetNickname: string | null;
+  }[];
   // Host only: all actions in current round/phase
   hostActions?: {
     playerId: string;
@@ -367,8 +373,35 @@ export async function getGameState(
           targetPlayerId: existingAction.target_player_id,
         }
       : null,
+    mafiaTeamActions: await getMafiaTeamActions(db, playerRow, gameRow, allPlayers),
     hostActions,
   };
+}
+
+async function getMafiaTeamActions(
+  db: D1Database,
+  playerRow: GamePlayerRow,
+  gameRow: GameRow,
+  allPlayers: GamePlayerRow[]
+): Promise<GameStateResponse["mafiaTeamActions"]> {
+  // Only show to mafia members during night or voting
+  if (playerRow.role !== "mafia") return undefined;
+  if (gameRow.phase !== "night" && gameRow.phase !== "voting") return undefined;
+
+  const { results } = await db
+    .prepare(
+      "SELECT ga.player_id, gp.nickname, ga.target_player_id FROM game_actions ga JOIN game_players gp ON gp.game_id = ga.game_id AND gp.player_id = ga.player_id WHERE ga.game_id = ? AND ga.round = ? AND ga.phase = ? AND gp.role = 'mafia' AND ga.player_id != ? ORDER BY ga.created_at ASC"
+    )
+    .bind(gameRow.id, gameRow.round, gameRow.phase, playerRow.player_id)
+    .all<{ player_id: string; nickname: string; target_player_id: string | null }>();
+
+  return results.map((r) => ({
+    nickname: r.nickname,
+    targetPlayerId: r.target_player_id,
+    targetNickname: r.target_player_id
+      ? allPlayers.find((p) => p.player_id === r.target_player_id)?.nickname ?? null
+      : null,
+  }));
 }
 
 // ---------------------------------------------------------------------------
