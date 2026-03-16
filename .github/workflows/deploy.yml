@@ -21,10 +21,10 @@ jobs:
 
       - run: npm ci
 
-      - run: npx @opennextjs/cloudflare build
+      - run: npx @cloudflare/next-on-pages
 
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy .open-next --project-name mafia-game --commit-dirty=true
+          command: pages deploy .vercel/output/static --project-name mafia-game --commit-dirty=true
