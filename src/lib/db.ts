@@ -501,7 +501,7 @@ export async function startGame(
     .bind(playerRow.game_id)
     .all<{ player_id: string }>();
 
-  const minPlayers = mode === "simple" ? 2 : 4;
+  const minPlayers = mode === "simple" ? 3 : 5;
   if (players.length < minPlayers) return { success: false, error: `Potrzeba minimum ${minPlayers} graczy (nie licząc MG)` };
 
   const n = players.length;
@@ -978,7 +978,7 @@ export async function rematch(
   // Use provided mode, or fallback to saved config, or default "full"
   const savedConfig = JSON.parse(gameRow.config || "{}");
   const effectiveMode = mode ?? savedConfig.mode ?? "full";
-  const minPlayers = effectiveMode === "simple" ? 2 : 4;
+  const minPlayers = effectiveMode === "simple" ? 3 : 5;
   if (players.length < minPlayers) return { success: false, error: `Potrzeba minimum ${minPlayers} graczy (nie licząc MG)` };
 
   const n = players.length;
