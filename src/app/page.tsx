@@ -93,7 +93,7 @@ export default function Home() {
   }
 
   return (
-    <div className="relative flex min-h-screen sm:min-h-0 w-full sm:max-w-[390px] flex-col bg-background-light dark:bg-background-dark group overflow-hidden shadow-2xl sm:mx-auto sm:my-8 sm:rounded-[2.5rem]">
+    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-light dark:bg-background-dark group overflow-hidden shadow-2xl md:mx-auto md:my-8 md:rounded-[2.5rem]">
       {/* Noir atmospheric background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-background-dark/40 via-background-dark/70 to-background-dark z-10" />
