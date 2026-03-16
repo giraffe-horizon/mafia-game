@@ -123,6 +123,14 @@ export interface GameStateResponse {
     round: number;
   } | null;
   myAction: { actionType: string; targetPlayerId: string | null } | null;
+  // Host only: all actions in current round/phase
+  hostActions?: {
+    playerId: string;
+    nickname: string;
+    actionType: string;
+    targetPlayerId: string | null;
+    targetNickname: string | null;
+  }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -220,18 +228,30 @@ export async function getGameState(
     .bind(playerRow.game_id)
     .all<GamePlayerRow>();
 
-  // Get unread messages (not from self, broadcast or targeted at me)
+  // Get messages:
+  //   - Broadcast (to_player_id IS NULL): all recent ones — never mark as read globally
+  //     so every player gets them. Client deduplicates via shownMessageIds ref.
+  //   - Private (to_player_id = me): only unread ones
   const { results: messages } = await db
     .prepare(
-      "SELECT * FROM messages WHERE game_id = ? AND (to_player_id IS NULL OR to_player_id = ?) AND from_player_id != ? AND is_read = 0 ORDER BY created_at ASC"
+      `SELECT * FROM messages
+       WHERE game_id = ? AND from_player_id != ?
+         AND (
+           (to_player_id IS NULL)
+           OR (to_player_id = ? AND is_read = 0)
+         )
+       ORDER BY created_at ASC`
     )
     .bind(playerRow.game_id, playerRow.player_id, playerRow.player_id)
     .all<MessageRow>();
 
-  // Mark them as read (batch)
-  if (messages.length > 0) {
+  // Mark only private (targeted) messages as read
+  const privateUnread = messages.filter(
+    (m) => m.to_player_id === playerRow.player_id && m.is_read === 0
+  );
+  if (privateUnread.length > 0) {
     await db.batch(
-      messages.map((m) =>
+      privateUnread.map((m) =>
         db.prepare("UPDATE messages SET is_read = 1 WHERE id = ?").bind(m.id)
       )
     );
@@ -273,6 +293,28 @@ export async function getGameState(
 
   const isHost = playerRow.is_host === 1;
 
+  // For host: fetch all actions in current round/phase to display in real-time
+  let hostActions: GameStateResponse["hostActions"] = undefined;
+  if (isHost && gameRow.status === "playing") {
+    const { results: actionRows } = await db
+      .prepare(
+        "SELECT ga.player_id, gp.nickname, ga.action_type, ga.target_player_id FROM game_actions ga JOIN game_players gp ON gp.game_id = ga.game_id AND gp.player_id = ga.player_id WHERE ga.game_id = ? AND ga.round = ? AND ga.phase = ? ORDER BY ga.created_at ASC"
+      )
+      .bind(playerRow.game_id, gameRow.round, gameRow.phase)
+      .all<{ player_id: string; nickname: string; action_type: string; target_player_id: string | null }>();
+
+    // Build nickname lookup for targets
+    const playerNicknameMap = new Map(allPlayers.map((p) => [p.player_id, p.nickname]));
+
+    hostActions = actionRows.map((a) => ({
+      playerId: a.player_id,
+      nickname: a.nickname,
+      actionType: a.action_type,
+      targetPlayerId: a.target_player_id,
+      targetNickname: a.target_player_id ? (playerNicknameMap.get(a.target_player_id) ?? null) : null,
+    }));
+  }
+
   return {
     game: {
       id: gameRow.id,
@@ -295,11 +337,13 @@ export async function getGameState(
       nickname: p.nickname,
       isAlive: p.is_alive === 1,
       isHost: p.is_host === 1,
-      // Host sees all roles; player sees own role during game; roles visible to all when finished
+      // Host sees all roles; player sees own role during game; mafia sees teammates;
+      // roles visible to all when finished
       role:
         isHost ||
         gameRow.status === "finished" ||
-        (gameRow.status === "playing" && p.token === token)
+        (gameRow.status === "playing" && p.token === token) ||
+        (gameRow.status === "playing" && playerRow.role === "mafia" && p.role === "mafia")
           ? (p.role as Role | null)
           : null,
       isYou: p.token === token,
@@ -323,6 +367,7 @@ export async function getGameState(
           targetPlayerId: existingAction.target_player_id,
         }
       : null,
+    hostActions,
   };
 }
 
@@ -623,7 +668,8 @@ export async function submitAction(
       return { success: false, error: "Tylko detektyw może sprawdzać" };
     if (actionType === "protect" && role !== "doctor")
       return { success: false, error: "Tylko doktor może chronić" };
-    if (!["kill", "investigate", "protect"].includes(actionType))
+    // 'wait' is the civilian smoke-screen action — always allowed at night
+    if (!["kill", "investigate", "protect", "wait"].includes(actionType))
       return { success: false, error: "Nieprawidłowa akcja nocna" };
   } else if (phase === "voting") {
     if (actionType !== "vote") return { success: false, error: "Teraz można tylko głosować" };
@@ -741,6 +787,93 @@ export async function createMission(
       now()
     )
     .run();
+
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// transferGm  (host only)
+// ---------------------------------------------------------------------------
+export async function transferGm(
+  db: D1Database,
+  token: string,
+  newHostPlayerId: string
+): Promise<{ success: boolean; error?: string }> {
+  const playerRow = await db
+    .prepare("SELECT * FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<GamePlayerRow>();
+  if (!playerRow?.is_host) return { success: false, error: "Tylko MG może przekazać rolę" };
+
+  if (playerRow.player_id === newHostPlayerId)
+    return { success: false, error: "Już jesteś MG" };
+
+  const target = await db
+    .prepare("SELECT player_id FROM game_players WHERE game_id = ? AND player_id = ?")
+    .bind(playerRow.game_id, newHostPlayerId)
+    .first<{ player_id: string }>();
+  if (!target) return { success: false, error: "Gracz nie istnieje" };
+
+  await db.batch([
+    db.prepare("UPDATE game_players SET is_host = 0 WHERE game_id = ? AND player_id = ?")
+      .bind(playerRow.game_id, playerRow.player_id),
+    db.prepare("UPDATE game_players SET is_host = 1 WHERE game_id = ? AND player_id = ?")
+      .bind(playerRow.game_id, newHostPlayerId),
+    db.prepare("UPDATE games SET host_player_id = ? WHERE id = ?")
+      .bind(newHostPlayerId, playerRow.game_id),
+  ]);
+
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// rematch  (host only) — reset game for another round, same players/tokens
+// ---------------------------------------------------------------------------
+export async function rematch(
+  db: D1Database,
+  token: string
+): Promise<{ success: boolean; error?: string }> {
+  const playerRow = await db
+    .prepare("SELECT * FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<GamePlayerRow>();
+  if (!playerRow?.is_host) return { success: false, error: "Tylko MG może zacząć następną rundę" };
+
+  const gameRow = await db
+    .prepare("SELECT * FROM games WHERE id = ?")
+    .bind(playerRow.game_id)
+    .first<GameRow>();
+  if (!gameRow || gameRow.status !== "finished")
+    return { success: false, error: "Gra nie jest jeszcze zakończona" };
+
+  const { results: players } = await db
+    .prepare("SELECT player_id FROM game_players WHERE game_id = ?")
+    .bind(playerRow.game_id)
+    .all<{ player_id: string }>();
+
+  if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy" };
+
+  const n = players.length;
+  const mafiaCount = Math.ceil(n / 3);
+  const roles: Role[] = [
+    ...Array<Role>(mafiaCount).fill("mafia"),
+    "detective",
+    "doctor",
+    ...Array<Role>(n - mafiaCount - 2).fill("civilian"),
+  ];
+  for (let i = roles.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [roles[i], roles[j]] = [roles[j], roles[i]];
+  }
+
+  await db.batch([
+    db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1, winner = NULL WHERE id = ?")
+      .bind(playerRow.game_id),
+    ...players.map((p, i) =>
+      db.prepare("UPDATE game_players SET role = ?, is_alive = 1 WHERE game_id = ? AND player_id = ?")
+        .bind(roles[i], playerRow.game_id, p.player_id)
+    ),
+  ]);
 
   return { success: true };
 }

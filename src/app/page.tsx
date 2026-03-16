@@ -17,6 +17,16 @@ export default function Home() {
     setLocalNickname(nickname);
   }, [nickname]);
 
+  // Auto-fill ?code= from URL (e.g. from QR code scan)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code) {
+      setSessionCode(code.toUpperCase());
+      setJoinMode(true);
+    }
+  }, []);
+
   async function handleCreate() {
     if (!localNickname.trim()) {
       setError("Podaj swoje imię");
@@ -83,7 +93,7 @@ export default function Home() {
   }
 
   return (
-    <div className="relative flex min-h-[844px] w-full max-w-[390px] flex-col bg-background-light dark:bg-background-dark group overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl mx-auto sm:my-8 sm:rounded-[2.5rem]">
+    <div className="relative flex min-h-screen sm:min-h-0 w-full sm:max-w-[390px] flex-col bg-background-light dark:bg-background-dark group overflow-hidden shadow-2xl sm:mx-auto sm:my-8 sm:rounded-[2.5rem]">
       {/* Noir atmospheric background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-background-dark/40 via-background-dark/70 to-background-dark z-10" />
@@ -228,7 +238,15 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="h-8 relative z-20" />
+      <div className="relative z-20 pb-6 flex justify-center">
+        <button
+          onClick={() => router.push("/ranking")}
+          className="flex items-center gap-1.5 text-slate-600 hover:text-slate-400 text-xs font-typewriter uppercase tracking-widest transition-colors"
+        >
+          <span className="material-symbols-outlined text-[14px]">leaderboard</span>
+          Ranking
+        </button>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import QRCode from "react-qr-code";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
+import { MISSION_PRESETS, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/missions-presets";
 
 // ---------------------------------------------------------------------------
 // Lookup tables
@@ -38,6 +40,15 @@ const PHASE_ICONS: Record<string, string> = {
   voting: "how_to_vote",
   lobby: "groups",
   ended: "emoji_events",
+};
+
+// Semantic confirmation text per role
+const ACTION_CONFIRMED: Record<string, string> = {
+  kill: "Wytypowałeś ofiarę:",
+  investigate: "Przesłuchujesz:",
+  protect: "Chronisz tej nocy:",
+  vote: "Oskarżasz:",
+  wait: "Czekasz w ukryciu...",
 };
 
 // ---------------------------------------------------------------------------
@@ -76,7 +87,7 @@ export default function GameClient() {
   const [starting, setStarting] = useState(false);
 
   // MG: message form
-  const [msgTarget, setMsgTarget] = useState(""); // "" = broadcast, else playerId
+  const [msgTarget, setMsgTarget] = useState("");
   const [msgContent, setMsgContent] = useState("");
   const [msgPending, setMsgPending] = useState(false);
   const [msgError, setMsgError] = useState("");
@@ -85,12 +96,20 @@ export default function GameClient() {
   const [msnTarget, setMsnTarget] = useState("");
   const [msnDesc, setMsnDesc] = useState("");
   const [msnSecret, setMsnSecret] = useState(false);
-  const [msnPoints, setMsnPoints] = useState(0);
+  const [msnPoints, setMsnPoints] = useState<1 | 2 | 3>(1);
+  const [msnPreset, setMsnPreset] = useState<string>("custom");
   const [msnPending, setMsnPending] = useState(false);
   const [msnError, setMsnError] = useState("");
 
+  // MG: transfer GM
+  const [transferGmPending, setTransferGmPending] = useState(false);
+  const [transferGmError, setTransferGmError] = useState("");
+
+  // MG: rematch
+  const [rematchPending, setRematchPending] = useState(false);
+
   // MG panel tab
-  const [mgTab, setMgTab] = useState<"phase" | "message" | "mission">("phase");
+  const [mgTab, setMgTab] = useState<"phase" | "message" | "mission" | "actions" | "gm">("phase");
 
   // ---------------------------------------------------------------------------
   // Polling
@@ -103,7 +122,7 @@ export default function GameClient() {
       const data: GameStateResponse = await res.json();
       setState(data);
 
-      // Push new messages as toasts
+      // Push new messages as toasts (client deduplicates by ID)
       for (const msg of data.messages) {
         if (!shownMessageIds.current.has(msg.id)) {
           shownMessageIds.current.add(msg.id);
@@ -160,7 +179,7 @@ export default function GameClient() {
       const res = await fetch(`/api/game/${token}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: actionType, targetPlayerId }),
+        body: JSON.stringify({ type: actionType, targetPlayerId: targetPlayerId || undefined }),
       });
       const data = await res.json();
       if (!res.ok) setActionError(data.error ?? "Błąd");
@@ -207,7 +226,13 @@ export default function GameClient() {
       });
       const data = await res.json();
       if (!res.ok) setMsnError(data.error ?? "Błąd");
-      else { setMsnDesc(""); setMsnTarget(""); setMsnSecret(false); setMsnPoints(0); }
+      else {
+        setMsnDesc("");
+        setMsnTarget("");
+        setMsnSecret(false);
+        setMsnPoints(1);
+        setMsnPreset("custom");
+      }
     } catch { setMsnError("Błąd połączenia"); }
     finally { setMsnPending(false); }
   }
@@ -217,6 +242,33 @@ export default function GameClient() {
       await fetch(`/api/game/${token}/mission/${missionId}/complete`, { method: "POST" });
       await fetchState();
     } catch { /* ignore */ }
+  }
+
+  async function handleTransferGm(newHostPlayerId: string) {
+    setTransferGmPending(true);
+    setTransferGmError("");
+    try {
+      const res = await fetch(`/api/game/${token}/transfer-gm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newHostPlayerId }),
+      });
+      const data = await res.json();
+      if (!res.ok) setTransferGmError(data.error ?? "Błąd");
+      else await fetchState();
+    } catch { setTransferGmError("Błąd połączenia"); }
+    finally { setTransferGmPending(false); }
+  }
+
+  async function handleRematch() {
+    setRematchPending(true);
+    try {
+      const res = await fetch(`/api/game/${token}/rematch`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) setError(data.error ?? "Błąd");
+      else await fetchState();
+    } catch { setError("Błąd połączenia"); }
+    finally { setRematchPending(false); }
   }
 
   function copyCode() {
@@ -231,7 +283,7 @@ export default function GameClient() {
   // ---------------------------------------------------------------------------
   if (error) {
     return (
-      <div className="flex min-h-[844px] w-full max-w-[390px] flex-col items-center justify-center bg-background-dark mx-auto sm:my-8 sm:rounded-[2.5rem] border border-slate-800">
+      <div className="flex min-h-screen sm:min-h-0 w-full sm:max-w-[390px] flex-col items-center justify-center bg-background-dark sm:mx-auto sm:my-8 sm:rounded-[2.5rem]">
         <span className="material-symbols-outlined text-[48px] text-primary mb-4">error</span>
         <p className="text-slate-300 font-typewriter text-lg text-center px-8">{error}</p>
         <button
@@ -246,7 +298,7 @@ export default function GameClient() {
 
   if (!state) {
     return (
-      <div className="flex min-h-[844px] w-full max-w-[390px] flex-col items-center justify-center bg-background-dark mx-auto sm:my-8 sm:rounded-[2.5rem] border border-slate-800">
+      <div className="flex min-h-screen sm:min-h-0 w-full sm:max-w-[390px] flex-col items-center justify-center bg-background-dark sm:mx-auto sm:my-8 sm:rounded-[2.5rem]">
         <span className="material-symbols-outlined text-[40px] text-primary animate-spin mb-4">refresh</span>
         <p className="text-slate-400 font-typewriter uppercase tracking-widest text-sm">Ładowanie...</p>
       </div>
@@ -261,16 +313,15 @@ export default function GameClient() {
   const phase = game.phase;
   const myAction = state.myAction;
 
-  // Players eligible for actions (alive, not self)
   const actionTargets = players.filter((p) => p.isAlive && !p.isYou && !p.isHost);
-  // Alive non-host players for MG forms
   const nonHostPlayers = players.filter((p) => !p.isHost);
+  const joinUrl = `https://mafia-game-bev.pages.dev/?code=${game.code}`;
 
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className="relative flex min-h-[844px] w-full max-w-[390px] flex-col bg-background-dark overflow-hidden border border-slate-800 shadow-2xl mx-auto sm:my-8 sm:rounded-[2.5rem]">
+    <div className="relative flex min-h-screen sm:min-h-0 w-full sm:max-w-[390px] flex-col bg-background-dark overflow-hidden shadow-2xl sm:mx-auto sm:my-8 sm:rounded-[2.5rem]">
       {/* Background glow */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
@@ -340,7 +391,7 @@ export default function GameClient() {
                 <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2">
                   Kod sesji — udostępnij graczom
                 </p>
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3 mb-4">
                   <span className="font-typewriter text-2xl font-bold text-white tracking-widest drop-shadow-[0_0_8px_rgba(218,11,11,0.3)]">
                     {game.code}
                   </span>
@@ -353,6 +404,23 @@ export default function GameClient() {
                     </span>
                     {copied ? "Skopiowano" : "Kopiuj"}
                   </button>
+                </div>
+                {/* QR Code */}
+                <div className="flex flex-col items-center gap-2 pt-3 border-t border-slate-800">
+                  <p className="text-slate-600 text-xs font-typewriter uppercase tracking-widest mb-1">
+                    Zeskanuj aby dołączyć
+                  </p>
+                  <div className="p-3 bg-white rounded-xl">
+                    <QRCode
+                      value={joinUrl}
+                      size={160}
+                      bgColor="#ffffff"
+                      fgColor="#1a0c0c"
+                    />
+                  </div>
+                  <p className="text-slate-700 text-[10px] font-typewriter text-center mt-1 break-all px-2">
+                    {joinUrl}
+                  </p>
                 </div>
               </div>
             )}
@@ -395,6 +463,11 @@ export default function GameClient() {
                     >
                       {ROLE_LABELS[currentPlayer.role ?? "civilian"]}
                     </p>
+                    {currentPlayer.role === "mafia" && (
+                      <p className="text-red-400/70 text-xs font-typewriter mt-1">
+                        🔴 Twoi wspólnicy są oznaczeni na liście
+                      </p>
+                    )}
                     <p className="text-slate-500 text-sm mt-1">Stuknij aby ukryć</p>
                   </div>
                 </div>
@@ -456,7 +529,7 @@ export default function GameClient() {
         {detectiveResult && isPlaying && !isHost && (
           <div className="mx-5 mt-4 p-4 rounded-xl bg-blue-950/30 border border-blue-800/40">
             <p className="text-blue-400 text-xs font-typewriter uppercase tracking-widest mb-2">
-              Wynik śledztwa — Runda {detectiveResult.round}
+              Wynik przesłuchania — Runda {detectiveResult.round}
             </p>
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[28px] text-blue-400">search</span>
@@ -503,9 +576,10 @@ export default function GameClient() {
           </div>
         )}
 
-        {/* ── PLAYING: day message for non-host non-action ── */}
+        {/* ── PLAYING: day message for non-host ── */}
         {isPlaying && !isHost && phase === "day" && (
           <div className="mx-5 mt-4 p-4 rounded-xl bg-black/30 border border-slate-800 text-center">
+            <span className="material-symbols-outlined text-[28px] text-yellow-500/60 mb-1 block">wb_sunny</span>
             <p className="text-slate-500 font-typewriter uppercase tracking-widest text-xs">
               Dzień — dyskutujcie i szukajcie mafii
             </p>
@@ -514,7 +588,14 @@ export default function GameClient() {
 
         {/* ── FINISHED: end screen ── */}
         {isFinished && (
-          <EndScreen game={game} players={players} currentPlayer={currentPlayer} />
+          <EndScreen
+            game={game}
+            players={players}
+            currentPlayer={currentPlayer}
+            isHost={isHost}
+            rematchPending={rematchPending}
+            onRematch={handleRematch}
+          />
         )}
 
         {/* ── MG controls panel ── */}
@@ -537,19 +618,20 @@ export default function GameClient() {
             msnDesc={msnDesc}
             msnSecret={msnSecret}
             msnPoints={msnPoints}
+            msnPreset={msnPreset}
             msnPending={msnPending}
             msnError={msnError}
             onMsnTargetChange={setMsnTarget}
             onMsnDescChange={setMsnDesc}
             onMsnSecretChange={setMsnSecret}
             onMsnPointsChange={setMsnPoints}
+            onMsnPresetChange={setMsnPreset}
             onCreateMission={handleCreateMission}
+            hostActions={state.hostActions}
+            transferGmPending={transferGmPending}
+            transferGmError={transferGmError}
+            onTransferGm={handleTransferGm}
           />
-        )}
-
-        {/* ── MG mission management (see all player missions) ── */}
-        {isHost && isPlaying && (
-          <MGMissions token={token} players={nonHostPlayers} onComplete={handleCompleteMission} />
         )}
 
         {/* ── Players list ── */}
@@ -563,17 +645,20 @@ export default function GameClient() {
                 key={p.playerId}
                 player={p}
                 isGamePlaying={isPlaying || isFinished}
+                isFinished={isFinished}
                 isHost={isHost}
+                currentPlayerRole={currentPlayer.role}
+                roleVisible={roleVisible}
               />
             ))}
           </div>
         </div>
 
-        {/* ── Lobby: start button ── */}
+        {/* ── Lobby: Transfer GM + Start button ── */}
         {isHost && isLobby && (
-          <div className="mx-5 mt-6">
+          <div className="mx-5 mt-6 flex flex-col gap-3">
             {players.length < 4 && (
-              <p className="text-slate-500 text-sm font-typewriter text-center mb-3">
+              <p className="text-slate-500 text-sm font-typewriter text-center">
                 Potrzeba minimum 4 graczy ({players.length}/4)
               </p>
             )}
@@ -585,6 +670,13 @@ export default function GameClient() {
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
               {starting ? "Startuję..." : "Rozpocznij grę"}
             </button>
+            {/* Transfer GM in lobby */}
+            <LobbyTransferGm
+              players={nonHostPlayers}
+              pending={transferGmPending}
+              error={transferGmError}
+              onTransfer={handleTransferGm}
+            />
           </div>
         )}
       </div>
@@ -599,12 +691,31 @@ export default function GameClient() {
 function PlayerRow({
   player,
   isGamePlaying,
+  isFinished,
   isHost,
+  currentPlayerRole,
+  roleVisible,
 }: {
   player: PublicPlayer;
   isGamePlaying: boolean;
+  isFinished: boolean;
   isHost: boolean;
+  currentPlayerRole?: string | null;
+  roleVisible?: boolean;
 }) {
+  // Determine if we show role badge and what color
+  const showRoleBadge =
+    isHost && isGamePlaying && player.role != null;
+
+  // Mafia teammate indicator (visible when the current player is mafia and has revealed their role)
+  const isMafiaTeammate =
+    !isHost &&
+    !player.isYou &&
+    !player.isHost &&
+    player.role === "mafia" &&
+    currentPlayerRole === "mafia" &&
+    roleVisible === true;
+
   return (
     <div
       className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
@@ -631,12 +742,31 @@ function PlayerRow({
           {player.isHost && (
             <span className="text-xs text-primary/70 font-typewriter uppercase">MG</span>
           )}
+          {isMafiaTeammate && (
+            <span className="text-xs" title="Członek mafii">🔴</span>
+          )}
         </div>
         {!player.isAlive && (
           <span className="text-xs text-slate-600 font-typewriter uppercase">Wyeliminowany</span>
         )}
       </div>
-      {player.role && (isGamePlaying) && (isHost || player.isYou) && (
+      {showRoleBadge && player.role && (
+        <span
+          className={`text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border ${
+            player.role === "mafia"
+              ? "text-red-400 border-red-900/50 bg-red-950/30"
+              : player.role === "detective"
+              ? "text-blue-400 border-blue-900/50 bg-blue-950/30"
+              : player.role === "doctor"
+              ? "text-green-400 border-green-900/50 bg-green-950/30"
+              : "text-slate-400 border-slate-700 bg-slate-900/30"
+          }`}
+        >
+          {ROLE_LABELS[player.role]}
+        </span>
+      )}
+      {/* End screen: show role for everyone when finished */}
+      {isFinished && !isHost && player.role && (
         <span
           className={`text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border ${
             player.role === "mafia"
@@ -672,34 +802,113 @@ function NightActionPanel({
   onAction: (type: string, targetId: string) => void;
 }) {
   const actionMap: Record<string, { type: string; label: string; icon: string; color: string }> = {
-    mafia: { type: "kill", label: "Wybierz ofiarę", icon: "skull", color: "text-red-400" },
-    detective: { type: "investigate", label: "Sprawdź gracza", icon: "search", color: "text-blue-400" },
-    doctor: { type: "protect", label: "Chroń gracza", icon: "medical_services", color: "text-green-400" },
+    mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
+    detective: { type: "investigate", label: "Kogo przesłuchać?", icon: "search", color: "text-blue-400" },
+    doctor: { type: "protect", label: "Kogo chronić tej nocy?", icon: "medical_services", color: "text-green-400" },
   };
 
-  const action = role ? actionMap[role] : null;
-  if (!action) {
+  // Civilian smoke screen
+  const [progress, setProgress] = useState(0);
+  const [smokeStarted, setSmokeStarted] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  function startCivilianWait() {
+    if (smokeStarted || myAction) return;
+    setSmokeStarted(true);
+    const duration = 8000;
+    const step = 100;
+    let elapsed = 0;
+    timerRef.current = setInterval(() => {
+      elapsed += step;
+      const pct = Math.min((elapsed / duration) * 100, 100);
+      setProgress(pct);
+      if (elapsed >= duration) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        onAction("wait", "");
+      }
+    }, step);
+  }
+
+  // Civilian confirmation — myAction with 'wait'
+  if (myAction && myAction.actionType === "wait") {
     return (
-      <div className="mx-5 mt-4 p-4 rounded-xl bg-black/30 border border-slate-800 text-center">
-        <span className="material-symbols-outlined text-[28px] text-slate-600 mb-1 block">
-          bedtime
-        </span>
-        <p className="text-slate-500 font-typewriter uppercase tracking-widest text-xs">
-          Noc — czekaj na rozkazy
+      <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-slate-700">
+        <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-1">
+          Czekasz w ukryciu...
         </p>
+        <p className="text-slate-600 text-sm">Ssssh. Udajesz że śpisz.</p>
       </div>
     );
   }
 
   if (myAction) {
     const targetName = targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ?? myAction.targetPlayerId;
+    const actionLabel = ACTION_CONFIRMED[myAction.actionType] ?? "Akcja złożona";
     return (
       <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-green-900/40">
         <p className="text-green-400 text-xs font-typewriter uppercase tracking-widest mb-1">
-          Akcja złożona
+          {actionLabel}
         </p>
-        <p className="text-slate-300 text-sm">
-          Cel: <span className="text-white font-medium">{targetName}</span>
+        {myAction.targetPlayerId && (
+          <p className="text-slate-300 text-sm">
+            <span className="text-white font-medium">{targetName}</span>
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Civilian: show smoke screen
+  if (role === "civilian") {
+    return (
+      <div className="mx-5 mt-4 p-5 rounded-xl bg-black/50 border border-slate-700">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="material-symbols-outlined text-[28px] text-slate-500">bedtime</span>
+          <div>
+            <p className="text-slate-300 font-typewriter text-sm uppercase tracking-widest">
+              Zamknij oczy i czekaj...
+            </p>
+            <p className="text-slate-600 text-xs mt-0.5">Noc trwa. Nie zdradzaj swojej roli.</p>
+          </div>
+        </div>
+        {smokeStarted ? (
+          <div>
+            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mb-2">
+              <div
+                className="h-full bg-slate-600 rounded-full transition-all duration-100"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-slate-600 text-xs font-typewriter text-center">
+              {progress < 100 ? "Modlisz się w ciemności..." : "Zakończono"}
+            </p>
+          </div>
+        ) : (
+          <button
+            onClick={startCivilianWait}
+            className="w-full flex items-center justify-center gap-2 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 font-typewriter uppercase tracking-wider text-sm transition-all"
+          >
+            <span className="material-symbols-outlined text-[16px]">self_improvement</span>
+            Zacznij czekać
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  const action = role ? actionMap[role] : null;
+  if (!action) {
+    return (
+      <div className="mx-5 mt-4 p-4 rounded-xl bg-black/30 border border-slate-800 text-center">
+        <span className="material-symbols-outlined text-[28px] text-slate-600 mb-1 block">bedtime</span>
+        <p className="text-slate-500 font-typewriter uppercase tracking-widest text-xs">
+          Noc — czekaj na rozkazy
         </p>
       </div>
     );
@@ -750,10 +959,10 @@ function VotePanel({
     return (
       <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-green-900/40">
         <p className="text-green-400 text-xs font-typewriter uppercase tracking-widest mb-1">
-          Głos oddany
+          Oskarżasz:
         </p>
         <p className="text-slate-300 text-sm">
-          Zagłosowałeś na: <span className="text-white font-medium">{targetName}</span>
+          <span className="text-white font-medium">{targetName}</span>
         </p>
       </div>
     );
@@ -765,7 +974,7 @@ function VotePanel({
     <div className="mx-5 mt-4">
       <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-3 pl-1">
         <span className="material-symbols-outlined text-[14px] align-middle mr-1">how_to_vote</span>
-        Zagłosuj na podejrzanego
+        Kogo oskarżasz?
       </p>
       {error && <p className="text-red-400 text-xs font-typewriter mb-2 px-1">{error}</p>}
       <div className="flex flex-col gap-2">
@@ -786,6 +995,16 @@ function VotePanel({
 }
 
 // ---------------------------------------------------------------------------
+// MGPanel
+// ---------------------------------------------------------------------------
+const ACTION_ROLE_LABELS: Record<string, string> = {
+  kill: "Eliminuje",
+  investigate: "Sprawdza",
+  protect: "Chroni",
+  vote: "Głosuje na",
+  wait: "Czeka",
+};
+
 function MGPanel({
   phase,
   players,
@@ -804,18 +1023,24 @@ function MGPanel({
   msnDesc,
   msnSecret,
   msnPoints,
+  msnPreset,
   msnPending,
   msnError,
   onMsnTargetChange,
   onMsnDescChange,
   onMsnSecretChange,
   onMsnPointsChange,
+  onMsnPresetChange,
   onCreateMission,
+  hostActions,
+  transferGmPending,
+  transferGmError,
+  onTransferGm,
 }: {
   phase: string;
   players: PublicPlayer[];
-  tab: "phase" | "message" | "mission";
-  onTabChange: (t: "phase" | "message" | "mission") => void;
+  tab: "phase" | "message" | "mission" | "actions" | "gm";
+  onTabChange: (t: "phase" | "message" | "mission" | "actions" | "gm") => void;
   phasePending: boolean;
   onPhase: (p: string) => void;
   msgTarget: string;
@@ -828,14 +1053,20 @@ function MGPanel({
   msnTarget: string;
   msnDesc: string;
   msnSecret: boolean;
-  msnPoints: number;
+  msnPoints: 1 | 2 | 3;
+  msnPreset: string;
   msnPending: boolean;
   msnError: string;
   onMsnTargetChange: (v: string) => void;
   onMsnDescChange: (v: string) => void;
   onMsnSecretChange: (v: boolean) => void;
-  onMsnPointsChange: (v: number) => void;
+  onMsnPointsChange: (v: 1 | 2 | 3) => void;
+  onMsnPresetChange: (v: string) => void;
   onCreateMission: () => void;
+  hostActions?: GameStateResponse["hostActions"];
+  transferGmPending: boolean;
+  transferGmError: string;
+  onTransferGm: (playerId: string) => void;
 }) {
   const nextPhaseMap: Record<string, { label: string; phase: string; icon: string }> = {
     night: { label: "Przejdź do Dnia", phase: "day", icon: "wb_sunny" },
@@ -848,17 +1079,32 @@ function MGPanel({
     { id: "phase" as const, icon: "swap_horiz", label: "Faza" },
     { id: "message" as const, icon: "mail", label: "Wiad." },
     { id: "mission" as const, icon: "task", label: "Misja" },
+    { id: "actions" as const, icon: "visibility", label: "Akcje" },
+    { id: "gm" as const, icon: "manage_accounts", label: "GM" },
   ];
+
+  // Handle preset selection
+  function handlePresetChange(value: string) {
+    onMsnPresetChange(value);
+    if (value !== "custom") {
+      const idx = parseInt(value, 10);
+      const preset = MISSION_PRESETS[idx];
+      if (preset) {
+        onMsnDescChange(preset.description);
+        onMsnPointsChange(preset.points);
+      }
+    }
+  }
 
   return (
     <div className="mx-5 mt-5 rounded-xl bg-black/40 border border-primary/20 overflow-hidden">
       {/* Tab bar */}
-      <div className="flex border-b border-slate-800">
+      <div className="flex border-b border-slate-800 overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => onTabChange(t.id)}
-            className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors text-xs font-typewriter uppercase tracking-wider ${
+            className={`flex-1 min-w-0 flex flex-col items-center py-2 gap-0.5 transition-colors text-[10px] font-typewriter uppercase tracking-wider whitespace-nowrap ${
               tab === t.id
                 ? "text-primary border-b-2 border-primary"
                 : "text-slate-500 hover:text-slate-300"
@@ -940,14 +1186,29 @@ function MGPanel({
                 </option>
               ))}
             </select>
+
+            {/* Preset dropdown */}
+            <select
+              value={msnPreset}
+              onChange={(e) => handlePresetChange(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm font-typewriter focus:outline-none focus:border-primary/50"
+            >
+              <option value="custom">— Własne zadanie —</option>
+              {MISSION_PRESETS.map((p, i) => (
+                <option key={i} value={String(i)}>
+                  [{CATEGORY_LABELS[p.category]}] {p.description.substring(0, 40)}…
+                </option>
+              ))}
+            </select>
+
             <textarea
               value={msnDesc}
-              onChange={(e) => onMsnDescChange(e.target.value)}
+              onChange={(e) => { onMsnDescChange(e.target.value); onMsnPresetChange("custom"); }}
               placeholder="Opis misji..."
               rows={3}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm font-typewriter placeholder:text-slate-600 focus:outline-none focus:border-primary/50 resize-none"
             />
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -957,16 +1218,24 @@ function MGPanel({
                 />
                 <span className="text-slate-400 text-sm font-typewriter">Tajna</span>
               </label>
-              <div className="flex items-center gap-2 ml-auto">
-                <span className="text-slate-500 text-sm font-typewriter">Punkty:</span>
-                <input
-                  type="number"
-                  value={msnPoints}
-                  min={0}
-                  max={100}
-                  onChange={(e) => onMsnPointsChange(Number(e.target.value))}
-                  className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-sm font-typewriter text-center focus:outline-none focus:border-primary/50"
-                />
+              <div className="flex items-center gap-1 ml-auto">
+                {([1, 2, 3] as const).map((pts) => (
+                  <button
+                    key={pts}
+                    onClick={() => onMsnPointsChange(pts)}
+                    className={`w-9 h-9 rounded-lg text-sm font-typewriter font-bold border transition-all ${
+                      msnPoints === pts
+                        ? pts === 1
+                          ? "bg-green-900/40 border-green-700 text-green-400"
+                          : pts === 2
+                          ? "bg-yellow-900/40 border-yellow-700 text-yellow-400"
+                          : "bg-red-900/40 border-red-700 text-red-400"
+                        : "border-slate-700 text-slate-500 hover:border-slate-500"
+                    }`}
+                  >
+                    {pts}
+                  </button>
+                ))}
               </div>
             </div>
             {msnError && <p className="text-red-400 text-xs font-typewriter">{msnError}</p>}
@@ -980,46 +1249,130 @@ function MGPanel({
             </button>
           </div>
         )}
+
+        {/* Actions tab — real-time player actions */}
+        {tab === "actions" && (
+          <div>
+            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
+              Akcje graczy — bieżąca faza
+            </p>
+            {!hostActions || hostActions.length === 0 ? (
+              <p className="text-slate-600 text-sm font-typewriter text-center py-2">
+                Brak akcji w tej fazie
+              </p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {hostActions.map((a, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-black/30 border border-slate-800">
+                    <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-white text-xs font-medium">{a.nickname}</span>
+                      <span className="text-slate-500 text-xs mx-1">·</span>
+                      <span className="text-slate-400 text-xs font-typewriter">
+                        {ACTION_ROLE_LABELS[a.actionType] ?? a.actionType}
+                        {a.targetNickname ? ` ${a.targetNickname}` : ""}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* GM transfer tab */}
+        {tab === "gm" && (
+          <div>
+            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
+              Przekaż rolę MG innemu graczowi
+            </p>
+            {transferGmError && (
+              <p className="text-red-400 text-xs font-typewriter mb-2">{transferGmError}</p>
+            )}
+            <div className="flex flex-col gap-2">
+              {players.map((p) => (
+                <button
+                  key={p.playerId}
+                  disabled={transferGmPending}
+                  onClick={() => onTransferGm(p.playerId)}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-black/20 hover:border-primary/40 hover:bg-primary/5 transition-all active:scale-[0.98] disabled:opacity-40 text-left"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-slate-400">person</span>
+                  <span className="text-white text-sm">{p.nickname}</span>
+                  <span className="ml-auto text-xs text-slate-600 font-typewriter">→ MG</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-function MGMissions({
-  token,
+// Lobby Transfer GM (shown in lobby for host)
+// ---------------------------------------------------------------------------
+function LobbyTransferGm({
   players,
-  onComplete,
+  pending,
+  error,
+  onTransfer,
 }: {
-  token: string;
   players: PublicPlayer[];
-  onComplete: (id: string) => void;
+  pending: boolean;
+  error: string;
+  onTransfer: (playerId: string) => void;
 }) {
-  const [missions, setMissions] = useState<
-    { id: string; playerId: string; description: string; isSecret: boolean; points: number }[]
-  >([]);
+  const [open, setOpen] = useState(false);
+  if (players.length === 0) return null;
 
-  useEffect(() => {
-    // Fetch active missions for all players (MG sees them)
-    // We reuse the getState polling — this component just reads from parent state
-    // Since we can't pass missions-per-player from parent easily, we skip for now
-    // MG can see missions via each player's state
-    void token; void players; void setMissions;
-  }, [token, players]);
-
-  void missions; void onComplete;
-  return null; // MG mission management is done via the mission tab in MGPanel
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-center gap-2 h-10 rounded-lg border border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-500 font-typewriter uppercase tracking-wider text-xs transition-all"
+      >
+        <span className="material-symbols-outlined text-[16px]">manage_accounts</span>
+        Przekaż rolę MG
+      </button>
+      {open && (
+        <div className="mt-2 rounded-lg border border-slate-700 bg-black/30 overflow-hidden">
+          {error && <p className="text-red-400 text-xs font-typewriter px-3 pt-2">{error}</p>}
+          {players.map((p) => (
+            <button
+              key={p.playerId}
+              disabled={pending}
+              onClick={() => { onTransfer(p.playerId); setOpen(false); }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 border-b border-slate-800 last:border-b-0 hover:bg-primary/5 transition-colors text-left disabled:opacity-40"
+            >
+              <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
+              <span className="text-white text-sm">{p.nickname}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
+// ---------------------------------------------------------------------------
+// EndScreen
 // ---------------------------------------------------------------------------
 function EndScreen({
   game,
   players,
   currentPlayer,
+  isHost,
+  rematchPending,
+  onRematch,
 }: {
   game: GameStateResponse["game"];
   players: PublicPlayer[];
   currentPlayer: GameStateResponse["currentPlayer"];
+  isHost: boolean;
+  rematchPending: boolean;
+  onRematch: () => void;
 }) {
   const winnerLabel = game.winner === "mafia" ? "Mafia wygrała!" : "Miasto wygrało!";
   const winnerIcon = game.winner === "mafia" ? "masks" : "groups";
@@ -1038,10 +1391,20 @@ function EndScreen({
         <p className={`font-typewriter text-2xl font-bold uppercase tracking-widest ${winnerColor} mb-2`}>
           {winnerLabel}
         </p>
-        {!currentPlayer.isHost && (
+        {!isHost && (
           <p className={`font-typewriter text-sm uppercase tracking-wider ${isWinner ? "text-green-400" : "text-slate-500"}`}>
             {isWinner ? "Wygrałeś!" : "Przegrałeś"}
           </p>
+        )}
+        {isHost && (
+          <button
+            onClick={onRematch}
+            disabled={rematchPending}
+            className="mt-4 flex items-center justify-center gap-2 mx-auto px-6 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider text-sm transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-[18px]">replay</span>
+            {rematchPending ? "Resetuję..." : "NASTĘPNA RUNDA"}
+          </button>
         )}
       </div>
 
