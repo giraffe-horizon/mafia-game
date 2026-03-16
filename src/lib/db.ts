@@ -414,12 +414,13 @@ export async function startGame(
   if (!gameRow) return { success: false, error: "Gra nie istnieje" };
   if (gameRow.status !== "lobby") return { success: false, error: "Gra już trwa" };
 
+  // Only non-host players get roles
   const { results: players } = await db
-    .prepare("SELECT player_id FROM game_players WHERE game_id = ?")
+    .prepare("SELECT player_id FROM game_players WHERE game_id = ? AND is_host = 0")
     .bind(playerRow.game_id)
     .all<{ player_id: string }>();
 
-  if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy" };
+  if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy (nie licząc MG)" };
 
   const n = players.length;
   const roles = buildRoles(n, customMafiaCount);
@@ -434,6 +435,9 @@ export async function startGame(
     db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1 WHERE id = ?").bind(
       playerRow.game_id
     ),
+    // GM gets no role (stays NULL)
+    db.prepare("UPDATE game_players SET role = 'gm' WHERE game_id = ? AND player_id = ?")
+      .bind(playerRow.game_id, playerRow.player_id),
     ...players.map((p, i) =>
       db
         .prepare("UPDATE game_players SET role = ? WHERE game_id = ? AND player_id = ?")
@@ -640,12 +644,12 @@ async function resolveVoting(
 
 async function checkWinConditions(db: D1Database, gameId: string): Promise<string | null> {
   const { results: alive } = await db
-    .prepare("SELECT role FROM game_players WHERE game_id = ? AND is_alive = 1")
+    .prepare("SELECT role FROM game_players WHERE game_id = ? AND is_alive = 1 AND is_host = 0")
     .bind(gameId)
     .all<{ role: string | null }>();
 
   const aliveMafia = alive.filter((p) => p.role === "mafia").length;
-  const aliveOthers = alive.filter((p) => p.role !== "mafia").length;
+  const aliveOthers = alive.filter((p) => p.role !== "mafia" && p.role !== "gm").length;
 
   if (aliveMafia === 0) return "town";
   if (aliveMafia >= aliveOthers) return "mafia";
@@ -863,12 +867,13 @@ export async function rematch(
   if (!gameRow || gameRow.status !== "finished")
     return { success: false, error: "Gra nie jest jeszcze zakończona" };
 
+  // Only non-host players get roles
   const { results: players } = await db
-    .prepare("SELECT player_id FROM game_players WHERE game_id = ?")
+    .prepare("SELECT player_id FROM game_players WHERE game_id = ? AND is_host = 0")
     .bind(playerRow.game_id)
     .all<{ player_id: string }>();
 
-  if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy" };
+  if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy (nie licząc MG)" };
 
   const n = players.length;
   const roles = buildRoles(n);
@@ -880,6 +885,8 @@ export async function rematch(
   await db.batch([
     db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1, winner = NULL WHERE id = ?")
       .bind(playerRow.game_id),
+    db.prepare("UPDATE game_players SET role = 'gm', is_alive = 1 WHERE game_id = ? AND player_id = ?")
+      .bind(playerRow.game_id, playerRow.player_id),
     ...players.map((p, i) =>
       db.prepare("UPDATE game_players SET role = ?, is_alive = 1 WHERE game_id = ? AND player_id = ?")
         .bind(roles[i], playerRow.game_id, p.player_id)

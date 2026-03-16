@@ -14,18 +14,21 @@ const ROLE_LABELS: Record<string, string> = {
   detective: "Detektyw",
   doctor: "Doktor",
   civilian: "Cywil",
+  gm: "Mistrz Gry",
 };
 const ROLE_ICONS: Record<string, string> = {
   mafia: "masks",
   detective: "search",
   doctor: "medical_services",
   civilian: "person",
+  gm: "manage_accounts",
 };
 const ROLE_COLORS: Record<string, string> = {
   mafia: "text-red-500",
   detective: "text-blue-400",
   doctor: "text-green-400",
   civilian: "text-slate-300",
+  gm: "text-amber-400",
 };
 const PHASE_LABELS: Record<string, string> = {
   lobby: "Lobby",
