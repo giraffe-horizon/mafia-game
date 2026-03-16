@@ -85,6 +85,7 @@ export default function GameClient() {
 
   // MG: start game
   const [starting, setStarting] = useState(false);
+  const [mafiaCount, setMafiaCount] = useState(0); // 0 = auto
 
   // MG: message form
   const [msgTarget, setMsgTarget] = useState("");
@@ -149,7 +150,11 @@ export default function GameClient() {
   async function handleStart() {
     setStarting(true);
     try {
-      const res = await fetch(`/api/game/${token}/start`, { method: "POST" });
+      const body = mafiaCount > 0 ? JSON.stringify({ mafiaCount }) : undefined;
+      const res = await fetch(`/api/game/${token}/start`, {
+        method: "POST",
+        ...(body ? { headers: { "Content-Type": "application/json" }, body } : {}),
+      });
       const data = await res.json();
       if (!res.ok) setError(data.error ?? "Błąd");
       else await fetchState();
@@ -661,6 +666,44 @@ export default function GameClient() {
               <p className="text-slate-500 text-sm font-typewriter text-center">
                 Potrzeba minimum 4 graczy ({players.length}/4)
               </p>
+            )}
+            {/* Mafia count selector */}
+            {players.length >= 4 && (
+              <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
+                <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
+                  Liczba mafii
+                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => setMafiaCount(0)}
+                    className={`px-3 py-2 rounded-lg text-sm font-typewriter uppercase tracking-wider border transition-all ${
+                      mafiaCount === 0
+                        ? "bg-primary/20 border-primary/50 text-primary"
+                        : "border-slate-700 text-slate-400 hover:border-slate-500"
+                    }`}
+                  >
+                    Auto ({players.length <= 5 ? 1 : players.length <= 8 ? 2 : players.length <= 11 ? 3 : 4})
+                  </button>
+                  {Array.from({ length: Math.max(1, players.length - 3) }, (_, i) => i + 1).map(
+                    (n) => (
+                      <button
+                        key={n}
+                        onClick={() => setMafiaCount(n)}
+                        className={`w-10 h-10 rounded-lg text-sm font-bold font-typewriter border transition-all ${
+                          mafiaCount === n
+                            ? "bg-primary/20 border-primary/50 text-primary"
+                            : "border-slate-700 text-slate-400 hover:border-slate-500"
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    )
+                  )}
+                </div>
+                <p className="text-slate-600 text-xs mt-2">
+                  + 1 policjant, 1 lekarz, reszta cywile
+                </p>
+              </div>
             )}
             <button
               onClick={handleStart}

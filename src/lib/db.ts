@@ -374,9 +374,32 @@ export async function getGameState(
 // ---------------------------------------------------------------------------
 // startGame
 // ---------------------------------------------------------------------------
+// Default mafia proportions:
+// 4-5 players: 1 mafia, 6-8: 2 mafia, 9-11: 3 mafia, 12+: 4 mafia
+// Always: 1 detective, 1 doctor, rest civilians
+function buildRoles(n: number, customMafiaCount?: number): Role[] {
+  let mafiaCount: number;
+  if (customMafiaCount !== undefined && customMafiaCount >= 1 && customMafiaCount <= n - 3) {
+    mafiaCount = customMafiaCount;
+  } else {
+    // Balanced defaults: ~25% mafia, min 1
+    if (n <= 5) mafiaCount = 1;
+    else if (n <= 8) mafiaCount = 2;
+    else if (n <= 11) mafiaCount = 3;
+    else mafiaCount = 4;
+  }
+  return [
+    ...Array<Role>(mafiaCount).fill("mafia"),
+    "detective",
+    "doctor",
+    ...Array<Role>(Math.max(0, n - mafiaCount - 2)).fill("civilian"),
+  ];
+}
+
 export async function startGame(
   db: D1Database,
-  token: string
+  token: string,
+  customMafiaCount?: number
 ): Promise<{ success: boolean; error?: string }> {
   const playerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
@@ -399,13 +422,7 @@ export async function startGame(
   if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy" };
 
   const n = players.length;
-  const mafiaCount = Math.ceil(n / 3);
-  const roles: Role[] = [
-    ...Array<Role>(mafiaCount).fill("mafia"),
-    "detective",
-    "doctor",
-    ...Array<Role>(n - mafiaCount - 2).fill("civilian"),
-  ];
+  const roles = buildRoles(n, customMafiaCount);
 
   // Fisher-Yates shuffle
   for (let i = roles.length - 1; i > 0; i--) {
@@ -854,13 +871,7 @@ export async function rematch(
   if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy" };
 
   const n = players.length;
-  const mafiaCount = Math.ceil(n / 3);
-  const roles: Role[] = [
-    ...Array<Role>(mafiaCount).fill("mafia"),
-    "detective",
-    "doctor",
-    ...Array<Role>(n - mafiaCount - 2).fill("civilian"),
-  ];
+  const roles = buildRoles(n);
   for (let i = roles.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [roles[i], roles[j]] = [roles[j], roles[i]];

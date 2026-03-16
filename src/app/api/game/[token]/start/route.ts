@@ -5,13 +5,24 @@ import { getRequestContext } from "@cloudflare/next-on-pages";
 import { startGame, type D1Database } from "@/lib/db";
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params;
   const { env } = getRequestContext();
   const db = (env as unknown as { DB: D1Database }).DB;
-  const result = await startGame(db, token);
+
+  let mafiaCount: number | undefined;
+  try {
+    const body = await req.json();
+    if (body.mafiaCount && typeof body.mafiaCount === "number") {
+      mafiaCount = body.mafiaCount;
+    }
+  } catch {
+    // no body = use defaults
+  }
+
+  const result = await startGame(db, token, mafiaCount);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
