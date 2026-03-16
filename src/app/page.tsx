@@ -19,9 +19,22 @@ function CodeInput({
   const chars = value.padEnd(length, "").split("").slice(0, length);
 
   const handleChange = useCallback(
-    (index: number, char: string) => {
-      const cleaned = char.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    (index: number, rawValue: string) => {
+      const cleaned = rawValue.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
       if (!cleaned) return;
+
+      // Multi-char = paste via onChange (some browsers don't fire onPaste)
+      if (cleaned.length > 1) {
+        const pasted = cleaned.slice(0, length);
+        onChange(pasted);
+        const focusIdx = Math.min(pasted.length, length - 1);
+        setTimeout(() => inputRefs.current[focusIdx]?.focus(), 50);
+        if (pasted.length === length) {
+          setTimeout(() => onComplete(), 100);
+        }
+        return;
+      }
+
       const newChars = [...chars];
       newChars[index] = cleaned[0];
       const newValue = newChars.join("").replace(/ /g, "");
