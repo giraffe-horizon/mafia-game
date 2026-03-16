@@ -1806,10 +1806,10 @@ function GmActionsTab({
         </div>
       )}
 
-      {pendingPlayers.length > 0 && (phase === "night" || phase === "voting") && (
+      {alivePlayers.length > 0 && (phase === "night" || phase === "voting") && (
         <div className="mt-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
           <p className="text-primary/70 text-xs font-typewriter uppercase tracking-widest mb-3">
-            Wybierz za gracza
+            {pendingPlayers.length > 0 ? "Wybierz / zmień cel gracza" : "Zmień cel gracza"}
           </p>
           <select
             value={selectedPlayer}
@@ -1817,9 +1817,10 @@ function GmActionsTab({
             className="w-full h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 mb-2 font-typewriter"
           >
             <option value="">— Wybierz gracza —</option>
-            {pendingPlayers.map((p) => (
+            {alivePlayers.map((p) => (
               <option key={p.playerId} value={p.playerId}>
                 {p.nickname} ({ROLE_LABELS[p.role ?? "civilian"] ?? "?"})
+                {actedPlayerIds.has(p.playerId) ? " ✓" : " ⏳"}
               </option>
             ))}
           </select>
