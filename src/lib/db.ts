@@ -696,20 +696,35 @@ export async function submitAction(
   db: D1Database,
   token: string,
   actionType: string,
-  targetPlayerId?: string
+  targetPlayerId?: string,
+  forPlayerId?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const playerRow = await db
+  const callerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
     .bind(token)
     .first<GamePlayerRow>();
-  if (!playerRow) return { success: false, error: "Nie znaleziono gracza" };
-  if (!playerRow.is_alive) return { success: false, error: "Wyeliminowani gracze nie mogą działać" };
+  if (!callerRow) return { success: false, error: "Nie znaleziono gracza" };
 
   const gameRow = await db
     .prepare("SELECT * FROM games WHERE id = ?")
-    .bind(playerRow.game_id)
+    .bind(callerRow.game_id)
     .first<GameRow>();
   if (!gameRow || gameRow.status !== "playing") return { success: false, error: "Gra nie trwa" };
+
+  // GM can act on behalf of another player
+  let playerRow = callerRow;
+  if (forPlayerId && callerRow.is_host) {
+    const targetPlayer = await db
+      .prepare("SELECT * FROM game_players WHERE game_id = ? AND player_id = ?")
+      .bind(callerRow.game_id, forPlayerId)
+      .first<GamePlayerRow>();
+    if (!targetPlayer) return { success: false, error: "Gracz nie istnieje" };
+    playerRow = targetPlayer;
+  } else if (forPlayerId) {
+    return { success: false, error: "Tylko MG może działać za innych graczy" };
+  }
+
+  if (!playerRow.is_alive) return { success: false, error: "Wyeliminowani gracze nie mogą działać" };
 
   const phase = gameRow.phase as GamePhase;
   const role = playerRow.role as Role | null;
@@ -722,7 +737,6 @@ export async function submitAction(
       return { success: false, error: "Tylko detektyw może sprawdzać" };
     if (actionType === "protect" && role !== "doctor")
       return { success: false, error: "Tylko doktor może chronić" };
-    // 'wait' is the civilian smoke-screen action — always allowed at night
     if (!["kill", "investigate", "protect", "wait"].includes(actionType))
       return { success: false, error: "Nieprawidłowa akcja nocna" };
   } else if (phase === "voting") {

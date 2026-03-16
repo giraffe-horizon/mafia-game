@@ -10,13 +10,13 @@ export async function POST(
 ) {
   const { token } = await params;
   try {
-    const { type, targetPlayerId } = await req.json();
+    const { type, targetPlayerId, forPlayerId } = await req.json();
     if (!type || typeof type !== "string") {
       return NextResponse.json({ error: "Podaj typ akcji" }, { status: 400 });
     }
     const { env } = getRequestContext();
     const db = (env as unknown as { DB: D1Database }).DB;
-    const result = await submitAction(db, token, type, targetPlayerId);
+    const result = await submitAction(db, token, type, targetPlayerId, forPlayerId);
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }

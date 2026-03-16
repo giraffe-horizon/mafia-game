@@ -268,6 +268,19 @@ export default function GameClient() {
     finally { setTransferGmPending(false); }
   }
 
+  async function handleGmAction(forPlayerId: string, actionType: string, targetPlayerId: string) {
+    try {
+      const res = await fetch(`/api/game/${token}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: actionType, targetPlayerId: targetPlayerId || undefined, forPlayerId }),
+      });
+      const data = await res.json();
+      if (!res.ok) setActionError(data.error ?? "Błąd");
+      else await fetchState();
+    } catch { setActionError("Błąd połączenia"); }
+  }
+
   async function handleRematch() {
     setRematchPending(true);
     try {
@@ -671,6 +684,7 @@ export default function GameClient() {
             onMsnPresetChange={setMsnPreset}
             onCreateMission={handleCreateMission}
             hostActions={state.hostActions}
+            onGmAction={handleGmAction}
             transferGmPending={transferGmPending}
             transferGmError={transferGmError}
             onTransferGm={handleTransferGm}
@@ -1142,6 +1156,7 @@ function MGPanel({
   onMsnPresetChange,
   onCreateMission,
   hostActions,
+  onGmAction,
   transferGmPending,
   transferGmError,
   onTransferGm,
@@ -1173,6 +1188,7 @@ function MGPanel({
   onMsnPresetChange: (v: string) => void;
   onCreateMission: () => void;
   hostActions?: GameStateResponse["hostActions"];
+  onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
   transferGmPending: boolean;
   transferGmError: string;
   onTransferGm: (playerId: string) => void;
@@ -1359,34 +1375,14 @@ function MGPanel({
           </div>
         )}
 
-        {/* Actions tab — real-time player actions */}
+        {/* Actions tab — real-time player actions + GM override */}
         {tab === "actions" && (
-          <div>
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
-              Akcje graczy — bieżąca faza
-            </p>
-            {!hostActions || hostActions.length === 0 ? (
-              <p className="text-slate-600 text-sm font-typewriter text-center py-2">
-                Brak akcji w tej fazie
-              </p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {hostActions.map((a, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-black/30 border border-slate-800">
-                    <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-white text-xs font-medium">{a.nickname}</span>
-                      <span className="text-slate-500 text-xs mx-1">·</span>
-                      <span className="text-slate-400 text-xs font-typewriter">
-                        {ACTION_ROLE_LABELS[a.actionType] ?? a.actionType}
-                        {a.targetNickname ? ` ${a.targetNickname}` : ""}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <GmActionsTab
+            hostActions={hostActions}
+            players={players}
+            phase={phase}
+            onGmAction={onGmAction}
+          />
         )}
 
         {/* GM transfer tab */}
@@ -1555,6 +1551,124 @@ function EndScreen({
             </div>
           ))}
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// GM Actions Tab — view actions + act on behalf of players
+// ---------------------------------------------------------------------------
+const ACTION_ROLE_MAP: Record<string, string> = {
+  mafia: "kill",
+  detective: "investigate",
+  doctor: "protect",
+  civilian: "wait",
+};
+
+function GmActionsTab({
+  hostActions,
+  players,
+  phase,
+  onGmAction,
+}: {
+  hostActions?: GameStateResponse["hostActions"];
+  players: PublicPlayer[];
+  phase: string;
+  onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
+}) {
+  const [selectedPlayer, setSelectedPlayer] = useState<string>("");
+  const [selectedTarget, setSelectedTarget] = useState<string>("");
+
+  const alivePlayers = players.filter((p) => p.isAlive && !p.isHost);
+  const actedPlayerIds = new Set(hostActions?.map((a) => a.playerId) ?? []);
+  const pendingPlayers = alivePlayers.filter((p) => !actedPlayerIds.has(p.playerId));
+
+  const selectedPlayerData = alivePlayers.find((p) => p.playerId === selectedPlayer);
+  const actionType = selectedPlayerData?.role ? ACTION_ROLE_MAP[selectedPlayerData.role] ?? "wait" : "vote";
+  const isVoting = phase === "voting";
+
+  function handleSubmit() {
+    if (!selectedPlayer) return;
+    const type = isVoting ? "vote" : actionType;
+    onGmAction(selectedPlayer, type, selectedTarget);
+    setSelectedPlayer("");
+    setSelectedTarget("");
+  }
+
+  return (
+    <div>
+      <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
+        Akcje graczy — bieżąca faza
+      </p>
+
+      {hostActions && hostActions.length > 0 && (
+        <div className="flex flex-col gap-2 mb-4">
+          {hostActions.map((a, i) => (
+            <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-black/30 border border-slate-800">
+              <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
+              <div className="flex-1 min-w-0">
+                <span className="text-white text-xs font-medium">{a.nickname}</span>
+                <span className="text-slate-500 text-xs mx-1">→</span>
+                <span className="text-slate-400 text-xs font-typewriter">
+                  {a.targetNickname ?? "—"}
+                </span>
+              </div>
+              <span className="text-slate-600 text-xs font-typewriter">
+                {ACTION_ROLE_LABELS[a.actionType] ?? a.actionType}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {pendingPlayers.length > 0 && (phase === "night" || phase === "voting") && (
+        <div className="mt-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+          <p className="text-primary/70 text-xs font-typewriter uppercase tracking-widest mb-3">
+            Wybierz za gracza
+          </p>
+          <select
+            value={selectedPlayer}
+            onChange={(e) => { setSelectedPlayer(e.target.value); setSelectedTarget(""); }}
+            className="w-full h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 mb-2 font-typewriter"
+          >
+            <option value="">— Wybierz gracza —</option>
+            {pendingPlayers.map((p) => (
+              <option key={p.playerId} value={p.playerId}>
+                {p.nickname} ({ROLE_LABELS[p.role ?? "civilian"] ?? "?"})
+              </option>
+            ))}
+          </select>
+          {selectedPlayer && (
+            <>
+              <select
+                value={selectedTarget}
+                onChange={(e) => setSelectedTarget(e.target.value)}
+                className="w-full h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 mb-2 font-typewriter"
+              >
+                <option value="">— Wybierz cel —</option>
+                {alivePlayers
+                  .filter((p) => p.playerId !== selectedPlayer)
+                  .map((p) => (
+                    <option key={p.playerId} value={p.playerId}>{p.nickname}</option>
+                  ))}
+              </select>
+              <button
+                onClick={handleSubmit}
+                disabled={!selectedTarget && actionType !== "wait"}
+                className="w-full h-10 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-bold font-typewriter uppercase tracking-wider transition-all disabled:opacity-40"
+              >
+                Zatwierdź
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {pendingPlayers.length === 0 && hostActions && hostActions.length > 0 && (
+        <p className="text-green-500/60 text-xs font-typewriter text-center mt-2">
+          ✓ Wszyscy oddali akcje
+        </p>
+      )}
     </div>
   );
 }
