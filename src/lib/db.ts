@@ -381,12 +381,13 @@ export async function getGameState(
       isAlive: p.is_alive === 1,
       isHost: p.is_host === 1,
       // Host sees all roles; player sees own role during game; mafia sees teammates;
-      // roles visible to all when finished
+      // dead players see all roles; roles visible to all when finished
       role:
         isHost ||
         gameRow.status === "finished" ||
         (gameRow.status === "playing" && p.token === token) ||
-        (gameRow.status === "playing" && playerRow.role === "mafia" && p.role === "mafia")
+        (gameRow.status === "playing" && playerRow.role === "mafia" && p.role === "mafia") ||
+        (gameRow.status === "playing" && !playerRow.is_alive)
           ? (p.role as Role | null)
           : null,
       isYou: p.token === token,
