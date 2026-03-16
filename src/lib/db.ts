@@ -153,10 +153,11 @@ export interface GameStateResponse {
 // Helpers
 // ---------------------------------------------------------------------------
 function generateSessionCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  // 6 chars, easy to read/type: no 0/O, no 1/I/L, no 5/S, no 8/B
+  const chars = "ACDEFGHJKMNPQRTUVWXY234679";
   let s = "";
-  for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return "MAFIA-" + s;
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
 }
 
 function now(): string {
