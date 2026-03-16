@@ -129,6 +129,12 @@ export interface GameStateResponse {
     targetPlayerId: string | null;
     targetNickname: string | null;
   }[];
+  // Voting phase: live tally visible to all
+  voteTally?: {
+    totalVoters: number;
+    votedCount: number;
+    results: { nickname: string; playerId: string; votes: number }[];
+  };
   // Host only: all actions in current round/phase
   hostActions?: {
     playerId: string;
@@ -405,8 +411,39 @@ export async function getGameState(
         }
       : null,
     mafiaTeamActions: await getMafiaTeamActions(db, playerRow, gameRow, allPlayers),
+    voteTally: await getVoteTally(db, gameRow, allPlayers),
     hostActions,
     hostMissions,
+  };
+}
+
+async function getVoteTally(
+  db: D1Database,
+  gameRow: GameRow,
+  allPlayers: GamePlayerRow[]
+): Promise<GameStateResponse["voteTally"]> {
+  if (gameRow.phase !== "voting") return undefined;
+
+  const aliveNonHost = allPlayers.filter((p) => p.is_alive && !p.is_host);
+  const totalVoters = aliveNonHost.length;
+
+  const { results: votes } = await db
+    .prepare(
+      "SELECT target_player_id, COUNT(*) as vote_count FROM game_actions WHERE game_id = ? AND round = ? AND phase = 'voting' AND action_type = 'vote' AND target_player_id IS NOT NULL GROUP BY target_player_id ORDER BY vote_count DESC"
+    )
+    .bind(gameRow.id, gameRow.round)
+    .all<{ target_player_id: string; vote_count: number }>();
+
+  const votedCount = votes.reduce((sum, v) => sum + v.vote_count, 0);
+
+  return {
+    totalVoters,
+    votedCount,
+    results: votes.map((v) => ({
+      playerId: v.target_player_id,
+      nickname: allPlayers.find((p) => p.player_id === v.target_player_id)?.nickname ?? "?",
+      votes: v.vote_count,
+    })),
   };
 }
 
