@@ -2,6 +2,7 @@ node_modules/
 .next/
 .worker-next/
 .open-next/
+.vercel/
 out/
 .env
 .env.local
