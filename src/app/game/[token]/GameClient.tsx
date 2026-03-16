@@ -93,6 +93,13 @@ export default function GameClient() {
   // Decision changing (must be before conditional returns!)
   const [changingDecision, setChangingDecision] = useState(false);
 
+  // Reset changingDecision when phase changes (must be before conditional returns!)
+  const currentPhase = state?.game?.phase;
+  const currentRound = state?.game?.round;
+  useEffect(() => {
+    setChangingDecision(false);
+  }, [currentPhase, currentRound]);
+
   // MG: message form
   const [msgTarget, setMsgTarget] = useState("");
   const [msgContent, setMsgContent] = useState("");
@@ -350,11 +357,6 @@ export default function GameClient() {
   const isFinished = game.status === "finished";
   const phase = game.phase;
   const myAction = changingDecision ? null : state.myAction;
-
-  // Reset changingDecision when phase changes
-  useEffect(() => {
-    setChangingDecision(false);
-  }, [phase, game.round]);
 
   const actionTargets = players.filter((p) => p.isAlive && !p.isYou && !p.isHost);
   const nonHostPlayers = players.filter((p) => !p.isHost);
