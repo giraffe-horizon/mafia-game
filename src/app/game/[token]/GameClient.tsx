@@ -988,7 +988,7 @@ function PlayerRow({
   return (
     <div
       className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-        player.isYou
+        false
           ? "border-primary/40 bg-primary/5"
           : "border-slate-800 bg-black/20"
       } ${!player.isAlive ? "opacity-40" : ""}`}
@@ -1007,7 +1007,7 @@ function PlayerRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
-          {player.isYou && <span className="text-xs text-primary font-typewriter">(ty)</span>}
+          
           {player.isHost && (
             <span className="text-xs text-primary/70 font-typewriter uppercase">MG</span>
           )}
@@ -1787,7 +1787,7 @@ function EndScreen({
                 {p.role ? ROLE_ICONS[p.role] : "person"}
               </span>
               <span className="text-white text-sm flex-1">{p.nickname}</span>
-              {p.isYou && <span className="text-xs text-primary font-typewriter">(ty)</span>}
+              
               {p.role && (
                 <span
                   className={`text-xs font-typewriter font-bold uppercase px-2 py-0.5 rounded border ${
