@@ -286,6 +286,17 @@ export default function GameClient() {
     finally { setTransferGmPending(false); }
   }
 
+  async function handleKick(playerId: string) {
+    try {
+      const res = await fetch(`/api/game/${token}/kick`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId }),
+      });
+      if (res.ok) await fetchState();
+    } catch { /* silent */ }
+  }
+
   async function handleGmAction(forPlayerId: string, actionType: string, targetPlayerId: string) {
     try {
       const res = await fetch(`/api/game/${token}/action`, {
@@ -878,9 +889,11 @@ export default function GameClient() {
                 player={p}
                 isGamePlaying={isPlaying || isFinished}
                 isFinished={isFinished}
+                isLobby={isLobby}
                 isHost={isHost}
                 currentPlayerRole={currentPlayer.role}
                 roleVisible={roleVisible}
+                onKick={isLobby && isHost ? handleKick : undefined}
               />
             ))}
           </div>
@@ -1002,16 +1015,20 @@ function PlayerRow({
   player,
   isGamePlaying,
   isFinished,
+  isLobby,
   isHost,
   currentPlayerRole,
   roleVisible,
+  onKick,
 }: {
   player: PublicPlayer;
   isGamePlaying: boolean;
   isFinished: boolean;
+  isLobby: boolean;
   isHost: boolean;
   currentPlayerRole?: string | null;
   roleVisible?: boolean;
+  onKick?: (playerId: string) => void;
 }) {
   // Determine if we show role badge and what color
   const showRoleBadge =
@@ -1090,6 +1107,15 @@ function PlayerRow({
         >
           {ROLE_LABELS[player.role]}
         </span>
+      )}
+      {isLobby && isHost && !player.isHost && onKick && (
+        <button
+          onClick={() => onKick(player.playerId)}
+          className="size-8 flex items-center justify-center rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-950/30 transition-all"
+          title="Usuń gracza"
+        >
+          <span className="material-symbols-outlined text-[16px]">close</span>
+        </button>
       )}
     </div>
   );

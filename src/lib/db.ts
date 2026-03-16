@@ -937,6 +937,36 @@ export async function sendMessage(
 }
 
 // ---------------------------------------------------------------------------
+// kickPlayer  (host only, lobby only)
+// ---------------------------------------------------------------------------
+export async function kickPlayer(
+  db: D1Database,
+  token: string,
+  targetPlayerId: string
+): Promise<{ success: boolean; error?: string }> {
+  const playerRow = await db
+    .prepare("SELECT * FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<GamePlayerRow>();
+  if (!playerRow?.is_host) return { success: false, error: "Tylko MG może usuwać graczy" };
+
+  const gameRow = await db
+    .prepare("SELECT * FROM games WHERE id = ?")
+    .bind(playerRow.game_id)
+    .first<GameRow>();
+  if (!gameRow || gameRow.status !== "lobby") return { success: false, error: "Można usuwać graczy tylko w lobby" };
+
+  if (targetPlayerId === playerRow.player_id) return { success: false, error: "Nie możesz usunąć siebie" };
+
+  await db
+    .prepare("DELETE FROM game_players WHERE game_id = ? AND player_id = ?")
+    .bind(playerRow.game_id, targetPlayerId)
+    .run();
+
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
 // createMission  (host only)
 // ---------------------------------------------------------------------------
 export async function createMission(
