@@ -613,7 +613,7 @@ export default function GameClient() {
         {/* ── VOTING: vote panel for players ── */}
         {isPlaying && !isHost && phase === "voting" && currentPlayer.isAlive && (
           <VotePanel
-            targets={players.filter((p) => p.isAlive && !p.isYou)}
+            targets={players.filter((p) => p.isAlive && !p.isYou && !p.isHost)}
             myAction={myAction}
             pending={actionPending}
             error={actionError}
