@@ -13,16 +13,20 @@ export async function POST(
   const db = (env as unknown as { DB: D1Database }).DB;
 
   let mafiaCount: number | undefined;
+  let mode: "full" | "simple" = "full";
   try {
     const body = await req.json();
     if (body.mafiaCount && typeof body.mafiaCount === "number") {
       mafiaCount = body.mafiaCount;
     }
+    if (body.mode === "simple") {
+      mode = "simple";
+    }
   } catch {
     // no body = use defaults
   }
 
-  const result = await startGame(db, token, mafiaCount);
+  const result = await startGame(db, token, mafiaCount, mode);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

@@ -89,6 +89,7 @@ export default function GameClient() {
   // MG: start game
   const [starting, setStarting] = useState(false);
   const [mafiaCount, setMafiaCount] = useState(0); // 0 = auto
+  const [gameMode, setGameMode] = useState<"full" | "simple">("full");
 
   // Decision changing (must be before conditional returns!)
   const [changingDecision, setChangingDecision] = useState(false);
@@ -166,10 +167,13 @@ export default function GameClient() {
   async function handleStart() {
     setStarting(true);
     try {
-      const body = mafiaCount > 0 ? JSON.stringify({ mafiaCount }) : undefined;
+      const bodyObj: Record<string, unknown> = { mode: gameMode };
+      if (mafiaCount > 0) bodyObj.mafiaCount = mafiaCount;
+      const body = JSON.stringify(bodyObj);
       const res = await fetch(`/api/game/${token}/start`, {
         method: "POST",
-        ...(body ? { headers: { "Content-Type": "application/json" }, body } : {}),
+        headers: { "Content-Type": "application/json" },
+        body,
       });
       const data = await res.json();
       if (!res.ok) setError(data.error ?? "Błąd");
@@ -753,13 +757,46 @@ export default function GameClient() {
         {/* ── Lobby: Transfer GM + Start button ── */}
         {isHost && isLobby && (
           <div className="mx-5 mt-6 flex flex-col gap-3">
-            {players.length < 4 && (
+            {players.length < (gameMode === "simple" ? 2 : 4) && (
               <p className="text-slate-500 text-sm font-typewriter text-center">
-                Potrzeba minimum 4 graczy ({players.length}/4)
+                Potrzeba minimum {gameMode === "simple" ? 2 : 4} graczy ({players.length}/{gameMode === "simple" ? 2 : 4})
               </p>
             )}
+            {/* Game mode selector */}
+            <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
+              <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
+                Tryb gry
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setGameMode("full")}
+                  className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-typewriter border transition-all text-center ${
+                    gameMode === "full"
+                      ? "bg-primary/20 border-primary/50 text-primary"
+                      : "border-slate-700 text-slate-400 hover:border-slate-500"
+                  }`}
+                >
+                  <span className="block font-bold">Pełny</span>
+                  <span className="block text-xs opacity-60 mt-0.5">Mafia + Policjant + Lekarz</span>
+                  <span className="block text-xs opacity-40">min. 4 graczy</span>
+                </button>
+                <button
+                  onClick={() => setGameMode("simple")}
+                  className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-typewriter border transition-all text-center ${
+                    gameMode === "simple"
+                      ? "bg-primary/20 border-primary/50 text-primary"
+                      : "border-slate-700 text-slate-400 hover:border-slate-500"
+                  }`}
+                >
+                  <span className="block font-bold">Uproszczony</span>
+                  <span className="block text-xs opacity-60 mt-0.5">Mafia vs Cywile</span>
+                  <span className="block text-xs opacity-40">min. 2 graczy</span>
+                </button>
+              </div>
+            </div>
+
             {/* Mafia count selector */}
-            {players.length >= 4 && (
+            {players.length >= (gameMode === "simple" ? 2 : 4) && (
               <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
                 <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
                   Liczba mafii
@@ -798,7 +835,7 @@ export default function GameClient() {
             )}
             <button
               onClick={handleStart}
-              disabled={starting || players.length < 4}
+              disabled={starting || players.length < (gameMode === "simple" ? 2 : 4)}
               className="flex w-full items-center justify-center rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-typewriter uppercase tracking-wider"
             >
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>

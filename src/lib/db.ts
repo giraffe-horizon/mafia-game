@@ -441,12 +441,28 @@ async function getMafiaTeamActions(
 // Default mafia proportions:
 // 4-5 players: 1 mafia, 6-8: 2 mafia, 9-11: 3 mafia, 12+: 4 mafia
 // Always: 1 detective, 1 doctor, rest civilians
-function buildRoles(n: number, customMafiaCount?: number): Role[] {
+// mode: "full" = mafia + detective + doctor + civilians (min 4 players)
+//       "simple" = mafia + civilians only (min 2 players, no special roles)
+function buildRoles(n: number, customMafiaCount?: number, mode: "full" | "simple" = "full"): Role[] {
   let mafiaCount: number;
+
+  if (mode === "simple") {
+    // Simple mode: just mafia vs civilians, no special roles
+    if (customMafiaCount !== undefined && customMafiaCount >= 1 && customMafiaCount <= n - 1) {
+      mafiaCount = customMafiaCount;
+    } else {
+      mafiaCount = Math.max(1, Math.floor(n / 3));
+    }
+    return [
+      ...Array<Role>(mafiaCount).fill("mafia"),
+      ...Array<Role>(n - mafiaCount).fill("civilian"),
+    ];
+  }
+
+  // Full mode: mafia + detective + doctor + civilians
   if (customMafiaCount !== undefined && customMafiaCount >= 1 && customMafiaCount <= n - 3) {
     mafiaCount = customMafiaCount;
   } else {
-    // Balanced defaults: ~25% mafia, min 1
     if (n <= 5) mafiaCount = 1;
     else if (n <= 8) mafiaCount = 2;
     else if (n <= 11) mafiaCount = 3;
@@ -463,7 +479,8 @@ function buildRoles(n: number, customMafiaCount?: number): Role[] {
 export async function startGame(
   db: D1Database,
   token: string,
-  customMafiaCount?: number
+  customMafiaCount?: number,
+  mode: "full" | "simple" = "full"
 ): Promise<{ success: boolean; error?: string }> {
   const playerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
@@ -484,10 +501,11 @@ export async function startGame(
     .bind(playerRow.game_id)
     .all<{ player_id: string }>();
 
-  if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy (nie licząc MG)" };
+  const minPlayers = mode === "simple" ? 2 : 4;
+  if (players.length < minPlayers) return { success: false, error: `Potrzeba minimum ${minPlayers} graczy (nie licząc MG)` };
 
   const n = players.length;
-  const roles = buildRoles(n, customMafiaCount);
+  const roles = buildRoles(n, customMafiaCount, mode);
 
   // Fisher-Yates shuffle
   for (let i = roles.length - 1; i > 0; i--) {
@@ -495,11 +513,10 @@ export async function startGame(
     [roles[i], roles[j]] = [roles[j], roles[i]];
   }
 
+  // Save mode in game config for rematch
   await db.batch([
-    db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1 WHERE id = ?").bind(
-      playerRow.game_id
-    ),
-    // GM gets no role (stays NULL)
+    db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1, config = ? WHERE id = ?")
+      .bind(JSON.stringify({ mode }), playerRow.game_id),
     db.prepare("UPDATE game_players SET role = 'gm' WHERE game_id = ? AND player_id = ?")
       .bind(playerRow.game_id, playerRow.player_id),
     ...players.map((p, i) =>
@@ -936,7 +953,8 @@ export async function transferGm(
 export async function rematch(
   db: D1Database,
   token: string,
-  customMafiaCount?: number
+  customMafiaCount?: number,
+  mode?: "full" | "simple"
 ): Promise<{ success: boolean; error?: string }> {
   const playerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
@@ -957,20 +975,23 @@ export async function rematch(
     .bind(playerRow.game_id)
     .all<{ player_id: string }>();
 
-  if (players.length < 4) return { success: false, error: "Potrzeba minimum 4 graczy (nie licząc MG)" };
+  // Use provided mode, or fallback to saved config, or default "full"
+  const savedConfig = JSON.parse(gameRow.config || "{}");
+  const effectiveMode = mode ?? savedConfig.mode ?? "full";
+  const minPlayers = effectiveMode === "simple" ? 2 : 4;
+  if (players.length < minPlayers) return { success: false, error: `Potrzeba minimum ${minPlayers} graczy (nie licząc MG)` };
 
   const n = players.length;
-  const roles = buildRoles(n, customMafiaCount);
+  const roles = buildRoles(n, customMafiaCount, effectiveMode);
   for (let i = roles.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [roles[i], roles[j]] = [roles[j], roles[i]];
   }
 
   await db.batch([
-    // Clear missions from previous round
     db.prepare("DELETE FROM missions WHERE game_id = ?").bind(playerRow.game_id),
-    db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1, winner = NULL WHERE id = ?")
-      .bind(playerRow.game_id),
+    db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1, winner = NULL, config = ? WHERE id = ?")
+      .bind(JSON.stringify({ mode: effectiveMode }), playerRow.game_id),
     db.prepare("UPDATE game_players SET role = 'gm', is_alive = 1 WHERE game_id = ? AND player_id = ?")
       .bind(playerRow.game_id, playerRow.player_id),
     ...players.map((p, i) =>
