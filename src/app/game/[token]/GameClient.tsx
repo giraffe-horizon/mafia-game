@@ -778,7 +778,7 @@ export default function GameClient() {
         {/* ── Lobby: Transfer GM + Start button ── */}
         {isHost && isLobby && (
           <div className="mx-5 mt-6 flex flex-col gap-3">
-            {players.length < (gameMode === "simple" ? 3 : 5) && (
+            {nonHostPlayers.length < (gameMode === "simple" ? 3 : 5) && (
               <p className="text-slate-500 text-sm font-typewriter text-center">
                 Potrzeba minimum {gameMode === "simple" ? 3 : 5} graczy ({players.length}/{gameMode === "simple" ? 3 : 5})
               </p>
@@ -817,7 +817,7 @@ export default function GameClient() {
             </div>
 
             {/* Mafia count selector */}
-            {players.length >= (gameMode === "simple" ? 3 : 5) && (
+            {nonHostPlayers.length >= (gameMode === "simple" ? 3 : 5) && (
               <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
                 <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
                   Liczba mafii
@@ -849,14 +849,21 @@ export default function GameClient() {
                     )
                   )}
                 </div>
-                <p className="text-slate-600 text-xs mt-2">
-                  + 1 policjant, 1 lekarz, reszta cywile
-                </p>
+                {gameMode === "full" && (
+                  <p className="text-slate-600 text-xs mt-2">
+                    + 1 policjant, 1 lekarz, reszta cywile
+                  </p>
+                )}
+                {gameMode === "simple" && (
+                  <p className="text-slate-600 text-xs mt-2">
+                    reszta cywile
+                  </p>
+                )}
               </div>
             )}
             <button
               onClick={handleStart}
-              disabled={starting || players.length < (gameMode === "simple" ? 3 : 5)}
+              disabled={starting || nonHostPlayers.length < (gameMode === "simple" ? 3 : 5)}
               className="flex w-full items-center justify-center rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-typewriter uppercase tracking-wider"
             >
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
@@ -1615,7 +1622,7 @@ function MGPanel({
               ))}
             </div>
             <p className="text-slate-600 text-xs mt-2">
-              + 1 policjant, 1 lekarz, reszta cywile
+              reszta cywile
             </p>
           </div>
         )}
