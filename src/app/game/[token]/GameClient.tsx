@@ -1008,47 +1008,8 @@ function NightActionPanel({
     mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
     detective: { type: "investigate", label: "Kogo przesłuchać?", icon: "search", color: "text-blue-400" },
     doctor: { type: "protect", label: "Kogo chronić tej nocy?", icon: "medical_services", color: "text-green-400" },
+    civilian: { type: "wait", label: "Kogo obserwujesz?", icon: "visibility", color: "text-slate-400" },
   };
-
-  // Civilian smoke screen
-  const [progress, setProgress] = useState(0);
-  const [smokeStarted, setSmokeStarted] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
-
-  function startCivilianWait() {
-    if (smokeStarted || myAction) return;
-    setSmokeStarted(true);
-    const duration = 8000;
-    const step = 100;
-    let elapsed = 0;
-    timerRef.current = setInterval(() => {
-      elapsed += step;
-      const pct = Math.min((elapsed / duration) * 100, 100);
-      setProgress(pct);
-      if (elapsed >= duration) {
-        if (timerRef.current) clearInterval(timerRef.current);
-        onAction("wait", "");
-      }
-    }, step);
-  }
-
-  // Civilian confirmation — myAction with 'wait'
-  if (myAction && myAction.actionType === "wait") {
-    return (
-      <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-slate-700">
-        <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-1">
-          Czekasz w ukryciu...
-        </p>
-        <p className="text-slate-600 text-sm">Ssssh. Udajesz że śpisz.</p>
-      </div>
-    );
-  }
 
   if (myAction) {
     const targetName = targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ?? myAction.targetPlayerId;
@@ -1073,44 +1034,6 @@ function NightActionPanel({
           <span className="material-symbols-outlined text-[14px]">edit</span>
           Zmień decyzję
         </button>
-      </div>
-    );
-  }
-
-  // Civilian: show smoke screen
-  if (role === "civilian") {
-    return (
-      <div className="mx-5 mt-4 p-5 rounded-xl bg-black/50 border border-slate-700">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="material-symbols-outlined text-[28px] text-slate-500">bedtime</span>
-          <div>
-            <p className="text-slate-300 font-typewriter text-sm uppercase tracking-widest">
-              Zamknij oczy i czekaj...
-            </p>
-            <p className="text-slate-600 text-xs mt-0.5">Noc trwa. Nie zdradzaj swojej roli.</p>
-          </div>
-        </div>
-        {smokeStarted ? (
-          <div>
-            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mb-2">
-              <div
-                className="h-full bg-slate-600 rounded-full transition-all duration-100"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <p className="text-slate-600 text-xs font-typewriter text-center">
-              {progress < 100 ? "Modlisz się w ciemności..." : "Zakończono"}
-            </p>
-          </div>
-        ) : (
-          <button
-            onClick={startCivilianWait}
-            className="w-full flex items-center justify-center gap-2 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 font-typewriter uppercase tracking-wider text-sm transition-all"
-          >
-            <span className="material-symbols-outlined text-[16px]">self_improvement</span>
-            Zacznij czekać
-          </button>
-        )}
       </div>
     );
   }
