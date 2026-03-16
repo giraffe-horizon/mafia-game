@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
-import { MISSION_PRESETS, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/missions-presets";
+import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
 
 // ---------------------------------------------------------------------------
 // Lookup tables
@@ -128,7 +128,9 @@ export default function GameClient() {
   const [mafiaCountSetting, setMafiaCountSetting] = useState(0); // 0 = auto
 
   // MG panel tab
-  const [mgTab, setMgTab] = useState<"phase" | "message" | "mission" | "actions" | "gm" | "settings">("phase");
+  const [mgTab, setMgTab] = useState<
+    "phase" | "message" | "mission" | "actions" | "gm" | "settings"
+  >("phase");
 
   // ---------------------------------------------------------------------------
   // Polling
@@ -136,7 +138,10 @@ export default function GameClient() {
   const fetchState = useCallback(async () => {
     try {
       const res = await fetch(`/api/game/${token}/state`);
-      if (res.status === 404) { setError("Sesja nie istnieje"); return; }
+      if (res.status === 404) {
+        setError("Sesja nie istnieje");
+        return;
+      }
       if (!res.ok) return;
       const data: GameStateResponse = await res.json();
       setState(data);
@@ -179,8 +184,11 @@ export default function GameClient() {
       const data = await res.json();
       if (!res.ok) setError(data.error ?? "Błąd");
       else await fetchState();
-    } catch { setError("Błąd połączenia"); }
-    finally { setStarting(false); }
+    } catch {
+      setError("Błąd połączenia");
+    } finally {
+      setStarting(false);
+    }
   }
 
   async function handlePhase(newPhase: string) {
@@ -194,8 +202,11 @@ export default function GameClient() {
       const data = await res.json();
       if (!res.ok) setError(data.error ?? "Błąd zmiany fazy");
       else await fetchState();
-    } catch { setError("Błąd połączenia"); }
-    finally { setPhasePending(false); }
+    } catch {
+      setError("Błąd połączenia");
+    } finally {
+      setPhasePending(false);
+    }
   }
 
   async function handleAction(actionType: string, targetPlayerId: string) {
@@ -210,8 +221,11 @@ export default function GameClient() {
       const data = await res.json();
       if (!res.ok) setActionError(data.error ?? "Błąd");
       else await fetchState();
-    } catch { setActionError("Błąd połączenia"); }
-    finally { setActionPending(false); }
+    } catch {
+      setActionError("Błąd połączenia");
+    } finally {
+      setActionPending(false);
+    }
   }
 
   async function handleVote(targetPlayerId: string) {
@@ -230,9 +244,15 @@ export default function GameClient() {
       });
       const data = await res.json();
       if (!res.ok) setMsgError(data.error ?? "Błąd");
-      else { setMsgContent(""); await fetchState(); }
-    } catch { setMsgError("Błąd połączenia"); }
-    finally { setMsgPending(false); }
+      else {
+        setMsgContent("");
+        await fetchState();
+      }
+    } catch {
+      setMsgError("Błąd połączenia");
+    } finally {
+      setMsgPending(false);
+    }
   }
 
   async function handleCreateMission() {
@@ -259,15 +279,20 @@ export default function GameClient() {
         setMsnPoints(1);
         setMsnPreset("custom");
       }
-    } catch { setMsnError("Błąd połączenia"); }
-    finally { setMsnPending(false); }
+    } catch {
+      setMsnError("Błąd połączenia");
+    } finally {
+      setMsnPending(false);
+    }
   }
 
   async function handleCompleteMission(missionId: string) {
     try {
       await fetch(`/api/game/${token}/mission/${missionId}/complete`, { method: "POST" });
       await fetchState();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   async function handleTransferGm(newHostPlayerId: string) {
@@ -282,8 +307,11 @@ export default function GameClient() {
       const data = await res.json();
       if (!res.ok) setTransferGmError(data.error ?? "Błąd");
       else await fetchState();
-    } catch { setTransferGmError("Błąd połączenia"); }
-    finally { setTransferGmPending(false); }
+    } catch {
+      setTransferGmError("Błąd połączenia");
+    } finally {
+      setTransferGmPending(false);
+    }
   }
 
   async function handleKick(playerId: string) {
@@ -294,7 +322,9 @@ export default function GameClient() {
         body: JSON.stringify({ playerId }),
       });
       if (res.ok) await fetchState();
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 
   async function handleGmAction(forPlayerId: string, actionType: string, targetPlayerId: string) {
@@ -302,18 +332,25 @@ export default function GameClient() {
       const res = await fetch(`/api/game/${token}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: actionType, targetPlayerId: targetPlayerId || undefined, forPlayerId }),
+        body: JSON.stringify({
+          type: actionType,
+          targetPlayerId: targetPlayerId || undefined,
+          forPlayerId,
+        }),
       });
       const data = await res.json();
       if (!res.ok) setActionError(data.error ?? "Błąd");
       else await fetchState();
-    } catch { setActionError("Błąd połączenia"); }
+    } catch {
+      setActionError("Błąd połączenia");
+    }
   }
 
   async function handleRematch() {
     setRematchPending(true);
     try {
-      const body = mafiaCountSetting > 0 ? JSON.stringify({ mafiaCount: mafiaCountSetting }) : undefined;
+      const body =
+        mafiaCountSetting > 0 ? JSON.stringify({ mafiaCount: mafiaCountSetting }) : undefined;
       const res = await fetch(`/api/game/${token}/rematch`, {
         method: "POST",
         ...(body ? { headers: { "Content-Type": "application/json" }, body } : {}),
@@ -321,15 +358,20 @@ export default function GameClient() {
       const data = await res.json();
       if (!res.ok) setError(data.error ?? "Błąd");
       else await fetchState();
-    } catch { setError("Błąd połączenia"); }
-    finally { setRematchPending(false); }
+    } catch {
+      setError("Błąd połączenia");
+    } finally {
+      setRematchPending(false);
+    }
   }
 
   async function handleDeleteMission(missionId: string) {
     try {
       await fetch(`/api/game/${token}/mission/${missionId}`, { method: "DELETE" });
       await fetchState();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   function copyCode() {
@@ -360,8 +402,12 @@ export default function GameClient() {
   if (!state) {
     return (
       <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark md:mx-auto md:my-8 md:rounded-[2.5rem]">
-        <span className="material-symbols-outlined text-[40px] text-primary animate-spin mb-4">refresh</span>
-        <p className="text-slate-400 font-typewriter uppercase tracking-widest text-sm">Ładowanie...</p>
+        <span className="material-symbols-outlined text-[40px] text-primary animate-spin mb-4">
+          refresh
+        </span>
+        <p className="text-slate-400 font-typewriter uppercase tracking-widest text-sm">
+          Ładowanie...
+        </p>
       </div>
     );
   }
@@ -397,7 +443,9 @@ export default function GameClient() {
               className="bg-slate-900 border border-primary/30 rounded-xl px-4 py-3 shadow-lg pointer-events-auto"
             >
               <div className="flex items-start gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0">mail</span>
+                <span className="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0">
+                  mail
+                </span>
                 <p className="text-white text-sm font-typewriter">{t.content}</p>
                 <button
                   onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
@@ -452,7 +500,6 @@ export default function GameClient() {
 
       {/* Scrollable content */}
       <div className="relative z-10 flex-1 flex flex-col overflow-y-auto pb-6">
-
         {/* ── LOBBY ── */}
         {isLobby && (
           <>
@@ -479,11 +526,13 @@ export default function GameClient() {
                 <button
                   onClick={() => {
                     if (navigator.share) {
-                      navigator.share({
-                        title: "Dołącz do Mafii!",
-                        text: `Dołącz do gry Mafia! Kod: ${game.code}`,
-                        url: joinUrl,
-                      }).catch(() => {});
+                      navigator
+                        .share({
+                          title: "Dołącz do Mafii!",
+                          text: `Dołącz do gry Mafia! Kod: ${game.code}`,
+                          url: joinUrl,
+                        })
+                        .catch(() => {});
                     } else {
                       navigator.clipboard.writeText(joinUrl);
                       setCopied(true);
@@ -502,12 +551,7 @@ export default function GameClient() {
                     Zeskanuj aby dołączyć
                   </p>
                   <div className="p-3 bg-white rounded-xl">
-                    <QRCode
-                      value={joinUrl}
-                      size={160}
-                      bgColor="#ffffff"
-                      fgColor="#1a0c0c"
-                    />
+                    <QRCode value={joinUrl} size={160} bgColor="#ffffff" fgColor="#1a0c0c" />
                   </div>
                   <p className="text-slate-700 text-[10px] font-typewriter text-center mt-1 break-all px-2">
                     {joinUrl}
@@ -630,7 +674,9 @@ export default function GameClient() {
           <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-slate-700">
             <div className="flex items-center justify-between mb-3">
               <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest">
-                <span className="material-symbols-outlined text-[12px] align-middle mr-1">how_to_vote</span>
+                <span className="material-symbols-outlined text-[12px] align-middle mr-1">
+                  how_to_vote
+                </span>
                 Głosy na żywo
               </p>
               <span className="text-slate-500 text-xs font-typewriter">
@@ -650,9 +696,11 @@ export default function GameClient() {
                         style={{ width: `${(r.votes / state.voteTally!.totalVoters) * 100}%` }}
                       />
                     </div>
-                    <span className={`text-sm font-bold font-typewriter min-w-[2rem] text-right ${
-                      i === 0 ? "text-primary" : "text-slate-500"
-                    }`}>
+                    <span
+                      className={`text-sm font-bold font-typewriter min-w-[2rem] text-right ${
+                        i === 0 ? "text-primary" : "text-slate-500"
+                      }`}
+                    >
                       {r.votes}
                     </span>
                   </div>
@@ -678,7 +726,8 @@ export default function GameClient() {
                 <div key={i} className="flex items-center justify-between text-sm">
                   <span className="text-red-300/80">{a.nickname}</span>
                   <span className="text-slate-500">
-                    → {a.targetNickname ?? <span className="italic text-slate-600">wybiera...</span>}
+                    →{" "}
+                    {a.targetNickname ?? <span className="italic text-slate-600">wybiera...</span>}
                   </span>
                 </div>
               ))}
@@ -721,17 +770,27 @@ export default function GameClient() {
                   className={`p-3 rounded-lg border ${m.isCompleted ? "bg-green-950/20 border-green-900/40 opacity-70" : "bg-black/40 border-yellow-900/40"}`}
                 >
                   <div className="flex items-start gap-2">
-                    <span className={`material-symbols-outlined text-[18px] mt-0.5 shrink-0 ${m.isCompleted ? "text-green-400" : "text-yellow-500"}`}>
+                    <span
+                      className={`material-symbols-outlined text-[18px] mt-0.5 shrink-0 ${m.isCompleted ? "text-green-400" : "text-yellow-500"}`}
+                    >
                       {m.isCompleted ? "check_circle" : "task"}
                     </span>
-                    <p className={`text-sm flex-1 ${m.isCompleted ? "text-slate-400 line-through" : "text-white"}`}>{m.description}</p>
+                    <p
+                      className={`text-sm flex-1 ${m.isCompleted ? "text-slate-400 line-through" : "text-white"}`}
+                    >
+                      {m.description}
+                    </p>
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       {m.points > 0 && (
-                        <span className={`text-xs font-typewriter font-bold ${m.isCompleted ? "text-green-400" : "text-yellow-400"}`}>
+                        <span
+                          className={`text-xs font-typewriter font-bold ${m.isCompleted ? "text-green-400" : "text-yellow-400"}`}
+                        >
                           +{m.points}pkt
                         </span>
                       )}
-                      <span className={`text-[10px] font-typewriter uppercase tracking-wider ${m.isCompleted ? "text-green-500" : "text-slate-600"}`}>
+                      <span
+                        className={`text-[10px] font-typewriter uppercase tracking-wider ${m.isCompleted ? "text-green-500" : "text-slate-600"}`}
+                      >
                         {m.isCompleted ? "✓ wykonana" : "⏳ w trakcie"}
                       </span>
                     </div>
@@ -745,7 +804,9 @@ export default function GameClient() {
         {/* ── PLAYING: day message for non-host ── */}
         {isPlaying && !isHost && phase === "day" && (
           <div className="mx-5 mt-4 p-4 rounded-xl bg-black/30 border border-slate-800 text-center">
-            <span className="material-symbols-outlined text-[28px] text-yellow-500/60 mb-1 block">wb_sunny</span>
+            <span className="material-symbols-outlined text-[28px] text-yellow-500/60 mb-1 block">
+              wb_sunny
+            </span>
             <p className="text-slate-500 font-typewriter uppercase tracking-widest text-xs">
               Dzień — dyskutujcie i szukajcie mafii
             </p>
@@ -756,45 +817,51 @@ export default function GameClient() {
         {isPlaying && phase === "review" && isHost && (
           <div className="mx-5 mt-5 p-5 rounded-xl bg-amber-950/20 border border-amber-700/30">
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-[28px] text-amber-400">rate_review</span>
+              <span className="material-symbols-outlined text-[28px] text-amber-400">
+                rate_review
+              </span>
               <div>
                 <p className="font-typewriter text-amber-400 text-sm font-bold uppercase tracking-widest">
                   Przegląd misji
                 </p>
-                <p className="text-slate-500 text-xs mt-0.5">
-                  Oceń misje przed zakończeniem rundy
-                </p>
+                <p className="text-slate-500 text-xs mt-0.5">Oceń misje przed zakończeniem rundy</p>
               </div>
             </div>
-            {state.hostMissions?.filter((m) => !m.isCompleted).map((m) => (
-              <div key={m.id} className="flex items-center gap-3 p-3 mb-2 rounded-lg bg-black/30 border border-slate-800">
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium">{m.playerNickname}</p>
-                  <p className="text-slate-400 text-xs mt-0.5">{m.description}</p>
-                  <p className="text-slate-600 text-xs">{m.points} pkt</p>
+            {state.hostMissions
+              ?.filter((m) => !m.isCompleted)
+              .map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-center gap-3 p-3 mb-2 rounded-lg bg-black/30 border border-slate-800"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium">{m.playerNickname}</p>
+                    <p className="text-slate-400 text-xs mt-0.5">{m.description}</p>
+                    <p className="text-slate-600 text-xs">{m.points} pkt</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCompleteMission(m.id)}
+                      className="size-9 flex items-center justify-center rounded-lg bg-green-900/30 border border-green-700/40 text-green-400 hover:bg-green-900/50 transition-all"
+                      title="Wykonana"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">check</span>
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await fetch(`/api/game/${token}/mission/${m.id}`, { method: "DELETE" });
+                        await fetchState();
+                      }}
+                      className="size-9 flex items-center justify-center rounded-lg bg-red-900/30 border border-red-700/40 text-red-400 hover:bg-red-900/50 transition-all"
+                      title="Niewykonana — usuń"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleCompleteMission(m.id)}
-                    className="size-9 flex items-center justify-center rounded-lg bg-green-900/30 border border-green-700/40 text-green-400 hover:bg-green-900/50 transition-all"
-                    title="Wykonana"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">check</span>
-                  </button>
-                  <button
-                    onClick={async () => {
-                      await fetch(`/api/game/${token}/mission/${m.id}`, { method: "DELETE" });
-                      await fetchState();
-                    }}
-                    className="size-9 flex items-center justify-center rounded-lg bg-red-900/30 border border-red-700/40 text-red-400 hover:bg-red-900/50 transition-all"
-                    title="Niewykonana — usuń"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">close</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-            {(!state.hostMissions || state.hostMissions.filter((m) => !m.isCompleted).length === 0) && (
+              ))}
+            {(!state.hostMissions ||
+              state.hostMissions.filter((m) => !m.isCompleted).length === 0) && (
               <p className="text-green-400/60 text-xs font-typewriter text-center mb-3">
                 ✓ Wszystkie misje ocenione
               </p>
@@ -814,7 +881,9 @@ export default function GameClient() {
 
         {isPlaying && phase === "review" && !isHost && (
           <div className="mx-5 mt-5 p-5 rounded-xl bg-black/30 border border-slate-800 text-center">
-            <span className="material-symbols-outlined text-[36px] text-amber-400/60 mb-2 block">hourglass_empty</span>
+            <span className="material-symbols-outlined text-[36px] text-amber-400/60 mb-2 block">
+              hourglass_empty
+            </span>
             <p className="text-slate-400 font-typewriter uppercase tracking-widest text-sm">
               MG ocenia misje...
             </p>
@@ -853,14 +922,12 @@ export default function GameClient() {
             onSendMessage={handleSendMessage}
             msnTarget={msnTarget}
             msnDesc={msnDesc}
-            msnSecret={msnSecret}
             msnPoints={msnPoints}
             msnPreset={msnPreset}
             msnPending={msnPending}
             msnError={msnError}
             onMsnTargetChange={setMsnTarget}
             onMsnDescChange={setMsnDesc}
-            onMsnSecretChange={setMsnSecret}
             onMsnPointsChange={setMsnPoints}
             onMsnPresetChange={setMsnPreset}
             onCreateMission={handleCreateMission}
@@ -905,7 +972,8 @@ export default function GameClient() {
           <div className="mx-5 mt-6 flex flex-col gap-3">
             {nonHostPlayers.length < (gameMode === "simple" ? 3 : 5) && (
               <p className="text-slate-500 text-sm font-typewriter text-center">
-                Potrzeba minimum {gameMode === "simple" ? 3 : 5} graczy ({players.length}/{gameMode === "simple" ? 3 : 5})
+                Potrzeba minimum {gameMode === "simple" ? 3 : 5} graczy ({players.length}/
+                {gameMode === "simple" ? 3 : 5})
               </p>
             )}
             {/* Game mode selector */}
@@ -923,7 +991,9 @@ export default function GameClient() {
                   }`}
                 >
                   <span className="block font-bold">Pełny</span>
-                  <span className="block text-xs opacity-60 mt-0.5">Mafia + Policjant + Lekarz</span>
+                  <span className="block text-xs opacity-60 mt-0.5">
+                    Mafia + Policjant + Lekarz
+                  </span>
                   <span className="block text-xs opacity-40">min. 5 graczy</span>
                 </button>
                 <button
@@ -956,7 +1026,15 @@ export default function GameClient() {
                         : "border-slate-700 text-slate-400 hover:border-slate-500"
                     }`}
                   >
-                    Auto ({players.length <= 5 ? 1 : players.length <= 8 ? 2 : players.length <= 11 ? 3 : 4})
+                    Auto (
+                    {players.length <= 5
+                      ? 1
+                      : players.length <= 8
+                        ? 2
+                        : players.length <= 11
+                          ? 3
+                          : 4}
+                    )
                   </button>
                   {Array.from({ length: Math.max(1, players.length - 3) }, (_, i) => i + 1).map(
                     (n) => (
@@ -980,9 +1058,7 @@ export default function GameClient() {
                   </p>
                 )}
                 {gameMode === "simple" && (
-                  <p className="text-slate-600 text-xs mt-2">
-                    reszta cywile
-                  </p>
+                  <p className="text-slate-600 text-xs mt-2">reszta cywile</p>
                 )}
               </div>
             )}
@@ -1032,8 +1108,7 @@ function PlayerRow({
   onKick?: (playerId: string) => void;
 }) {
   // Determine if we show role badge and what color
-  const showRoleBadge =
-    isHost && isGamePlaying && player.role != null;
+  const showRoleBadge = isHost && isGamePlaying && player.role != null;
 
   // Mafia teammate indicator (visible when the current player is mafia and has revealed their role)
   const isMafiaTeammate =
@@ -1046,17 +1121,11 @@ function PlayerRow({
 
   return (
     <div
-      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-        false
-          ? "border-primary/40 bg-primary/5"
-          : "border-slate-800 bg-black/20"
-      } ${!player.isAlive ? "opacity-40" : ""}`}
+      className={`flex items-center gap-3 p-3 rounded-lg border transition-all border-slate-800 bg-black/20 ${!player.isAlive ? "opacity-40" : ""}`}
     >
       <div
         className={`w-9 h-9 rounded-full flex items-center justify-center border ${
-          player.isHost
-            ? "border-primary/50 bg-primary/10"
-            : "border-slate-700 bg-slate-800"
+          player.isHost ? "border-primary/50 bg-primary/10" : "border-slate-700 bg-slate-800"
         }`}
       >
         <span className="material-symbols-outlined text-[18px] text-slate-400">
@@ -1066,12 +1135,14 @@ function PlayerRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
-          
+
           {player.isHost && (
             <span className="text-xs text-primary/70 font-typewriter uppercase">MG</span>
           )}
           {isMafiaTeammate && (
-            <span className="text-xs" title="Członek mafii">🔴</span>
+            <span className="text-xs" title="Członek mafii">
+              🔴
+            </span>
           )}
         </div>
         {!player.isAlive && (
@@ -1084,10 +1155,10 @@ function PlayerRow({
             player.role === "mafia"
               ? "text-red-400 border-red-900/50 bg-red-950/30"
               : player.role === "detective"
-              ? "text-blue-400 border-blue-900/50 bg-blue-950/30"
-              : player.role === "doctor"
-              ? "text-green-400 border-green-900/50 bg-green-950/30"
-              : "text-slate-400 border-slate-700 bg-slate-900/30"
+                ? "text-blue-400 border-blue-900/50 bg-blue-950/30"
+                : player.role === "doctor"
+                  ? "text-green-400 border-green-900/50 bg-green-950/30"
+                  : "text-slate-400 border-slate-700 bg-slate-900/30"
           }`}
         >
           {ROLE_LABELS[player.role]}
@@ -1100,10 +1171,10 @@ function PlayerRow({
             player.role === "mafia"
               ? "text-red-400 border-red-900/50 bg-red-950/30"
               : player.role === "detective"
-              ? "text-blue-400 border-blue-900/50 bg-blue-950/30"
-              : player.role === "doctor"
-              ? "text-green-400 border-green-900/50 bg-green-950/30"
-              : "text-slate-400 border-slate-700 bg-slate-900/30"
+                ? "text-blue-400 border-blue-900/50 bg-blue-950/30"
+                : player.role === "doctor"
+                  ? "text-green-400 border-green-900/50 bg-green-950/30"
+                  : "text-slate-400 border-slate-700 bg-slate-900/30"
           }`}
         >
           {ROLE_LABELS[player.role]}
@@ -1144,14 +1215,33 @@ function NightActionPanel({
 }) {
   const actionMap: Record<string, { type: string; label: string; icon: string; color: string }> = {
     mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
-    detective: { type: "investigate", label: "Kogo przesłuchać?", icon: "search", color: "text-blue-400" },
-    doctor: { type: "protect", label: "Kogo chronić tej nocy?", icon: "medical_services", color: "text-green-400" },
-    civilian: { type: "wait", label: "Kogo obserwujesz?", icon: "visibility", color: "text-slate-400" },
+    detective: {
+      type: "investigate",
+      label: "Kogo przesłuchać?",
+      icon: "search",
+      color: "text-blue-400",
+    },
+    doctor: {
+      type: "protect",
+      label: "Kogo chronić tej nocy?",
+      icon: "medical_services",
+      color: "text-green-400",
+    },
+    civilian: {
+      type: "wait",
+      label: "Kogo obserwujesz?",
+      icon: "visibility",
+      color: "text-slate-400",
+    },
   };
 
   if (myAction) {
-    const targetName = targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ?? myAction.targetPlayerId;
-    const actionLabel = roleHidden ? "Akcja wykonana" : (ACTION_CONFIRMED[myAction.actionType] ?? "Akcja wykonana");
+    const targetName =
+      targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ??
+      myAction.targetPlayerId;
+    const actionLabel = roleHidden
+      ? "Akcja wykonana"
+      : (ACTION_CONFIRMED[myAction.actionType] ?? "Akcja wykonana");
     return (
       <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-green-900/40">
         <p className="text-green-400 text-xs font-typewriter uppercase tracking-widest mb-1">
@@ -1180,7 +1270,9 @@ function NightActionPanel({
   if (!action) {
     return (
       <div className="mx-5 mt-4 p-4 rounded-xl bg-black/30 border border-slate-800 text-center">
-        <span className="material-symbols-outlined text-[28px] text-slate-600 mb-1 block">bedtime</span>
+        <span className="material-symbols-outlined text-[28px] text-slate-600 mb-1 block">
+          bedtime
+        </span>
         <p className="text-slate-500 font-typewriter uppercase tracking-widest text-xs">
           Noc — czekaj na rozkazy
         </p>
@@ -1196,12 +1288,12 @@ function NightActionPanel({
   return (
     <div className="mx-5 mt-4">
       <p className={`text-xs font-typewriter uppercase tracking-widest mb-3 pl-1 ${action.color}`}>
-        <span className="material-symbols-outlined text-[14px] align-middle mr-1">{action.icon}</span>
+        <span className="material-symbols-outlined text-[14px] align-middle mr-1">
+          {action.icon}
+        </span>
         {action.label}
       </p>
-      {error && (
-        <p className="text-red-400 text-xs font-typewriter mb-2 px-1">{error}</p>
-      )}
+      {error && <p className="text-red-400 text-xs font-typewriter mb-2 px-1">{error}</p>}
       <div className="flex flex-col gap-2">
         {targets.map((p) => (
           <button
@@ -1236,7 +1328,9 @@ function VotePanel({
   onChangeDecision: () => void;
 }) {
   if (myAction) {
-    const targetName = targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ?? myAction.targetPlayerId;
+    const targetName =
+      targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ??
+      myAction.targetPlayerId;
     return (
       <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-green-900/40">
         <p className="text-green-400 text-xs font-typewriter uppercase tracking-widest mb-1">
@@ -1309,14 +1403,12 @@ function MGPanel({
   onSendMessage,
   msnTarget,
   msnDesc,
-  msnSecret,
   msnPoints,
   msnPreset,
   msnPending,
   msnError,
   onMsnTargetChange,
   onMsnDescChange,
-  onMsnSecretChange,
   onMsnPointsChange,
   onMsnPresetChange,
   onCreateMission,
@@ -1347,14 +1439,12 @@ function MGPanel({
   onSendMessage: () => void;
   msnTarget: string;
   msnDesc: string;
-  msnSecret: boolean;
   msnPoints: 1 | 2 | 3;
   msnPreset: string;
   msnPending: boolean;
   msnError: string;
   onMsnTargetChange: (v: string) => void;
   onMsnDescChange: (v: string) => void;
-  onMsnSecretChange: (v: boolean) => void;
   onMsnPointsChange: (v: 1 | 2 | 3) => void;
   onMsnPresetChange: (v: string) => void;
   onCreateMission: () => void;
@@ -1427,17 +1517,24 @@ function MGPanel({
               <>
                 <button
                   onClick={() => onPhase(nextPhase.phase)}
-                  disabled={phasePending || (phase === "voting" && !!voteTally && voteTally.votedCount < voteTally.totalVoters)}
+                  disabled={
+                    phasePending ||
+                    (phase === "voting" &&
+                      !!voteTally &&
+                      voteTally.votedCount < voteTally.totalVoters)
+                  }
                   className="flex w-full items-center justify-center gap-2 rounded-lg h-12 bg-primary hover:bg-primary/90 text-white font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.3)] active:scale-[0.98] disabled:opacity-50 font-typewriter uppercase tracking-wider text-sm"
                 >
                   <span className="material-symbols-outlined text-[18px]">{nextPhase.icon}</span>
                   {phasePending ? "Czekaj..." : nextPhase.label}
                 </button>
-                {phase === "voting" && voteTally && voteTally.votedCount < voteTally.totalVoters && (
-                  <p className="text-slate-500 text-xs font-typewriter text-center mt-2">
-                    Czekaj na głosy ({voteTally.votedCount}/{voteTally.totalVoters})
-                  </p>
-                )}
+                {phase === "voting" &&
+                  voteTally &&
+                  voteTally.votedCount < voteTally.totalVoters && (
+                    <p className="text-slate-500 text-xs font-typewriter text-center mt-2">
+                      Czekaj na głosy ({voteTally.votedCount}/{voteTally.totalVoters})
+                    </p>
+                  )}
               </>
             ) : (
               <p className="text-slate-500 text-sm font-typewriter text-center">
@@ -1498,14 +1595,20 @@ function MGPanel({
                     <div className="flex items-start gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className={`text-[10px] font-typewriter font-bold uppercase ${m.isCompleted ? "text-green-500" : "text-slate-500"}`}>
+                          <span
+                            className={`text-[10px] font-typewriter font-bold uppercase ${m.isCompleted ? "text-green-500" : "text-slate-500"}`}
+                          >
                             {m.playerNickname}
                           </span>
                           <span className="text-slate-700 text-[10px]">·</span>
-                          <span className="text-yellow-600 text-[10px] font-typewriter">+{m.points}pkt</span>
+                          <span className="text-yellow-600 text-[10px] font-typewriter">
+                            +{m.points}pkt
+                          </span>
                           {m.isCompleted && <span className="text-green-500 text-[10px]">✓</span>}
                         </div>
-                        <p className={`text-xs ${m.isCompleted ? "text-slate-500 line-through" : "text-slate-300"}`}>
+                        <p
+                          className={`text-xs ${m.isCompleted ? "text-slate-500 line-through" : "text-slate-300"}`}
+                        >
                           {m.description}
                         </p>
                       </div>
@@ -1516,7 +1619,9 @@ function MGPanel({
                             title="Oznacz jako wykonaną"
                             className="w-7 h-7 flex items-center justify-center rounded bg-green-900/30 hover:bg-green-900/60 border border-green-800/40 transition-all"
                           >
-                            <span className="material-symbols-outlined text-[14px] text-green-400">check</span>
+                            <span className="material-symbols-outlined text-[14px] text-green-400">
+                              check
+                            </span>
                           </button>
                         )}
                         <button
@@ -1524,7 +1629,9 @@ function MGPanel({
                           title="Usuń misję"
                           className="w-7 h-7 flex items-center justify-center rounded bg-red-950/30 hover:bg-red-950/60 border border-red-900/30 transition-all"
                         >
-                          <span className="material-symbols-outlined text-[14px] text-red-500">delete</span>
+                          <span className="material-symbols-outlined text-[14px] text-red-500">
+                            delete
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -1573,7 +1680,10 @@ function MGPanel({
 
             <textarea
               value={msnDesc}
-              onChange={(e) => { onMsnDescChange(e.target.value); onMsnPresetChange("custom"); }}
+              onChange={(e) => {
+                onMsnDescChange(e.target.value);
+                onMsnPresetChange("custom");
+              }}
               placeholder="Opis misji..."
               rows={3}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm font-typewriter placeholder:text-slate-600 focus:outline-none focus:border-primary/50 resize-none"
@@ -1589,8 +1699,8 @@ function MGPanel({
                         ? pts === 1
                           ? "bg-green-900/40 border-green-700 text-green-400"
                           : pts === 2
-                          ? "bg-yellow-900/40 border-yellow-700 text-yellow-400"
-                          : "bg-red-900/40 border-red-700 text-red-400"
+                            ? "bg-yellow-900/40 border-yellow-700 text-yellow-400"
+                            : "bg-red-900/40 border-red-700 text-red-400"
                         : "border-slate-700 text-slate-500 hover:border-slate-500"
                     }`}
                   >
@@ -1638,7 +1748,9 @@ function MGPanel({
                   onClick={() => onTransferGm(p.playerId)}
                   className="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-black/20 hover:border-primary/40 hover:bg-primary/5 transition-all active:scale-[0.98] disabled:opacity-40 text-left"
                 >
-                  <span className="material-symbols-outlined text-[18px] text-slate-400">person</span>
+                  <span className="material-symbols-outlined text-[18px] text-slate-400">
+                    person
+                  </span>
                   <span className="text-white text-sm">{p.nickname}</span>
                   <span className="ml-auto text-xs text-slate-600 font-typewriter">→ MG</span>
                 </button>
@@ -1665,7 +1777,8 @@ function MGPanel({
                     : "border-slate-700 text-slate-400 hover:border-slate-500"
                 }`}
               >
-                Auto ({players.length <= 5 ? 1 : players.length <= 8 ? 2 : players.length <= 11 ? 3 : 4})
+                Auto (
+                {players.length <= 5 ? 1 : players.length <= 8 ? 2 : players.length <= 11 ? 3 : 4})
               </button>
               {Array.from({ length: Math.max(1, players.length - 3) }, (_, i) => i + 1).map((n) => (
                 <button
@@ -1681,9 +1794,7 @@ function MGPanel({
                 </button>
               ))}
             </div>
-            <p className="text-slate-600 text-xs mt-2">
-              reszta cywile
-            </p>
+            <p className="text-slate-600 text-xs mt-2">reszta cywile</p>
           </div>
         )}
       </div>
@@ -1724,7 +1835,10 @@ function LobbyTransferGm({
             <button
               key={p.playerId}
               disabled={pending}
-              onClick={() => { onTransfer(p.playerId); setOpen(false); }}
+              onClick={() => {
+                onTransfer(p.playerId);
+                setOpen(false);
+              }}
               className="w-full flex items-center gap-3 px-3 py-2.5 border-b border-slate-800 last:border-b-0 hover:bg-primary/5 transition-colors text-left disabled:opacity-40"
             >
               <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
@@ -1768,16 +1882,23 @@ function EndScreen({
     (game.winner === "town" && currentPlayer.role !== "mafia");
 
   // Build per-player mission summary for host
-  const missionSummary = hostMissions && hostMissions.length > 0
-    ? Object.values(
-        hostMissions.reduce<Record<string, { nickname: string; completed: number; total: number; points: number }>>((acc, m) => {
-          if (!acc[m.playerId]) acc[m.playerId] = { nickname: m.playerNickname, completed: 0, total: 0, points: 0 };
-          acc[m.playerId].total++;
-          if (m.isCompleted) { acc[m.playerId].completed++; acc[m.playerId].points += m.points; }
-          return acc;
-        }, {})
-      )
-    : [];
+  const missionSummary =
+    hostMissions && hostMissions.length > 0
+      ? Object.values(
+          hostMissions.reduce<
+            Record<string, { nickname: string; completed: number; total: number; points: number }>
+          >((acc, m) => {
+            if (!acc[m.playerId])
+              acc[m.playerId] = { nickname: m.playerNickname, completed: 0, total: 0, points: 0 };
+            acc[m.playerId].total++;
+            if (m.isCompleted) {
+              acc[m.playerId].completed++;
+              acc[m.playerId].points += m.points;
+            }
+            return acc;
+          }, {})
+        )
+      : [];
 
   return (
     <div className="mx-5 mt-5">
@@ -1785,11 +1906,15 @@ function EndScreen({
         <span className={`material-symbols-outlined text-[56px] ${winnerColor} mb-3 block`}>
           {winnerIcon}
         </span>
-        <p className={`font-typewriter text-2xl font-bold uppercase tracking-widest ${winnerColor} mb-2`}>
+        <p
+          className={`font-typewriter text-2xl font-bold uppercase tracking-widest ${winnerColor} mb-2`}
+        >
           {winnerLabel}
         </p>
         {!isHost && (
-          <p className={`font-typewriter text-sm uppercase tracking-wider ${isWinner ? "text-green-400" : "text-slate-500"}`}>
+          <p
+            className={`font-typewriter text-sm uppercase tracking-wider ${isWinner ? "text-green-400" : "text-slate-500"}`}
+          >
             {isWinner ? "Wygrałeś!" : "Przegrałeś"}
           </p>
         )}
@@ -1797,7 +1922,8 @@ function EndScreen({
           <div className="mt-4 flex flex-col gap-2">
             {mafiaCountSetting !== undefined && mafiaCountSetting > 0 && (
               <p className="text-slate-600 text-xs font-typewriter text-center">
-                Następna runda: {mafiaCountSetting} {mafiaCountSetting === 1 ? "mafioz" : "mafiozy/ów"}
+                Następna runda: {mafiaCountSetting}{" "}
+                {mafiaCountSetting === 1 ? "mafioz" : "mafiozy/ów"}
               </p>
             )}
             <button
@@ -1820,14 +1946,19 @@ function EndScreen({
           </p>
           <div className="flex flex-col gap-2">
             {missionSummary.map((s) => (
-              <div key={s.nickname} className="flex items-center gap-3 p-3 rounded-lg border border-slate-800 bg-black/20">
+              <div
+                key={s.nickname}
+                className="flex items-center gap-3 p-3 rounded-lg border border-slate-800 bg-black/20"
+              >
                 <span className="material-symbols-outlined text-[18px] text-slate-500">person</span>
                 <span className="text-white text-sm flex-1">{s.nickname}</span>
                 <span className="text-slate-400 text-xs font-typewriter">
                   {s.completed}/{s.total} misji
                 </span>
                 {s.points > 0 && (
-                  <span className="text-yellow-400 text-xs font-typewriter font-bold">+{s.points}pkt</span>
+                  <span className="text-yellow-400 text-xs font-typewriter font-bold">
+                    +{s.points}pkt
+                  </span>
                 )}
               </div>
             ))}
@@ -1845,7 +1976,9 @@ function EndScreen({
             <div
               key={p.playerId}
               className={`flex items-center gap-3 p-3 rounded-lg border ${
-                p.isAlive ? "border-slate-700 bg-black/20" : "border-slate-800 bg-black/10 opacity-50"
+                p.isAlive
+                  ? "border-slate-700 bg-black/20"
+                  : "border-slate-800 bg-black/10 opacity-50"
               }`}
             >
               <span
@@ -1854,17 +1987,17 @@ function EndScreen({
                 {p.role ? ROLE_ICONS[p.role] : "person"}
               </span>
               <span className="text-white text-sm flex-1">{p.nickname}</span>
-              
+
               {p.role && (
                 <span
                   className={`text-xs font-typewriter font-bold uppercase px-2 py-0.5 rounded border ${
                     p.role === "mafia"
                       ? "text-red-400 border-red-900/50 bg-red-950/30"
                       : p.role === "detective"
-                      ? "text-blue-400 border-blue-900/50 bg-blue-950/30"
-                      : p.role === "doctor"
-                      ? "text-green-400 border-green-900/50 bg-green-950/30"
-                      : "text-slate-400 border-slate-700 bg-slate-900/30"
+                        ? "text-blue-400 border-blue-900/50 bg-blue-950/30"
+                        : p.role === "doctor"
+                          ? "text-green-400 border-green-900/50 bg-green-950/30"
+                          : "text-slate-400 border-slate-700 bg-slate-900/30"
                   }`}
                 >
                   {ROLE_LABELS[p.role]}
@@ -1906,7 +2039,9 @@ function GmActionsTab({
   const pendingPlayers = alivePlayers.filter((p) => !actedPlayerIds.has(p.playerId));
 
   const selectedPlayerData = alivePlayers.find((p) => p.playerId === selectedPlayer);
-  const actionType = selectedPlayerData?.role ? ACTION_ROLE_MAP[selectedPlayerData.role] ?? "wait" : "vote";
+  const actionType = selectedPlayerData?.role
+    ? (ACTION_ROLE_MAP[selectedPlayerData.role] ?? "wait")
+    : "vote";
   const isVoting = phase === "voting";
 
   function handleSubmit() {
@@ -1926,7 +2061,10 @@ function GmActionsTab({
       {hostActions && hostActions.length > 0 && (
         <div className="flex flex-col gap-2 mb-4">
           {hostActions.map((a, i) => (
-            <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-black/30 border border-slate-800">
+            <div
+              key={i}
+              className="flex items-center gap-3 p-2 rounded-lg bg-black/30 border border-slate-800"
+            >
               <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
               <div className="flex-1 min-w-0">
                 <span className="text-white text-xs font-medium">{a.nickname}</span>
@@ -1950,7 +2088,10 @@ function GmActionsTab({
           </p>
           <select
             value={selectedPlayer}
-            onChange={(e) => { setSelectedPlayer(e.target.value); setSelectedTarget(""); }}
+            onChange={(e) => {
+              setSelectedPlayer(e.target.value);
+              setSelectedTarget("");
+            }}
             className="w-full h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 mb-2 font-typewriter"
           >
             <option value="">— Wybierz gracza —</option>
@@ -1972,7 +2113,9 @@ function GmActionsTab({
                 {alivePlayers
                   .filter((p) => p.playerId !== selectedPlayer)
                   .map((p) => (
-                    <option key={p.playerId} value={p.playerId}>{p.nickname}</option>
+                    <option key={p.playerId} value={p.playerId}>
+                      {p.nickname}
+                    </option>
                   ))}
               </select>
               <button
