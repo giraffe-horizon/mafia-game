@@ -1416,4 +1416,165 @@ describe("Database Integration Tests (SQLite)", () => {
       expect(state!.phaseProgress).toBeUndefined();
     });
   });
+
+  describe("resolveNight unanimous voting", () => {
+    async function setupMafiaGame() {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      // Add players to get mafia roles and get their tokens (need more civilians to avoid immediate win)
+      const player1Token = await db.joinGame(mockDb, code, "Player1");
+      const player2Token = await db.joinGame(mockDb, code, "Player2");
+      const player3Token = await db.joinGame(mockDb, code, "Player3");
+      const player4Token = await db.joinGame(mockDb, code, "Player4");
+      const player5Token = await db.joinGame(mockDb, code, "Player5");
+      const player6Token = await db.joinGame(mockDb, code, "Player6");
+
+      await db.startGame(mockDb, hostToken, 2); // Force 2 mafia
+
+      const state = await db.getGameState(mockDb, hostToken);
+      const players = state!.players;
+
+      // Find players with their roles (roles are randomly assigned)
+      const mafiaPlayers = players.filter((p) => p.role === "mafia");
+      const mafia1 = mafiaPlayers[0];
+      const mafia2 = mafiaPlayers[1];
+      const civilian = players.find((p) => p.role === "civilian");
+      const detective = players.find((p) => p.role === "detective");
+      const doctor = players.find((p) => p.role === "doctor");
+
+      // Map tokens to players based on actual roles
+      const playerTokens = [
+        { nickname: "Player1", token: player1Token.token },
+        { nickname: "Player2", token: player2Token.token },
+        { nickname: "Player3", token: player3Token.token },
+        { nickname: "Player4", token: player4Token.token },
+        { nickname: "Player5", token: player5Token.token },
+        { nickname: "Player6", token: player6Token.token },
+      ];
+
+      // Find the correct tokens for each role
+      const actualMafia1Token = playerTokens.find((pt) => pt.nickname === mafia1?.nickname)?.token;
+      const actualMafia2Token = playerTokens.find((pt) => pt.nickname === mafia2?.nickname)?.token;
+      const actualDetectiveToken = playerTokens.find(
+        (pt) => pt.nickname === detective?.nickname
+      )?.token;
+      const actualDoctorToken = playerTokens.find((pt) => pt.nickname === doctor?.nickname)?.token;
+
+      // Find a civilian token for testing
+      const actualCivilianToken = playerTokens.find(
+        (pt) => pt.nickname === civilian?.nickname
+      )?.token;
+
+      return {
+        hostToken,
+        mafia1,
+        mafia2,
+        civilian,
+        detective,
+        doctor,
+        mafia1Token: actualMafia1Token!,
+        mafia2Token: actualMafia2Token!,
+        detectiveToken: actualDetectiveToken!,
+        doctorToken: actualDoctorToken!,
+        civilianToken: actualCivilianToken!,
+        players,
+      };
+    }
+
+    it("should eliminate target when both mafia choose the same target", async () => {
+      const { hostToken, mafia1, mafia2, civilian, mafia1Token, mafia2Token } =
+        await setupMafiaGame();
+
+      // Both mafia vote for the same target
+      await db.submitAction(mockDb, mafia1Token, "kill", civilian!.playerId);
+      await db.submitAction(mockDb, mafia2Token, "kill", civilian!.playerId);
+
+      // Resolve the night
+      await db.changePhase(mockDb, hostToken, "day");
+
+      // Check if civilian was eliminated (main test - unanimous mafia should eliminate target)
+      const state = await db.getGameState(mockDb, hostToken);
+      const updatedCivilian = state!.players.find((p) => p.playerId === civilian!.playerId);
+      expect(updatedCivilian!.isAlive).toBe(false);
+    });
+
+    it("should not eliminate anyone when mafia choose different targets", async () => {
+      const { hostToken, mafia1, mafia2, civilian, detective, mafia1Token, mafia2Token } =
+        await setupMafiaGame();
+
+      // Mafia vote for different targets
+      await db.submitAction(mockDb, mafia1Token, "kill", civilian!.playerId);
+      await db.submitAction(mockDb, mafia2Token, "kill", detective!.playerId);
+
+      // Resolve the night
+      await db.changePhase(mockDb, hostToken, "day");
+
+      // Check that both targets are still alive (disagreement should prevent elimination)
+      const state = await db.getGameState(mockDb, hostToken);
+      const updatedCivilian = state!.players.find((p) => p.playerId === civilian!.playerId);
+      const updatedDetective = state!.players.find((p) => p.playerId === detective!.playerId);
+
+      expect(updatedCivilian!.isAlive).toBe(true);
+      expect(updatedDetective!.isAlive).toBe(true);
+    });
+
+    it("should eliminate target when solo mafia votes", async () => {
+      const { hostToken, mafia1, mafia2, civilian, mafia1Token } = await setupMafiaGame();
+
+      // Eliminate one mafia first to create solo scenario
+      await mockDb
+        .prepare("UPDATE game_players SET is_alive = 0 WHERE player_id = ?")
+        .bind(mafia2!.playerId)
+        .run();
+
+      // Solo mafia votes
+      await db.submitAction(mockDb, mafia1Token, "kill", civilian!.playerId);
+
+      // Resolve the night
+      await db.changePhase(mockDb, hostToken, "day");
+
+      // Check if civilian was eliminated
+      const state = await db.getGameState(mockDb, hostToken);
+      const updatedCivilian = state!.players.find((p) => p.playerId === civilian!.playerId);
+      expect(updatedCivilian!.isAlive).toBe(false);
+    });
+
+    it("should not eliminate anyone when not all mafia vote", async () => {
+      const { hostToken, mafia1, civilian, mafia1Token } = await setupMafiaGame();
+
+      // Only one of two mafia votes
+      await db.submitAction(mockDb, mafia1Token, "kill", civilian!.playerId);
+      // mafia2 doesn't vote
+
+      // Resolve the night
+      await db.changePhase(mockDb, hostToken, "day");
+
+      // Check that target is still alive (partial voting should prevent elimination)
+      const state = await db.getGameState(mockDb, hostToken);
+      const updatedCivilian = state!.players.find((p) => p.playerId === civilian!.playerId);
+      expect(updatedCivilian!.isAlive).toBe(true);
+    });
+
+    it("should respect doctor protection even with unanimous mafia vote", async () => {
+      const { hostToken, mafia1, mafia2, civilian, doctor, mafia1Token, mafia2Token, doctorToken } =
+        await setupMafiaGame();
+
+      // Both mafia vote for the same target
+      await db.submitAction(mockDb, mafia1Token, "kill", civilian!.playerId);
+      await db.submitAction(mockDb, mafia2Token, "kill", civilian!.playerId);
+
+      // Doctor protects the same target
+      await db.submitAction(mockDb, doctorToken, "protect", civilian!.playerId);
+
+      // Resolve the night
+      await db.changePhase(mockDb, hostToken, "day");
+
+      // Check that civilian is still alive due to protection
+      const state = await db.getGameState(mockDb, hostToken);
+      const updatedCivilian = state!.players.find((p) => p.playerId === civilian!.playerId);
+      expect(updatedCivilian!.isAlive).toBe(true);
+    });
+  });
 });

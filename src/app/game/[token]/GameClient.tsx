@@ -160,6 +160,7 @@ export default function GameClient() {
   // MG: transfer GM
   const [transferGmPending, setTransferGmPending] = useState(false);
   const [transferGmError, setTransferGmError] = useState("");
+  const [transferGmTarget, setTransferGmTarget] = useState("");
 
   // MG: rematch
   const [rematchPending, setRematchPending] = useState(false);
@@ -168,9 +169,7 @@ export default function GameClient() {
   const [mafiaCountSetting, setMafiaCountSetting] = useState(0); // 0 = auto
 
   // MG panel tab
-  const [mgTab, setMgTab] = useState<
-    "phase" | "message" | "mission" | "actions" | "gm" | "settings"
-  >("phase");
+  const [mgTab, setMgTab] = useState<"game" | "message" | "mission" | "settings">("game");
 
   // Settings modal
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -1053,7 +1052,7 @@ export default function GameClient() {
               <span className="material-symbols-outlined text-[12px] align-middle mr-1">group</span>
               Twoja rodzina
             </p>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 mb-3">
               {state.mafiaTeamActions.map((a, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
                   <span className="text-red-300/80">{a.nickname}</span>
@@ -1064,6 +1063,43 @@ export default function GameClient() {
                 </div>
               ))}
             </div>
+
+            {/* Consensus check for mafia voting */}
+            {(() => {
+              const mafiaWithTargets = state.mafiaTeamActions.filter((a) => a.targetNickname);
+              const targets = [...new Set(mafiaWithTargets.map((a) => a.targetNickname))];
+              const allMafiaVoted = mafiaWithTargets.length === state.mafiaTeamActions.length;
+
+              if (mafiaWithTargets.length > 0 && targets.length > 1) {
+                // Multiple targets - not unanimous
+                return (
+                  <div className="p-2 bg-red-900/30 border border-red-700/50 rounded-lg">
+                    <p className="text-red-400 text-xs font-typewriter">
+                      ⚠️ Mafia nie jest zgodna! Cel nie zostanie wyeliminowany.
+                    </p>
+                  </div>
+                );
+              } else if (allMafiaVoted && targets.length === 1 && targets[0]) {
+                // Unanimous target
+                return (
+                  <div className="p-2 bg-green-900/30 border border-green-700/50 rounded-lg">
+                    <p className="text-green-400 text-xs font-typewriter">
+                      ✅ Mafia jest zgodna — cel: {targets[0]}
+                    </p>
+                  </div>
+                );
+              } else if (mafiaWithTargets.length > 0 && !allMafiaVoted) {
+                // Some voted, waiting for others
+                return (
+                  <div className="p-2 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
+                    <p className="text-yellow-400 text-xs font-typewriter">
+                      ⏳ Czekam na pozostałych członków mafii...
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         )}
 
@@ -1090,7 +1126,7 @@ export default function GameClient() {
         )}
 
         {/* ── Missions card (non-host) ── */}
-        {!isHost && missions.length > 0 && (
+        {!isHost && missions.length > 0 && state.showPoints && (
           <div className="mx-5 mt-4">
             <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2 pl-1">
               Twoje misje
@@ -1146,7 +1182,7 @@ export default function GameClient() {
         )}
 
         {/* ── REVIEW: GM rates pending missions before game ends ── */}
-        {isPlaying && phase === "review" && isHost && (
+        {isPlaying && phase === "review" && isHost && state.showPoints && (
           <div className="mx-5 mt-5 p-5 rounded-xl bg-amber-950/20 border border-amber-700/30">
             <div className="flex items-center gap-2 mb-4">
               <span className="material-symbols-outlined text-[28px] text-amber-400">
@@ -1272,6 +1308,8 @@ export default function GameClient() {
             onGmAction={handleGmAction}
             transferGmPending={transferGmPending}
             transferGmError={transferGmError}
+            transferGmTarget={transferGmTarget}
+            setTransferGmTarget={setTransferGmTarget}
             onTransferGm={handleTransferGm}
             mafiaCountSetting={mafiaCountSetting}
             onMafiaCountSettingChange={setMafiaCountSetting}
@@ -1871,13 +1909,6 @@ function VotePanel({
 // ---------------------------------------------------------------------------
 // MGPanel
 // ---------------------------------------------------------------------------
-const ACTION_ROLE_LABELS: Record<string, string> = {
-  kill: "Eliminuje",
-  investigate: "Sprawdza",
-  protect: "Chroni",
-  vote: "Głosuje na",
-  wait: "Czeka",
-};
 
 function MGPanel({
   phase,
@@ -1913,14 +1944,16 @@ function MGPanel({
   onGmAction,
   transferGmPending,
   transferGmError,
+  transferGmTarget,
+  setTransferGmTarget,
   onTransferGm,
   mafiaCountSetting,
   onMafiaCountSettingChange,
 }: {
   phase: string;
   players: PublicPlayer[];
-  tab: "phase" | "message" | "mission" | "actions" | "gm" | "settings";
-  onTabChange: (t: "phase" | "message" | "mission" | "actions" | "gm" | "settings") => void;
+  tab: "game" | "message" | "mission" | "settings";
+  onTabChange: (t: "game" | "message" | "mission" | "settings") => void;
   phasePending: boolean;
   onPhase: (p: string) => void;
   msgTarget: string;
@@ -1950,6 +1983,8 @@ function MGPanel({
   onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
   transferGmPending: boolean;
   transferGmError: string;
+  transferGmTarget: string;
+  setTransferGmTarget: (target: string) => void;
   onTransferGm: (playerId: string) => void;
   mafiaCountSetting: number;
   onMafiaCountSettingChange: (n: number) => void;
@@ -1962,11 +1997,9 @@ function MGPanel({
   const nextPhase = nextPhaseMap[phase];
 
   const TABS = [
-    { id: "phase" as const, icon: "swap_horiz", label: "Faza" },
+    { id: "game" as const, icon: "gamepad", label: "Gra" },
     { id: "message" as const, icon: "mail", label: "Wiad." },
     { id: "mission" as const, icon: "task", label: "Misje" },
-    { id: "actions" as const, icon: "visibility", label: "Akcje" },
-    { id: "gm" as const, icon: "manage_accounts", label: "GM" },
     { id: "settings" as const, icon: "settings", label: "Ustaw." },
   ];
 
@@ -2004,38 +2037,19 @@ function MGPanel({
       </div>
 
       <div className="p-4">
-        {/* Phase tab */}
-        {tab === "phase" && (
-          <div>
-            {nextPhase ? (
-              <>
-                <button
-                  onClick={() => onPhase(nextPhase.phase)}
-                  disabled={
-                    phasePending ||
-                    (phase === "voting" &&
-                      !!voteTally &&
-                      voteTally.votedCount < voteTally.totalVoters)
-                  }
-                  className="flex w-full items-center justify-center gap-2 rounded-lg h-12 bg-primary hover:bg-primary/90 text-white font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.3)] active:scale-[0.98] disabled:opacity-50 font-typewriter uppercase tracking-wider text-sm"
-                >
-                  <span className="material-symbols-outlined text-[18px]">{nextPhase.icon}</span>
-                  {phasePending ? "Czekaj..." : nextPhase.label}
-                </button>
-                {phase === "voting" &&
-                  voteTally &&
-                  voteTally.votedCount < voteTally.totalVoters && (
-                    <p className="text-slate-500 text-xs font-typewriter text-center mt-2">
-                      Czekaj na głosy ({voteTally.votedCount}/{voteTally.totalVoters})
-                    </p>
-                  )}
-              </>
-            ) : (
-              <p className="text-slate-500 text-sm font-typewriter text-center">
-                Brak dostępnych przejść
-              </p>
-            )}
-          </div>
+        {/* Game tab — merged phase + actions */}
+        {tab === "game" && (
+          <GmGameTab
+            hostActions={hostActions}
+            players={players}
+            phase={phase}
+            phaseProgress={phaseProgress}
+            onGmAction={onGmAction}
+            onPhase={onPhase}
+            phasePending={phasePending}
+            voteTally={voteTally}
+            nextPhase={nextPhase}
+          />
         )}
 
         {/* Message tab */}
@@ -2215,46 +2229,6 @@ function MGPanel({
           </div>
         )}
 
-        {/* Actions tab — real-time player actions + GM override */}
-        {tab === "actions" && (
-          <GmActionsTab
-            hostActions={hostActions}
-            players={players}
-            phase={phase}
-            phaseProgress={phaseProgress}
-            onGmAction={onGmAction}
-            onPhase={onPhase}
-          />
-        )}
-
-        {/* GM transfer tab */}
-        {tab === "gm" && (
-          <div>
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
-              Przekaż rolę MG innemu graczowi
-            </p>
-            {transferGmError && (
-              <p className="text-red-400 text-xs font-typewriter mb-2">{transferGmError}</p>
-            )}
-            <div className="flex flex-col gap-2">
-              {players.map((p) => (
-                <button
-                  key={p.playerId}
-                  disabled={transferGmPending}
-                  onClick={() => onTransferGm(p.playerId)}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-black/20 hover:border-primary/40 hover:bg-primary/5 transition-all active:scale-[0.98] disabled:opacity-40 text-left"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-slate-400">
-                    person
-                  </span>
-                  <span className="text-white text-sm">{p.nickname}</span>
-                  <span className="ml-auto text-xs text-slate-600 font-typewriter">→ MG</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Settings tab */}
         {tab === "settings" && (
           <div>
@@ -2291,6 +2265,44 @@ function MGPanel({
               ))}
             </div>
             <p className="text-slate-600 text-xs mt-2">reszta cywile</p>
+
+            {/* GM Transfer Section */}
+            <div className="mt-6 pt-4 border-t border-slate-700">
+              <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
+                Przekaż rolę MG
+              </p>
+              {transferGmError && (
+                <p className="text-red-400 text-xs font-typewriter mb-2">{transferGmError}</p>
+              )}
+              <div className="flex gap-3">
+                <select
+                  value={transferGmTarget}
+                  onChange={(e) => setTransferGmTarget(e.target.value)}
+                  className="flex-1 h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 font-typewriter"
+                >
+                  <option value="">— Wybierz gracza —</option>
+                  {players
+                    .filter((p) => !p.isHost && p.isAlive)
+                    .map((p) => (
+                      <option key={p.playerId} value={p.playerId}>
+                        {p.nickname}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  onClick={() => {
+                    if (transferGmTarget) {
+                      onTransferGm(transferGmTarget);
+                      setTransferGmTarget("");
+                    }
+                  }}
+                  disabled={!transferGmTarget || transferGmPending}
+                  className="px-4 h-10 rounded-lg bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary font-typewriter uppercase tracking-wider text-sm transition-all disabled:opacity-40"
+                >
+                  {transferGmPending ? "Przekazuję..." : "Przekaż"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -2516,13 +2528,16 @@ const ACTION_ROLE_MAP: Record<string, string> = {
   civilian: "wait",
 };
 
-function GmActionsTab({
+function GmGameTab({
   hostActions,
   players,
   phase,
   phaseProgress,
   onGmAction,
   onPhase,
+  phasePending,
+  voteTally,
+  nextPhase,
 }: {
   hostActions?: GameStateResponse["hostActions"];
   players: PublicPlayer[];
@@ -2530,13 +2545,15 @@ function GmActionsTab({
   phaseProgress?: GameStateResponse["phaseProgress"];
   onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
   onPhase: (p: string) => void;
+  phasePending: boolean;
+  voteTally?: { votedCount: number; totalVoters: number };
+  nextPhase?: { label: string; phase: string; icon: string };
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState<string>("");
   const [selectedTarget, setSelectedTarget] = useState<string>("");
 
   const alivePlayers = players.filter((p) => p.isAlive && !p.isHost);
   const actedPlayerIds = new Set(hostActions?.map((a) => a.playerId) ?? []);
-  const pendingPlayers = alivePlayers.filter((p) => !actedPlayerIds.has(p.playerId));
 
   const selectedPlayerData = alivePlayers.find((p) => p.playerId === selectedPlayer);
   const actionType = selectedPlayerData?.role
@@ -2554,136 +2571,83 @@ function GmActionsTab({
 
   return (
     <div>
-      {/* Phase Progress Section */}
+      {/* Hint Box */}
       {phaseProgress && (
-        <div className="mb-6">
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
-                Postęp fazy: {phaseProgress.phase}
-              </p>
-              <span className="text-xs text-slate-400">
-                {phaseProgress.requiredActions.filter((a) => a.done).length}/
-                {phaseProgress.requiredActions.length}
-              </span>
-            </div>
-            <div className="w-full bg-slate-800 rounded-full h-2">
-              <div
-                className="bg-primary h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: `${
-                    phaseProgress.requiredActions.length === 0
-                      ? 100
-                      : (phaseProgress.requiredActions.filter((a) => a.done).length /
-                          phaseProgress.requiredActions.length) *
-                        100
-                  }%`,
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="mb-4 p-3 bg-slate-800 rounded-lg border-l-4 border-primary">
-            <p className="text-sm text-slate-300">{phaseProgress.hint}</p>
-          </div>
-
-          {phaseProgress.requiredActions.length > 0 && (
-            <div className="mb-4">
-              <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2">
-                Status graczy
-              </p>
-              <div className="flex flex-col gap-1">
-                {[...phaseProgress.requiredActions]
-                  .sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
-                  .map((action) => (
-                    <div
-                      key={action.playerId}
-                      className="flex items-center gap-3 p-2 rounded-lg bg-black/20"
-                    >
-                      <span
-                        className={`material-symbols-outlined text-[16px] ${
-                          action.done ? "text-green-500" : "text-yellow-500"
-                        }`}
-                      >
-                        {action.done ? "check_circle" : "schedule"}
-                      </span>
-                      <span className="text-white text-xs font-medium flex-1">
-                        {action.nickname}
-                      </span>
-                      <span className="text-slate-400 text-xs font-typewriter">{action.role}</span>
-                      <span
-                        className={`text-xs font-typewriter ${
-                          action.done ? "text-green-400" : "text-yellow-400"
-                        }`}
-                      >
-                        {action.done ? "Gotowe" : "Oczekuje"}
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          <button
-            disabled={!phaseProgress.allDone}
-            className={`w-full py-2 px-4 rounded-lg font-medium text-sm transition-all ${
-              phaseProgress.allDone
-                ? "bg-primary hover:bg-primary/80 text-black"
-                : "bg-slate-700 text-slate-500 cursor-not-allowed"
-            }`}
-            onClick={() => {
-              const nextPhaseMap: Record<string, string> = {
-                night: "day",
-                day: "voting",
-                voting: "night",
-              };
-              const nextPhase = nextPhaseMap[phaseProgress.phase];
-              if (nextPhase) {
-                onPhase(nextPhase);
-              }
-            }}
-          >
-            {phaseProgress.allDone
-              ? "Dalej"
-              : `Czekaj na: ${phaseProgress.requiredActions
-                  .filter((a) => !a.done)
-                  .map((a) => a.nickname)
-                  .join(", ")}`}
-          </button>
+        <div className="mb-4 p-3 bg-slate-800 rounded-lg border-l-4 border-primary">
+          <p className="text-sm text-slate-300">{phaseProgress.hint}</p>
         </div>
       )}
 
-      <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
-        Akcje graczy — bieżąca faza
-      </p>
-
-      {hostActions && hostActions.length > 0 && (
-        <div className="flex flex-col gap-2 mb-4">
-          {hostActions.map((a, i) => (
+      {/* Progress Bar */}
+      {phaseProgress && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
+              Postęp akcji
+            </p>
+            <span className="text-xs text-slate-400">
+              {phaseProgress.requiredActions.filter((a) => a.done).length}/
+              {phaseProgress.requiredActions.length}
+            </span>
+          </div>
+          <div className="w-full bg-slate-800 rounded-full h-2">
             <div
-              key={i}
-              className="flex items-center gap-3 p-2 rounded-lg bg-black/30 border border-slate-800"
-            >
-              <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
-              <div className="flex-1 min-w-0">
-                <span className="text-white text-xs font-medium">{a.nickname}</span>
-                <span className="text-slate-500 text-xs mx-1">→</span>
-                <span className="text-slate-400 text-xs font-typewriter">
-                  {a.targetNickname ?? "—"}
-                </span>
-              </div>
-              <span className="text-slate-600 text-xs font-typewriter">
-                {ACTION_ROLE_LABELS[a.actionType] ?? a.actionType}
-              </span>
-            </div>
-          ))}
+              className="bg-primary h-2 rounded-full transition-all duration-300"
+              style={{
+                width: `${
+                  phaseProgress.requiredActions.length === 0
+                    ? 100
+                    : (phaseProgress.requiredActions.filter((a) => a.done).length /
+                        phaseProgress.requiredActions.length) *
+                      100
+                }%`,
+              }}
+            />
+          </div>
         </div>
       )}
 
+      {/* Lista graczy ze statusem */}
+      {phaseProgress && phaseProgress.requiredActions.length > 0 && (
+        <div className="mb-4">
+          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2">
+            Status graczy
+          </p>
+          <div className="flex flex-col gap-1">
+            {[...phaseProgress.requiredActions]
+              .sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
+              .map((action) => (
+                <div
+                  key={action.playerId}
+                  className="flex items-center gap-3 p-2 rounded-lg bg-black/20"
+                >
+                  <span
+                    className={`material-symbols-outlined text-[16px] ${
+                      action.done ? "text-green-500" : "text-yellow-500"
+                    }`}
+                  >
+                    {action.done ? "check_circle" : "schedule"}
+                  </span>
+                  <span className="text-white text-xs font-medium flex-1">{action.nickname}</span>
+                  <span className="text-slate-400 text-xs font-typewriter">{action.role}</span>
+                  <span
+                    className={`text-xs font-typewriter ${
+                      action.done ? "text-green-400" : "text-yellow-400"
+                    }`}
+                  >
+                    {action.done ? "✅ Gotowe" : "⏳ Oczekuje"}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* GM override sekcja */}
       {alivePlayers.length > 0 && (phase === "night" || phase === "voting") && (
-        <div className="mt-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+        <div className="mt-3 p-4 rounded-xl bg-primary/5 border border-primary/20 mb-4">
           <p className="text-primary/70 text-xs font-typewriter uppercase tracking-widest mb-3">
-            {pendingPlayers.length > 0 ? "Wybierz / zmień cel gracza" : "Zmień cel gracza"}
+            Zmień akcję gracza (override GM)
           </p>
           <select
             value={selectedPlayer}
@@ -2729,9 +2693,55 @@ function GmActionsTab({
         </div>
       )}
 
-      {pendingPlayers.length === 0 && hostActions && hostActions.length > 0 && (
-        <p className="text-green-500/60 text-xs font-typewriter text-center mt-2">
-          ✓ Wszyscy oddali akcje
+      {/* Przycisk przejścia fazy - NA DOLE */}
+      {nextPhase ? (
+        <button
+          onClick={() => onPhase(nextPhase.phase)}
+          disabled={
+            !phaseProgress?.allDone ||
+            phasePending ||
+            (phase === "voting" && !!voteTally && voteTally.votedCount < voteTally.totalVoters)
+          }
+          className={`flex w-full items-center justify-center gap-2 rounded-lg h-12 transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.3)] active:scale-[0.98] font-typewriter uppercase tracking-wider text-sm ${
+            !phaseProgress?.allDone ||
+            phasePending ||
+            (phase === "voting" && !!voteTally && voteTally.votedCount < voteTally.totalVoters)
+              ? "bg-slate-700 text-slate-500 cursor-not-allowed"
+              : "bg-primary hover:bg-primary/90 text-white font-bold"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px]">
+            {phase === "night" ? "wb_sunny" : phase === "day" ? "how_to_vote" : "bedtime"}
+          </span>
+          {phasePending
+            ? "Czekaj..."
+            : phase === "night"
+              ? "☀️ Zacznij dzień"
+              : phase === "day"
+                ? "🗳️ Zacznij głosowanie"
+                : phase === "voting"
+                  ? "🌙 Zacznij noc"
+                  : nextPhase.label}
+        </button>
+      ) : (
+        <p className="text-slate-500 text-sm font-typewriter text-center">
+          Brak dostępnych przejść
+        </p>
+      )}
+
+      {!phaseProgress?.allDone && phaseProgress && (
+        <p className="text-slate-500 text-xs font-typewriter text-center mt-2">
+          Czekaj na:{" "}
+          {phaseProgress.requiredActions
+            .filter((a) => !a.done)
+            .map((a) => a.nickname)
+            .join(", ")}
+        </p>
+      )}
+
+      {phase === "voting" && voteTally && voteTally.votedCount < voteTally.totalVoters && (
+        <p className="text-slate-500 text-xs font-typewriter text-center mt-2">
+          Czekaj na głosy ({voteTally.votedCount}/{voteTally.totalVoters})
         </p>
       )}
     </div>
