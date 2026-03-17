@@ -45,22 +45,40 @@ export default function CharacterPicker({
             }`}
           >
             <div className="relative">
-              <img
-                src={character.avatar_url}
-                alt={character.name_pl}
-                className={`w-16 h-16 rounded-full border-2 transition-all ${
-                  isSelected ? "border-primary" : "border-slate-600"
-                }`}
-                onError={(e) => {
-                  // Fallback to placeholder if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.src = `data:image/svg+xml,${encodeURIComponent(
-                    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" fill="%23cbd5e1"/>
-                    </svg>`
-                  )}`;
-                }}
-              />
+              {character.avatar_url ? (
+                <>
+                  <img
+                    src={character.avatar_url}
+                    alt={character.name_pl}
+                    className={`w-16 h-16 rounded-full border-2 transition-all ${
+                      isSelected ? "border-primary" : "border-slate-600"
+                    }`}
+                    onError={(e) => {
+                      // Hide image and show placeholder on error
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                      const placeholder =
+                        target.parentElement?.querySelector(".avatar-placeholder");
+                      if (placeholder) (placeholder as HTMLElement).style.display = "flex";
+                    }}
+                  />
+                  <div
+                    className={`avatar-placeholder hidden w-16 h-16 rounded-full bg-primary/20 text-primary font-bold items-center justify-center border-2 transition-all ${
+                      isSelected ? "border-primary" : "border-slate-600"
+                    }`}
+                  >
+                    {character.name_pl.charAt(0).toUpperCase()}
+                  </div>
+                </>
+              ) : (
+                <div
+                  className={`w-16 h-16 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center border-2 transition-all ${
+                    isSelected ? "border-primary" : "border-slate-600"
+                  }`}
+                >
+                  {character.name_pl.charAt(0).toUpperCase()}
+                </div>
+              )}
               {isDisabled && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="material-symbols-outlined text-slate-400 text-xl">lock</span>

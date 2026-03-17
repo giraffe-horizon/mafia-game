@@ -4,7 +4,15 @@ import { joinGame, type D1Database } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
-    const { code, nickname, characterId } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (jsonError) {
+      console.error("Failed to parse request body:", jsonError);
+      return NextResponse.json({ error: "Niepoprawny format danych" }, { status: 400 });
+    }
+
+    const { code, nickname, characterId } = body;
     if (!code || typeof code !== "string") {
       return NextResponse.json({ error: "Podaj kod sesji" }, { status: 400 });
     }
@@ -18,7 +26,8 @@ export async function POST(req: NextRequest) {
       );
     }
     return NextResponse.json({ token: result.token });
-  } catch {
+  } catch (error) {
+    console.error("Join game error:", error);
     return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
   }
 }

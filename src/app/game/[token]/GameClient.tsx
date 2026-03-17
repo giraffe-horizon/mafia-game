@@ -226,6 +226,16 @@ export default function GameClient() {
     fetchCharacters();
   }, []);
 
+  // Scroll lock when settings modal is open
+  useEffect(() => {
+    if (showSettingsModal) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [showSettingsModal]);
+
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
@@ -663,77 +673,66 @@ export default function GameClient() {
       )}
 
       {/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-800">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => router.push("/")}
-            className="size-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
-          </button>
-          <button
-            onClick={() => router.push(`/ranking?token=${token}`)}
-            className="size-10 flex items-center justify-center text-slate-500 hover:text-amber-400 transition-colors"
-            title="Ranking sesji"
-          >
-            <span className="material-symbols-outlined text-[20px]">leaderboard</span>
-          </button>
-          {!isHost && (
-            <button
-              onClick={handleLeaveGame}
-              className="size-10 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors"
-              title="Opuść grę"
-            >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
-            </button>
+      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <button
+          onClick={() => router.push("/")}
+          className="size-9 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+        </button>
+        <div className="text-center">
+          <h2 className="font-typewriter text-white text-sm font-semibold">
+            {PHASE_LABELS[phase]}
+          </h2>
+          {game.round > 0 && (
+            <p className="text-slate-500 text-xs font-typewriter">Runda {game.round}</p>
           )}
         </div>
-        <div className="text-center">
-          <h2 className="font-typewriter text-primary text-base font-bold tracking-widest drop-shadow-[0_0_6px_rgba(218,11,11,0.5)]">
-            MAFIA
-          </h2>
-          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
-            {PHASE_LABELS[phase]}
-            {game.round > 0 && ` · Runda ${game.round}`}
-          </p>
-        </div>
-        <div className="size-10 flex items-center justify-center">
-          {currentPlayer.character ? (
+        <div className="size-9 flex items-center justify-center">
+          {isHost ? (
             <button
               onClick={() => setShowSettingsModal(true)}
-              className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors overflow-hidden"
+              className="w-8 h-8 rounded-full border-2 border-primary/50 hover:border-primary transition-colors bg-primary/10 flex items-center justify-center"
             >
-              <img
-                src={currentPlayer.character.avatarUrl}
-                alt={currentPlayer.character.namePl}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = "none";
-                  const fallback = target.parentElement?.querySelector(".fallback-badge");
-                  if (fallback) (fallback as HTMLElement).style.display = "block";
-                }}
-              />
-              <span
-                className={`fallback-badge hidden text-xs font-typewriter px-2 py-1 rounded-full border font-bold uppercase tracking-wider ${
-                  isHost
-                    ? "text-primary border-primary/40 bg-primary/10"
-                    : "text-slate-400 border-slate-700 bg-slate-800/50"
-                }`}
-              >
-                ⚙️
+              <span className="material-symbols-outlined text-[16px] text-primary">
+                manage_accounts
               </span>
+            </button>
+          ) : currentPlayer.character ? (
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors overflow-hidden flex items-center justify-center"
+            >
+              {currentPlayer.character.avatarUrl ? (
+                <>
+                  <img
+                    src={currentPlayer.character.avatarUrl}
+                    alt={currentPlayer.character.namePl}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                      const placeholder =
+                        target.parentElement?.querySelector(".header-placeholder");
+                      if (placeholder) (placeholder as HTMLElement).style.display = "flex";
+                    }}
+                  />
+                  <div className="header-placeholder hidden w-full h-full bg-primary/20 text-primary font-bold items-center justify-center text-xs">
+                    {currentPlayer.character.namePl.charAt(0).toUpperCase()}
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
+                  {currentPlayer.character.namePl.charAt(0).toUpperCase()}
+                </div>
+              )}
             </button>
           ) : (
             <button
               onClick={() => setShowSettingsModal(true)}
-              className={`text-xs font-typewriter px-2 py-1 rounded-full border font-bold uppercase tracking-wider ${
-                isHost
-                  ? "text-primary border-primary/40 bg-primary/10"
-                  : "text-slate-400 border-slate-700 bg-slate-800/50"
-              }`}
+              className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors bg-slate-800 flex items-center justify-center"
             >
-              ⚙️
+              <span className="material-symbols-outlined text-[16px] text-slate-400">person</span>
             </button>
           )}
         </div>
@@ -1424,7 +1423,7 @@ export default function GameClient() {
                 />
               </div>
 
-              {characters.length > 0 && (
+              {characters.length > 0 && !currentPlayer.isHost && (
                 <div>
                   <label className="block text-slate-400 text-sm mb-3 font-typewriter">
                     Postać
@@ -1445,17 +1444,32 @@ export default function GameClient() {
               >
                 Anuluj
               </button>
-              <button
-                onClick={handleCharacterUpdate}
-                disabled={
-                  !selectedCharacterId ||
-                  selectedCharacterId === state?.currentPlayer?.character?.id
-                }
-                className="flex-1 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded font-typewriter transition-colors"
-              >
-                Zapisz
-              </button>
+              {!currentPlayer.isHost && (
+                <button
+                  onClick={handleCharacterUpdate}
+                  disabled={
+                    !selectedCharacterId ||
+                    selectedCharacterId === state?.currentPlayer?.character?.id
+                  }
+                  className="flex-1 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded font-typewriter transition-colors"
+                >
+                  Zapisz
+                </button>
+              )}
             </div>
+
+            {!currentPlayer.isHost && (
+              <button
+                onClick={() => {
+                  setShowSettingsModal(false);
+                  handleLeaveGame();
+                }}
+                className="w-full mt-4 py-2 bg-red-900/50 hover:bg-red-800/50 border border-red-700/50 text-red-300 rounded font-typewriter transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+                Opuść grę
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -1526,24 +1540,37 @@ function PlayerRow({
         }`}
       >
         {player.character ? (
-          <img
-            src={player.character.avatarUrl}
-            alt={player.character.namePl}
-            className="w-9 h-9 rounded-full object-cover"
-            onError={(e) => {
-              // Fallback to icon if image fails
-              const target = e.target as HTMLImageElement;
-              target.style.display = "none";
-              const icon = target.parentElement?.querySelector(".fallback-icon");
-              if (icon) (icon as HTMLElement).style.display = "block";
-            }}
-          />
-        ) : null}
-        <span
-          className={`material-symbols-outlined text-[18px] text-slate-400 ${player.character ? "fallback-icon hidden" : ""}`}
-        >
-          {player.isHost ? "manage_accounts" : "person"}
-        </span>
+          <>
+            {player.character.avatarUrl ? (
+              <>
+                <img
+                  src={player.character.avatarUrl}
+                  alt={player.character.namePl}
+                  className="w-9 h-9 rounded-full object-cover"
+                  onError={(e) => {
+                    // Hide image and show placeholder on error
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                    const placeholder =
+                      target.parentElement?.querySelector(".character-placeholder");
+                    if (placeholder) (placeholder as HTMLElement).style.display = "flex";
+                  }}
+                />
+                <div className="character-placeholder hidden w-9 h-9 rounded-full bg-primary/20 text-primary font-bold items-center justify-center text-sm">
+                  {player.character.namePl.charAt(0).toUpperCase()}
+                </div>
+              </>
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-sm">
+                {player.character.namePl.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="material-symbols-outlined text-[18px] text-slate-400">
+            {player.isHost ? "manage_accounts" : "person"}
+          </span>
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

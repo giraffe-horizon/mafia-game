@@ -117,14 +117,18 @@ export default function Home() {
   const [sessionCode, setSessionCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const autoJoinAttempted = useRef(false);
 
   // Auto-fill ?code= from URL (e.g. from QR code scan)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    if (code) {
+    if (code && !autoJoinAttempted.current) {
+      autoJoinAttempted.current = true;
       setSessionCode(code.toUpperCase());
       setJoinMode(true);
+      // Auto-join immediately
+      handleJoinWithCode(code.toUpperCase());
     }
   }, []);
 
@@ -150,12 +154,8 @@ export default function Home() {
     }
   }
 
-  async function handleJoin() {
-    if (!joinMode) {
-      setJoinMode(true);
-      return;
-    }
-    if (!sessionCode.trim()) {
+  async function handleJoinWithCode(code: string) {
+    if (!code.trim()) {
       setError("Podaj kod sesji");
       return;
     }
@@ -166,7 +166,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: sessionCode.trim(),
+          code: code.trim(),
         }),
       });
       const data = await res.json();
@@ -180,6 +180,14 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleJoin() {
+    if (!joinMode) {
+      setJoinMode(true);
+      return;
+    }
+    await handleJoinWithCode(sessionCode);
   }
 
   return (
