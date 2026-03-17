@@ -4,10 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRequestContext } from "@cloudflare/next-on-pages";
 import { rematch, type D1Database } from "@/lib/db";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   try {
     const { env } = getRequestContext();
@@ -22,7 +19,9 @@ export async function POST(
       }
       if (body?.mode === "simple") mode = "simple";
       else if (body?.mode === "full") mode = "full";
-    } catch { /* no body */ }
+    } catch {
+      /* no body */
+    }
 
     const result = await rematch(db, token, mafiaCount, mode);
     if (!result.success) {

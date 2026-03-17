@@ -90,12 +90,14 @@ export async function GET(req: NextRequest) {
         ? (game.winner === "mafia" && r.role === "mafia") ||
           (game.winner === "town" && r.role !== "mafia")
         : false,
-      totalScore: r.mission_points + (r.is_alive === 1 ? 1 : 0) +
+      totalScore:
+        r.mission_points +
+        (r.is_alive === 1 ? 1 : 0) +
         (game?.winner
-          ? ((game.winner === "mafia" && r.role === "mafia") ||
-             (game.winner === "town" && r.role !== "mafia")
-              ? 3
-              : 0)
+          ? (game.winner === "mafia" && r.role === "mafia") ||
+            (game.winner === "town" && r.role !== "mafia")
+            ? 3
+            : 0
           : 0),
     }));
 

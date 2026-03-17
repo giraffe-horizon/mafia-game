@@ -78,8 +78,12 @@ export default function RankingClient() {
   if (loading) {
     return (
       <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-[#1a0c0c] md:mx-auto md:my-8 md:rounded-[2.5rem]">
-        <span className="material-symbols-outlined text-[40px] text-[#da0b0b] animate-spin mb-4">refresh</span>
-        <p className="text-slate-400 font-['Special_Elite'] uppercase tracking-widest text-sm">Ładowanie...</p>
+        <span className="material-symbols-outlined text-[40px] text-[#da0b0b] animate-spin mb-4">
+          refresh
+        </span>
+        <p className="text-slate-400 font-['Special_Elite'] uppercase tracking-widest text-sm">
+          Ładowanie...
+        </p>
       </div>
     );
   }
@@ -89,7 +93,12 @@ export default function RankingClient() {
       <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-[#1a0c0c] md:mx-auto md:my-8 md:rounded-[2.5rem]">
         <span className="material-symbols-outlined text-[48px] text-[#da0b0b] mb-4">error</span>
         <p className="text-slate-300 font-['Special_Elite'] text-lg text-center px-8">{error}</p>
-        <button onClick={() => router.push("/")} className="mt-6 text-[#da0b0b] font-['Special_Elite'] uppercase tracking-widest text-sm">← Powrót</button>
+        <button
+          onClick={() => router.push("/")}
+          className="mt-6 text-[#da0b0b] font-['Special_Elite'] uppercase tracking-widest text-sm"
+        >
+          ← Powrót
+        </button>
       </div>
     );
   }
@@ -99,7 +108,7 @@ export default function RankingClient() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-800">
         <button
-          onClick={() => token ? router.push(`/game/${token}`) : router.push("/")}
+          onClick={() => (token ? router.push(`/game/${token}`) : router.push("/"))}
           className="size-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
         >
           <span className="material-symbols-outlined text-[22px]">arrow_back</span>
@@ -123,19 +132,27 @@ export default function RankingClient() {
             <div
               key={r.playerId}
               className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                i === 0 ? "border-amber-700/50 bg-amber-950/20" :
-                i === 1 ? "border-slate-600/50 bg-slate-900/20" :
-                i === 2 ? "border-orange-900/50 bg-orange-950/10" :
-                "border-slate-800 bg-black/20"
+                i === 0
+                  ? "border-amber-700/50 bg-amber-950/20"
+                  : i === 1
+                    ? "border-slate-600/50 bg-slate-900/20"
+                    : i === 2
+                      ? "border-orange-900/50 bg-orange-950/10"
+                      : "border-slate-800 bg-black/20"
               } ${!r.isAlive ? "opacity-50" : ""}`}
             >
               {/* Position */}
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm font-['Special_Elite'] ${
-                i === 0 ? "bg-amber-500/20 text-amber-400 border border-amber-600/50" :
-                i === 1 ? "bg-slate-500/20 text-slate-300 border border-slate-600/50" :
-                i === 2 ? "bg-orange-500/20 text-orange-400 border border-orange-600/50" :
-                "bg-slate-800 text-slate-500 border border-slate-700"
-              }`}>
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm font-['Special_Elite'] ${
+                  i === 0
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-600/50"
+                    : i === 1
+                      ? "bg-slate-500/20 text-slate-300 border border-slate-600/50"
+                      : i === 2
+                        ? "bg-orange-500/20 text-orange-400 border border-orange-600/50"
+                        : "bg-slate-800 text-slate-500 border border-slate-700"
+                }`}
+              >
                 {i + 1}
               </div>
 
@@ -146,12 +163,9 @@ export default function RankingClient() {
                   {!r.isAlive && (
                     <span className="text-slate-600 text-xs font-['Special_Elite']">☠</span>
                   )}
-                  {r.won && (
-                    <span className="text-amber-400 text-xs">⭐</span>
-                  )}
+                  {r.won && <span className="text-amber-400 text-xs">⭐</span>}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  
                   {r.missionsTotal > 0 && (
                     <span className="text-slate-600 text-xs">
                       📋 {r.missionsDone}/{r.missionsTotal}
@@ -162,9 +176,11 @@ export default function RankingClient() {
 
               {/* Score */}
               <div className="text-right">
-                <span className={`text-lg font-bold font-['Special_Elite'] ${
-                  i === 0 ? "text-amber-400" : "text-white"
-                }`}>
+                <span
+                  className={`text-lg font-bold font-['Special_Elite'] ${
+                    i === 0 ? "text-amber-400" : "text-white"
+                  }`}
+                >
                   {r.totalScore}
                 </span>
                 <p className="text-slate-600 text-xs">pkt</p>
@@ -175,7 +191,9 @@ export default function RankingClient() {
 
         {/* Legend */}
         <div className="mt-6 p-3 rounded-lg bg-black/30 border border-slate-800">
-          <p className="text-slate-500 text-xs font-['Special_Elite'] uppercase tracking-widest mb-2">Punktacja</p>
+          <p className="text-slate-500 text-xs font-['Special_Elite'] uppercase tracking-widest mb-2">
+            Punktacja
+          </p>
           <div className="flex flex-col gap-1 text-xs text-slate-600">
             <span>⭐ Wygrana z drużyną: +3 pkt</span>
             <span>💀 Przeżycie: +1 pkt</span>
