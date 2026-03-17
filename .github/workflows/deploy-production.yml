@@ -1,6 +1,8 @@
 name: Deploy Production
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       confirm:
@@ -15,8 +17,7 @@ jobs:
   deploy:
     name: 🚀 Deploy to Production
     runs-on: ubuntu-latest
-    environment: production
-    if: github.event.inputs.confirm == 'deploy'
+    if: github.event_name == 'release' || github.event.inputs.confirm == 'deploy'
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -32,7 +33,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "4"
-          command: d1 migrations apply mafia-game-db --remote
+          command: d1 migrations apply mafia-game-db --remote --env=""
 
       - name: Build with OpenNext
         run: pnpm build:cf
@@ -43,7 +44,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "4"
-          command: deploy
+          command: deploy --env=""
 
       - name: Smoke test
         run: |
@@ -51,15 +52,7 @@ jobs:
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://mafia-game.liske.workers.dev/)
           echo "Production response: $STATUS"
           if [ "$STATUS" != "200" ]; then
-            echo "❌ Production smoke test failed!"
+            echo "❌ Smoke test failed!"
             exit 1
           fi
           echo "✅ Production is live"
-
-      - name: Summary
-        run: |
-          echo "## 🚀 Production Deploy" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **URL:** https://mafia-game.liske.workers.dev" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
