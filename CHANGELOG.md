@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/giraffe-horizon/mafia-game/compare/v1.1.0...v1.1.1) (2026-03-17)
+
+
+### Bug Fixes
+
+* auto-deploy production on new release + explicit env flags ([03e609c](https://github.com/giraffe-horizon/mafia-game/commit/03e609c57ab634727c74f29ff95b319f4ae4cf73))
+
 # [1.1.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.0.0...v1.1.0) (2026-03-17)
 
 
