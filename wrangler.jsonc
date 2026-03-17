@@ -14,5 +14,17 @@
       "database_name": "mafia-game-db",
       "database_id": "2171f8bf-4d09-4176-91e3-ff643ded53bf"
     }
-  ]
+  ],
+  "env": {
+    "staging": {
+      "name": "mafia-game-staging",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "mafia-game-staging-db",
+          "database_id": "90a576a5-ca00-4edb-b721-927725dfc65b"
+        }
+      ]
+    }
+  }
 }
