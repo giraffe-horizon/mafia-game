@@ -16,22 +16,6 @@ interface RankingEntry {
   totalScore: number;
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  mafia: "Mafia",
-  detective: "Detektyw",
-  doctor: "Doktor",
-  civilian: "Cywil",
-  gm: "MG",
-};
-
-const ROLE_COLORS: Record<string, string> = {
-  mafia: "text-red-400",
-  detective: "text-blue-400",
-  doctor: "text-green-400",
-  civilian: "text-slate-400",
-  gm: "text-amber-400",
-};
-
 export default function RankingClient() {
   const searchParams = useSearchParams();
   const router = useRouter();

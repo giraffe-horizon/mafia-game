@@ -12,7 +12,7 @@ describe("Mission Presets", () => {
   });
 
   it("should have valid structure for all presets", () => {
-    MISSION_PRESETS.forEach((preset: MissionPreset, index: number) => {
+    MISSION_PRESETS.forEach((preset: MissionPreset, _index: number) => {
       expect(typeof preset.description).toBe("string");
       expect(preset.description.length).toBeGreaterThan(0);
       expect([1, 2, 3]).toContain(preset.points);

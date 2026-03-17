@@ -302,7 +302,7 @@ describe("Database Integration Tests (SQLite)", () => {
       const hostState = await db.getGameState(mockDb, hostToken);
       const code = hostState!.game.code;
 
-      const joinResult = await db.joinGame(mockDb, code, "Kickable");
+      await db.joinGame(mockDb, code, "Kickable");
 
       // Get player ID from game state
       const stateBeforeKick = await db.getGameState(mockDb, hostToken);
@@ -329,7 +329,7 @@ describe("Database Integration Tests (SQLite)", () => {
       const hostState = await db.getGameState(mockDb, hostToken);
       const code = hostState!.game.code;
 
-      const joinResult = await db.joinGame(mockDb, code, "Player1");
+      await db.joinGame(mockDb, code, "Player1");
 
       // Get player ID
       const state = await db.getGameState(mockDb, hostToken);
@@ -674,7 +674,7 @@ describe("Database Integration Tests (SQLite)", () => {
       const hostState = await db.getGameState(mockDb, hostToken);
       const code = hostState!.game.code;
 
-      const joinResult = await db.joinGame(mockDb, code, "Player1");
+      await db.joinGame(mockDb, code, "Player1");
 
       // Start game first
       for (let i = 1; i < 5; i++) {
@@ -708,7 +708,7 @@ describe("Database Integration Tests (SQLite)", () => {
       const hostState = await db.getGameState(mockDb, hostToken);
       const code = hostState!.game.code;
 
-      const joinResult = await db.joinGame(mockDb, code, "NewGM");
+      await db.joinGame(mockDb, code, "NewGM");
 
       const state = await db.getGameState(mockDb, hostToken);
       const newGm = state!.players.find((p) => p.nickname === "NewGM");
