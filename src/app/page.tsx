@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useGameStore } from "@/stores/gameStore";
 import { AppVersion } from "@/components/AppVersion";
+import CharacterPicker from "@/components/CharacterPicker";
 
 function CodeInput({
   value,
@@ -121,6 +122,16 @@ export default function Home() {
   const [sessionCode, setSessionCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [characters, setCharacters] = useState<
+    Array<{
+      id: string;
+      slug: string;
+      name: string;
+      name_pl: string;
+      avatar_url: string;
+    }>
+  >([]);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalNickname(nickname);
@@ -136,6 +147,22 @@ export default function Home() {
     }
   }, []);
 
+  // Fetch characters on mount
+  useEffect(() => {
+    async function fetchCharacters() {
+      try {
+        const res = await fetch("/api/characters");
+        if (res.ok) {
+          const data = await res.json();
+          setCharacters(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch characters:", error);
+      }
+    }
+    fetchCharacters();
+  }, []);
+
   async function handleCreate() {
     if (!localNickname.trim()) {
       setError("Podaj swoje imię");
@@ -147,7 +174,7 @@ export default function Home() {
       const res = await fetch("/api/game/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: localNickname.trim() }),
+        body: JSON.stringify({ nickname: localNickname.trim(), characterId: selectedCharacterId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -185,6 +212,7 @@ export default function Home() {
         body: JSON.stringify({
           nickname: localNickname.trim(),
           code: sessionCode.trim(),
+          characterId: selectedCharacterId,
         }),
       });
       const data = await res.json();
@@ -264,6 +292,20 @@ export default function Home() {
               />
             </div>
           </label>
+
+          {/* Character selection */}
+          {characters.length > 0 && (
+            <div className="flex flex-col w-full">
+              <p className="text-slate-400 text-sm font-typewriter leading-normal pb-3 uppercase tracking-widest pl-1">
+                Wybierz postać
+              </p>
+              <CharacterPicker
+                characters={characters}
+                selectedId={selectedCharacterId}
+                onSelect={setSelectedCharacterId}
+              />
+            </div>
+          )}
 
           {joinMode && (
             <div className="flex flex-col w-full">

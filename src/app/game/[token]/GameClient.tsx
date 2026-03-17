@@ -6,6 +6,7 @@ import QRCode from "react-qr-code";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
 import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
 import { useGameStore } from "@/stores/gameStore";
+import CharacterPicker from "@/components/CharacterPicker";
 
 // ---------------------------------------------------------------------------
 // Lookup tables
@@ -104,6 +105,46 @@ export default function GameClient() {
     setChangingDecision(false);
   }, [currentPhase, currentRound]);
 
+  // Fetch characters and set selected character based on current player
+  useEffect(() => {
+    async function fetchCharacters() {
+      try {
+        const res = await fetch("/api/characters");
+        if (res.ok) {
+          const data = await res.json();
+          setCharacters(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch characters:", error);
+      }
+    }
+    fetchCharacters();
+  }, []);
+
+  useEffect(() => {
+    if (state?.currentPlayer?.character) {
+      setSelectedCharacterId(state.currentPlayer.character.id);
+    }
+  }, [state?.currentPlayer?.character]);
+
+  // Handle character update
+  const handleCharacterUpdate = async () => {
+    if (!selectedCharacterId) return;
+    try {
+      const res = await fetch(`/api/game/${token}/character`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId: selectedCharacterId }),
+      });
+      if (res.ok) {
+        setShowSettingsModal(false);
+        fetchState(); // Refresh game state
+      }
+    } catch (error) {
+      console.error("Failed to update character:", error);
+    }
+  };
+
   // MG: message form
   const [msgTarget, setMsgTarget] = useState("");
   const [msgContent, setMsgContent] = useState("");
@@ -133,6 +174,19 @@ export default function GameClient() {
   const [mgTab, setMgTab] = useState<
     "phase" | "message" | "mission" | "actions" | "gm" | "settings"
   >("phase");
+
+  // Settings modal
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [characters, setCharacters] = useState<
+    Array<{
+      id: string;
+      slug: string;
+      name: string;
+      name_pl: string;
+      avatar_url: string;
+    }>
+  >([]);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
   // ---------------------------------------------------------------------------
   // Polling
@@ -535,15 +589,44 @@ export default function GameClient() {
           </p>
         </div>
         <div className="size-10 flex items-center justify-center">
-          <span
-            className={`text-xs font-typewriter px-2 py-1 rounded-full border font-bold uppercase tracking-wider ${
-              isHost
-                ? "text-primary border-primary/40 bg-primary/10"
-                : "text-slate-400 border-slate-700 bg-slate-800/50"
-            }`}
-          >
-            {isHost ? "MG" : "Gracz"}
-          </span>
+          {currentPlayer.character ? (
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors overflow-hidden"
+            >
+              <img
+                src={currentPlayer.character.avatarUrl}
+                alt={currentPlayer.character.namePl}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  const fallback = target.parentElement?.querySelector(".fallback-badge");
+                  if (fallback) (fallback as HTMLElement).style.display = "block";
+                }}
+              />
+              <span
+                className={`fallback-badge hidden text-xs font-typewriter px-2 py-1 rounded-full border font-bold uppercase tracking-wider ${
+                  isHost
+                    ? "text-primary border-primary/40 bg-primary/10"
+                    : "text-slate-400 border-slate-700 bg-slate-800/50"
+                }`}
+              >
+                {isHost ? "MG" : "Gracz"}
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className={`text-xs font-typewriter px-2 py-1 rounded-full border font-bold uppercase tracking-wider ${
+                isHost
+                  ? "text-primary border-primary/40 bg-primary/10"
+                  : "text-slate-400 border-slate-700 bg-slate-800/50"
+              }`}
+            >
+              {isHost ? "MG" : "Gracz"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -1214,6 +1297,59 @@ export default function GameClient() {
           </div>
         )}
       </div>
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-white font-bold text-lg mb-4 font-typewriter">Ustawienia gracza</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-slate-400 text-sm mb-2 font-typewriter">Nazwa</label>
+                <input
+                  type="text"
+                  value={state?.currentPlayer?.nickname || ""}
+                  readOnly
+                  className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white"
+                />
+              </div>
+
+              {characters.length > 0 && (
+                <div>
+                  <label className="block text-slate-400 text-sm mb-3 font-typewriter">
+                    Postać
+                  </label>
+                  <CharacterPicker
+                    characters={characters}
+                    selectedId={selectedCharacterId}
+                    onSelect={setSelectedCharacterId}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded font-typewriter transition-colors"
+              >
+                Anuluj
+              </button>
+              <button
+                onClick={handleCharacterUpdate}
+                disabled={
+                  !selectedCharacterId ||
+                  selectedCharacterId === state?.currentPlayer?.character?.id
+                }
+                className="flex-1 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded font-typewriter transition-colors"
+              >
+                Zapisz
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1280,7 +1416,23 @@ function PlayerRow({
           player.isHost ? "border-primary/50 bg-primary/10" : "border-slate-700 bg-slate-800"
         }`}
       >
-        <span className="material-symbols-outlined text-[18px] text-slate-400">
+        {player.character ? (
+          <img
+            src={player.character.avatarUrl}
+            alt={player.character.namePl}
+            className="w-9 h-9 rounded-full object-cover"
+            onError={(e) => {
+              // Fallback to icon if image fails
+              const target = e.target as HTMLImageElement;
+              target.style.display = "none";
+              const icon = target.parentElement?.querySelector(".fallback-icon");
+              if (icon) (icon as HTMLElement).style.display = "block";
+            }}
+          />
+        ) : null}
+        <span
+          className={`material-symbols-outlined text-[18px] text-slate-400 ${player.character ? "fallback-icon hidden" : ""}`}
+        >
           {player.isHost ? "manage_accounts" : "person"}
         </span>
       </div>

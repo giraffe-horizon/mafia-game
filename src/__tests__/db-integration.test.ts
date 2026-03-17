@@ -958,4 +958,115 @@ describe("Database Integration Tests (SQLite)", () => {
       expect(["finished", "playing"]).toContain(finalState!.game.status);
     });
   });
+
+  describe("Characters", () => {
+    beforeEach(async () => {
+      // Seed test characters
+      await mockDb.exec(`
+        INSERT INTO characters (id, slug, name, name_pl, gender, description, avatar_url, is_active, sort_order) VALUES
+        ('test_char_1', 'test-char-1', 'Test Character 1', 'Testowa Postać 1', 'male', 'Test description', '/avatars/test1.webp', 1, 1),
+        ('test_char_2', 'test-char-2', 'Test Character 2', 'Testowa Postać 2', 'female', 'Test description 2', '/avatars/test2.webp', 1, 2),
+        ('inactive_char', 'inactive', 'Inactive Character', 'Nieaktywna Postać', 'male', 'Inactive', '/avatars/inactive.webp', 0, 3)
+      `);
+    });
+
+    describe("getCharacters", () => {
+      it("should return list of active characters", async () => {
+        const characters = await db.getCharacters(mockDb);
+
+        expect(characters.length).toBe(2); // Only active characters
+        expect(characters[0].slug).toBe("test-char-1");
+        expect(characters[1].slug).toBe("test-char-2");
+        expect(characters.every((c) => c.is_active === 1)).toBe(true);
+      });
+
+      it("should return characters in sort order", async () => {
+        const characters = await db.getCharacters(mockDb);
+
+        expect(characters[0].sort_order).toBe(1);
+        expect(characters[1].sort_order).toBe(2);
+      });
+    });
+
+    describe("updateCharacter", () => {
+      it("should update character successfully", async () => {
+        const { token } = await db.createGame(mockDb, "Player1");
+
+        const success = await db.updateCharacter(mockDb, token, "test_char_1");
+        expect(success).toBe(true);
+
+        const state = await db.getGameState(mockDb, token);
+        expect(state!.currentPlayer.character).toEqual({
+          id: "test_char_1",
+          slug: "test-char-1",
+          namePl: "Testowa Postać 1",
+          avatarUrl: "/avatars/test1.webp",
+        });
+      });
+
+      it("should return false for invalid character", async () => {
+        const { token } = await db.createGame(mockDb, "Player1");
+
+        const success = await db.updateCharacter(mockDb, token, "invalid_char");
+        expect(success).toBe(false);
+      });
+
+      it("should return false for inactive character", async () => {
+        const { token } = await db.createGame(mockDb, "Player1");
+
+        const success = await db.updateCharacter(mockDb, token, "inactive_char");
+        expect(success).toBe(false);
+      });
+
+      it("should return false for invalid token", async () => {
+        const success = await db.updateCharacter(mockDb, "invalid_token", "test_char_1");
+        expect(success).toBe(false);
+      });
+    });
+
+    describe("getGameState with character data", () => {
+      it("should include character data for players", async () => {
+        const { token: hostToken } = await db.createGame(mockDb, "Host", "test_char_1");
+        const hostState = await db.getGameState(mockDb, hostToken);
+        const code = hostState!.game.code;
+
+        await db.joinGame(mockDb, code, "Player1", "test_char_2");
+        await db.joinGame(mockDb, code, "Player2"); // No character
+
+        const state = await db.getGameState(mockDb, hostToken);
+
+        const hostPlayer = state!.players.find((p) => p.nickname === "Host");
+        const player1 = state!.players.find((p) => p.nickname === "Player1");
+        const player2 = state!.players.find((p) => p.nickname === "Player2");
+
+        expect(hostPlayer!.character).toEqual({
+          id: "test_char_1",
+          slug: "test-char-1",
+          namePl: "Testowa Postać 1",
+          avatarUrl: "/avatars/test1.webp",
+        });
+
+        expect(player1!.character).toEqual({
+          id: "test_char_2",
+          slug: "test-char-2",
+          namePl: "Testowa Postać 2",
+          avatarUrl: "/avatars/test2.webp",
+        });
+
+        expect(player2!.character).toBe(null);
+      });
+
+      it("should include character data for current player", async () => {
+        const { token } = await db.createGame(mockDb, "Host", "test_char_1");
+        const state = await db.getGameState(mockDb, token);
+
+        expect(state!.currentPlayer.character).toEqual({
+          id: "test_char_1",
+          slug: "test-char-1",
+          namePl: "Testowa Postać 1",
+          avatarUrl: "/avatars/test1.webp",
+        });
+      });
+    });
+  });
 });
