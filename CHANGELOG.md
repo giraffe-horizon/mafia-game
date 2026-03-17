@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.1.2...v1.2.0) (2026-03-17)
+
+
+### Features
+
+* handle players leaving game mid-session (closes [#2](https://github.com/giraffe-horizon/mafia-game/issues/2)) ([#8](https://github.com/giraffe-horizon/mafia-game/issues/8)) ([ed4273d](https://github.com/giraffe-horizon/mafia-game/commit/ed4273dd9e1aa68b6072cbbf2c38d2ecf7bacfa1))
+
 ## [1.1.2](https://github.com/giraffe-horizon/mafia-game/compare/v1.1.1...v1.1.2) (2026-03-17)
 
 
