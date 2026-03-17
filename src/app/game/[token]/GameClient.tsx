@@ -1249,7 +1249,7 @@ function PlayerRow({
 
   return (
     <div
-      className={`flex items-center gap-3 p-3 rounded-lg border transition-all border-slate-800 bg-black/20 ${!player.isAlive ? "opacity-40" : ""}`}
+      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${player.isYou ? "border-emerald-500/50 bg-emerald-500/5" : "border-slate-800 bg-black/20"} ${!player.isAlive ? "opacity-40" : ""}`}
     >
       <div
         className={`w-9 h-9 rounded-full flex items-center justify-center border ${
@@ -1295,6 +1295,9 @@ function PlayerRow({
           ) : (
             <>
               <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
+              {player.isYou && (
+                <span className="text-xs text-emerald-400/70 font-typewriter">(Ty)</span>
+              )}
               {isLobby && player.isYou && onRename && (
                 <button
                   onClick={() => setIsEditing(true)}
