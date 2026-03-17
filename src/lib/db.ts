@@ -195,6 +195,31 @@ function now(): string {
   return new Date().toISOString();
 }
 
+async function getMafiaKillActions(
+  db: D1Database,
+  gameId: string,
+  round: number
+): Promise<{
+  aliveMafia: { player_id: string }[];
+  killActions: { player_id: string; target_player_id: string }[];
+}> {
+  const { results: aliveMafia } = await db
+    .prepare(
+      "SELECT player_id FROM game_players WHERE game_id = ? AND role = 'mafia' AND is_alive = 1"
+    )
+    .bind(gameId)
+    .all<{ player_id: string }>();
+
+  const { results: killActions } = await db
+    .prepare(
+      "SELECT player_id, target_player_id FROM game_actions WHERE game_id = ? AND round = ? AND phase = 'night' AND action_type = 'kill'"
+    )
+    .bind(gameId, round)
+    .all<{ player_id: string; target_player_id: string }>();
+
+  return { aliveMafia, killActions };
+}
+
 async function getPhaseProgress(
   db: D1Database,
   gameRow: GameRow,
@@ -241,19 +266,7 @@ async function getPhaseProgress(
     const missingRoles = requiredActions.filter((a) => !a.done).map((a) => a.role);
 
     // Check mafia consensus
-    const { results: aliveMafia } = await db
-      .prepare(
-        "SELECT player_id FROM game_players WHERE game_id = ? AND role = 'mafia' AND is_alive = 1"
-      )
-      .bind(gameRow.id)
-      .all<{ player_id: string }>();
-
-    const { results: killActions } = await db
-      .prepare(
-        "SELECT player_id, target_player_id FROM game_actions WHERE game_id = ? AND round = ? AND phase = 'night' AND action_type = 'kill'"
-      )
-      .bind(gameRow.id, round)
-      .all<{ player_id: string; target_player_id: string }>();
+    const { aliveMafia, killActions } = await getMafiaKillActions(db, gameRow.id, round);
 
     let consensusWarning = "";
 
@@ -975,35 +988,20 @@ export async function changePhase(
 async function resolveNight(
   db: D1Database,
   gameRow: GameRow,
-  hostPlayer: GamePlayerRow
+  _hostPlayer: GamePlayerRow
 ): Promise<void> {
-  // Get all alive mafia players
-  const { results: aliveMafia } = await db
-    .prepare(
-      "SELECT player_id FROM game_players WHERE game_id = ? AND role = 'mafia' AND is_alive = 1"
-    )
-    .bind(gameRow.id)
-    .all<{ player_id: string }>();
-
-  // Get all kill actions from mafia in this round
-  const { results: killActions } = await db
-    .prepare(
-      "SELECT player_id, target_player_id FROM game_actions WHERE game_id = ? AND round = ? AND phase = 'night' AND action_type = 'kill'"
-    )
-    .bind(gameRow.id, gameRow.round)
-    .all<{ player_id: string; target_player_id: string }>();
+  const { aliveMafia, killActions } = await getMafiaKillActions(db, gameRow.id, gameRow.round);
 
   let nightMsg = "Tej nocy nikt nie zginął.";
+  let msgInserted = false;
 
   // Check for unanimous mafia vote
   if (aliveMafia.length > 0) {
     const mafiaPlayerIds = new Set(aliveMafia.map((m) => m.player_id));
     const votedMafia = killActions.filter((action) => mafiaPlayerIds.has(action.player_id));
 
-    // Check if all alive mafia voted
+    // Check if all alive mafia voted for the same target
     const allMafiaVoted = votedMafia.length === aliveMafia.length;
-
-    // Check if all mafia chose the same target
     const targets = [...new Set(votedMafia.map((action) => action.target_player_id))];
     const unanimous = targets.length === 1 && allMafiaVoted;
 
@@ -1019,23 +1017,33 @@ async function resolveNight(
         .first<{ id: string }>();
 
       if (!protectAction) {
-        await db
-          .prepare("UPDATE game_players SET is_alive = 0 WHERE game_id = ? AND player_id = ?")
-          .bind(gameRow.id, targetPlayerId)
-          .run();
-
+        // Pre-fetch nickname before the batch
         const killed = await db
           .prepare("SELECT nickname FROM game_players WHERE game_id = ? AND player_id = ?")
           .bind(gameRow.id, targetPlayerId)
           .first<{ nickname: string }>();
 
         nightMsg = `Tej nocy zginął: ${killed?.nickname ?? "gracz"}.`;
+
+        // Atomic: mark dead + broadcast night result in one batch
+        await db.batch([
+          db
+            .prepare("UPDATE game_players SET is_alive = 0 WHERE game_id = ? AND player_id = ?")
+            .bind(gameRow.id, targetPlayerId),
+          db
+            .prepare(
+              "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, NULL, NULL, ?, 0, ?)"
+            )
+            .bind(nanoid(), gameRow.id, nightMsg, now()),
+        ]);
+        msgInserted = true;
       } else {
         nightMsg = "Tej nocy nikt nie zginął — ktoś był chroniony.";
       }
-    } else if (aliveMafia.length > 0) {
+    } else {
       // Mafia exists but didn't reach consensus
-      nightMsg = "Tej nocy nikt nie zginął — Mafia nie mogła się zdecydować.";
+      const disagreed = votedMafia.length > 0 && targets.length > 1;
+      nightMsg = disagreed ? "Mafia nie mogła się zdecydować." : "Tej nocy nikt nie zginął.";
     }
   }
 
@@ -1064,13 +1072,15 @@ async function resolveNight(
       .run();
   }
 
-  // Broadcast night result
-  await db
-    .prepare(
-      "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, NULL, NULL, ?, 0, ?)"
-    )
-    .bind(nanoid(), gameRow.id, nightMsg, now())
-    .run();
+  // Broadcast night result (if not already done atomically in the kill batch)
+  if (!msgInserted) {
+    await db
+      .prepare(
+        "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, NULL, NULL, ?, 0, ?)"
+      )
+      .bind(nanoid(), gameRow.id, nightMsg, now())
+      .run();
+  }
 }
 
 async function resolveVoting(
