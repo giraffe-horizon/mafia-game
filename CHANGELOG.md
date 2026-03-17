@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.0.0...v1.1.0) (2026-03-17)
+
+
+### Bug Fixes
+
+* add version to page title and meta tags ([49d981c](https://github.com/giraffe-horizon/mafia-game/commit/49d981cad58a61753251933be49577e6d325ace5))
+
+
+### Features
+
+* handle players leaving game mid-session (closes [#2](https://github.com/giraffe-horizon/mafia-game/issues/2)) ([a0ed0c4](https://github.com/giraffe-horizon/mafia-game/commit/a0ed0c4d66f57b505caa4b4e8b269b464308cef8))
+
 # 1.0.0 (2026-03-17)
 
 
