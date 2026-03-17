@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useGameStore } from "@/stores/gameStore";
+import { AppVersion } from "@/components/AppVersion";
 
 function CodeInput({
   value,
@@ -322,6 +323,9 @@ export default function Home() {
             </button>
           )}
         </div>
+      </div>
+      <div className="relative z-20 pb-4 flex justify-center">
+        <AppVersion />
       </div>
     </div>
   );
