@@ -1,3 +1,18 @@
+# [1.3.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.2.0...v1.3.0) (2026-03-17)
+
+
+### Bug Fixes
+
+* UI polish — scroll lock, avatar placeholders, header redesign, auto-join ([bec1f39](https://github.com/giraffe-horizon/mafia-game/commit/bec1f391cce0bab142c066ffd97ea3460041d08c))
+* update test to expect empty string instead of null for nickname ([d5c3055](https://github.com/giraffe-horizon/mafia-game/commit/d5c3055df2ecfa9d8bcc872aa4e3227bf4883089))
+* use empty string instead of null for nickname (D1 NOT NULL constraint) ([5b696db](https://github.com/giraffe-horizon/mafia-game/commit/5b696dbba81707e4dcaf65e3b3274b0679ff03f7))
+
+
+### Features
+
+* character selection system with R2 avatars (closes [#3](https://github.com/giraffe-horizon/mafia-game/issues/3)) ([9ad244c](https://github.com/giraffe-horizon/mafia-game/commit/9ad244c833f580863811bbb3b3105673788ff1da))
+* onboarding refactor + UI fixes ([7849977](https://github.com/giraffe-horizon/mafia-game/commit/7849977f666601eb1d1304d64713c2f17a2547ef))
+
 # [1.2.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.1.2...v1.2.0) (2026-03-17)
 
 
