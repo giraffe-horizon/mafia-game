@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import packageJson from "../../package.json";
 
 export const metadata: Metadata = {
-  title: "Mafia Game",
+  title: `Mafia Game v${packageJson.version}`,
   description: "Pomocnik do gry Mafia",
+  other: {
+    "app-version": packageJson.version,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
