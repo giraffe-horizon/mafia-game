@@ -3,37 +3,27 @@ import { useGameStore } from "@/stores/gameStore";
 
 describe("Game Store (Zustand)", () => {
   beforeEach(() => {
-    useGameStore.setState({ nickname: "", gameState: null });
+    useGameStore.setState({ gameState: null });
   });
 
   describe("Store structure", () => {
     it("should have correct interface shape", () => {
       const store = useGameStore.getState();
 
-      expect(store).toHaveProperty("nickname");
-      expect(store).toHaveProperty("setNickname");
       expect(store).toHaveProperty("gameState");
       expect(store).toHaveProperty("setGameState");
 
-      expect(typeof store.nickname).toBe("string");
-      expect(typeof store.setNickname).toBe("function");
       expect(typeof store.setGameState).toBe("function");
     });
 
     it("should initialize with correct default values", () => {
       const store = useGameStore.getState();
 
-      expect(store.nickname).toBe("");
       expect(store.gameState).toBeNull();
     });
   });
 
   describe("Store methods", () => {
-    it("should set nickname", () => {
-      useGameStore.getState().setNickname("TestPlayer");
-      expect(useGameStore.getState().nickname).toBe("TestPlayer");
-    });
-
     it("should set game state", () => {
       const mockState = {
         game: {
@@ -51,12 +41,14 @@ describe("Game Store (Zustand)", () => {
           role: null,
           isAlive: true,
           isHost: true,
+          isSetupComplete: true,
         },
         players: [],
         messages: [],
         missions: [],
         detectiveResult: null,
         myAction: null,
+        takenCharacterIds: [],
       };
       useGameStore.getState().setGameState(mockState as never);
       expect(useGameStore.getState().gameState).toBeDefined();
@@ -65,13 +57,6 @@ describe("Game Store (Zustand)", () => {
     it("should clear game state", () => {
       useGameStore.getState().setGameState(null);
       expect(useGameStore.getState().gameState).toBeNull();
-    });
-
-    it("should update nickname multiple times", () => {
-      useGameStore.getState().setNickname("First");
-      expect(useGameStore.getState().nickname).toBe("First");
-      useGameStore.getState().setNickname("Second");
-      expect(useGameStore.getState().nickname).toBe("Second");
     });
   });
 
@@ -86,16 +71,8 @@ describe("Game Store (Zustand)", () => {
     it("should use proper TypeScript types", () => {
       const store = useGameStore.getState();
 
-      expect(store.nickname).toBeDefined();
       expect(store.gameState !== undefined).toBe(true);
-      expect(store.setNickname).toBeDefined();
       expect(store.setGameState).toBeDefined();
-    });
-
-    it("should have persistence configuration", () => {
-      expect(() => useGameStore.getState()).not.toThrow();
-      expect(useGameStore.persist).toBeDefined();
-      expect(useGameStore.persist.getOptions().name).toBe("mafia-game-store");
     });
   });
 
@@ -117,12 +94,15 @@ describe("Game Store (Zustand)", () => {
           role: null,
           isAlive: true,
           isHost: true,
+          isSetupComplete: true,
+          character: null,
         },
         players: [],
         messages: [],
         missions: [],
         detectiveResult: null,
         myAction: null,
+        takenCharacterIds: [],
       };
 
       expect(mockGameState).toBeDefined();
@@ -146,6 +126,8 @@ describe("Game Store (Zustand)", () => {
           role: "mafia" as const,
           isAlive: true,
           isHost: false,
+          isSetupComplete: true,
+          character: null,
         },
         players: [
           {
@@ -155,6 +137,7 @@ describe("Game Store (Zustand)", () => {
             isHost: false,
             role: null,
             isYou: false,
+            character: null,
           },
         ],
         messages: [],
@@ -169,6 +152,7 @@ describe("Game Store (Zustand)", () => {
         ],
         detectiveResult: null,
         myAction: null,
+        takenCharacterIds: [],
       };
 
       expect(complexGameState.game.round).toBe(3);

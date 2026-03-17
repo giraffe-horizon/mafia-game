@@ -23,13 +23,14 @@ CREATE TABLE IF NOT EXISTS games (
 );
 
 CREATE TABLE IF NOT EXISTS game_players (
-  game_id   TEXT NOT NULL,
-  player_id TEXT NOT NULL,
-  token     TEXT NOT NULL UNIQUE,
-  nickname  TEXT NOT NULL,
-  role      TEXT,            -- mafia | detective | doctor | civilian | NULL
-  is_alive  INTEGER NOT NULL DEFAULT 1,  -- 0 | 1
-  is_host   INTEGER NOT NULL DEFAULT 0,  -- 0 | 1
+  game_id      TEXT NOT NULL,
+  player_id    TEXT NOT NULL,
+  token        TEXT NOT NULL UNIQUE,
+  nickname     TEXT,            -- Can be NULL for incomplete setup
+  role         TEXT,            -- mafia | detective | doctor | civilian | NULL
+  is_alive     INTEGER NOT NULL DEFAULT 1,  -- 0 | 1
+  is_host      INTEGER NOT NULL DEFAULT 0,  -- 0 | 1
+  character_id TEXT,            -- References characters.id
   PRIMARY KEY (game_id, player_id)
 );
 
@@ -64,6 +65,18 @@ CREATE TABLE IF NOT EXISTS missions (
   is_completed INTEGER NOT NULL DEFAULT 0,
   points       INTEGER NOT NULL DEFAULT 0,
   created_at   TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS characters (
+  id          TEXT PRIMARY KEY,
+  slug        TEXT NOT NULL UNIQUE,
+  name        TEXT NOT NULL,
+  name_pl     TEXT NOT NULL,
+  gender      TEXT NOT NULL CHECK(gender IN ('male', 'female')),
+  description TEXT,
+  avatar_url  TEXT NOT NULL,
+  is_active   INTEGER NOT NULL DEFAULT 1,
+  sort_order  INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_games_code ON games(code);

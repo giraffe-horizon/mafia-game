@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
 import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
-import { useGameStore } from "@/stores/gameStore";
+import CharacterPicker from "@/components/CharacterPicker";
 
 // ---------------------------------------------------------------------------
 // Lookup tables
@@ -70,7 +70,6 @@ interface Toast {
 export default function GameClient() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
-  const { setNickname } = useGameStore();
 
   // Core state
   const [state, setState] = useState<GameStateResponse | null>(null);
@@ -97,12 +96,51 @@ export default function GameClient() {
   // Decision changing (must be before conditional returns!)
   const [changingDecision, setChangingDecision] = useState(false);
 
+  // Onboarding state
+  const [characters, setCharacters] = useState<
+    Array<{
+      id: string;
+      slug: string;
+      name: string;
+      name_pl: string;
+      avatar_url: string;
+    }>
+  >([]);
+  const [onboardingNickname, setOnboardingNickname] = useState("");
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+  const [onboardingError, setOnboardingError] = useState("");
+
   // Reset changingDecision when phase changes (must be before conditional returns!)
   const currentPhase = state?.game?.phase;
   const currentRound = state?.game?.round;
   useEffect(() => {
     setChangingDecision(false);
   }, [currentPhase, currentRound]);
+
+  useEffect(() => {
+    if (state?.currentPlayer?.character) {
+      setSelectedCharacterId(state.currentPlayer.character.id);
+    }
+  }, [state?.currentPlayer?.character]);
+
+  // Handle character update
+  const handleCharacterUpdate = async () => {
+    if (!selectedCharacterId) return;
+    try {
+      const res = await fetch(`/api/game/${token}/character`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId: selectedCharacterId }),
+      });
+      if (res.ok) {
+        setShowSettingsModal(false);
+        fetchState(); // Refresh game state
+      }
+    } catch (error) {
+      console.error("Failed to update character:", error);
+    }
+  };
 
   // MG: message form
   const [msgTarget, setMsgTarget] = useState("");
@@ -133,6 +171,9 @@ export default function GameClient() {
   const [mgTab, setMgTab] = useState<
     "phase" | "message" | "mission" | "actions" | "gm" | "settings"
   >("phase");
+
+  // Settings modal
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Polling
@@ -169,6 +210,32 @@ export default function GameClient() {
     return () => clearInterval(interval);
   }, [fetchState]);
 
+  // Fetch characters for onboarding
+  useEffect(() => {
+    async function fetchCharacters() {
+      try {
+        const res = await fetch("/api/characters");
+        if (res.ok) {
+          const data = await res.json();
+          setCharacters(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch characters:", error);
+      }
+    }
+    fetchCharacters();
+  }, []);
+
+  // Scroll lock when settings modal is open
+  useEffect(() => {
+    if (showSettingsModal) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [showSettingsModal]);
+
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
@@ -190,6 +257,40 @@ export default function GameClient() {
       setError("Błąd połączenia");
     } finally {
       setStarting(false);
+    }
+  }
+
+  async function handleOnboardingSetup() {
+    if (!onboardingNickname.trim()) {
+      setOnboardingError("Podaj swoje imię");
+      return;
+    }
+    if (!selectedCharacterId) {
+      setOnboardingError("Wybierz postać");
+      return;
+    }
+    setOnboardingError("");
+    setOnboardingLoading(true);
+    try {
+      const res = await fetch(`/api/game/${token}/setup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: onboardingNickname.trim(),
+          characterId: selectedCharacterId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOnboardingError(data.error ?? "Błąd");
+        return;
+      }
+      // Refresh state to show lobby
+      await fetchState();
+    } catch {
+      setOnboardingError("Błąd połączenia");
+    } finally {
+      setOnboardingLoading(false);
     }
   }
 
@@ -254,29 +355,6 @@ export default function GameClient() {
       setMsgError("Błąd połączenia");
     } finally {
       setMsgPending(false);
-    }
-  }
-
-  async function handleRename(newNickname: string) {
-    try {
-      const res = await fetch(`/api/game/${token}/rename`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: newNickname }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Błąd zmiany nazwy");
-        return;
-      }
-
-      // Update the local store
-      setNickname(newNickname);
-
-      // Refetch game state to get updated nickname
-      await fetchState();
-    } catch {
-      setError("Błąd połączenia podczas zmiany nazwy");
     }
   }
 
@@ -452,6 +530,101 @@ export default function GameClient() {
     );
   }
 
+  // Onboarding screen
+  if (state && !state.currentPlayer.isSetupComplete && !state.currentPlayer.isHost) {
+    return (
+      <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-dark overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        </div>
+
+        {/* Header */}
+        <div className="relative z-20 flex items-center p-4 pb-2 justify-between">
+          <div className="size-12 shrink-0 opacity-0 pointer-events-none" />
+          <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-typewriter text-primary drop-shadow-[0_0_8px_rgba(218,11,11,0.5)]">
+            DOŁĄCZANIE DO GRY
+          </h2>
+          <div className="size-12 shrink-0" />
+        </div>
+
+        <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
+          {/* Info */}
+          <div className="flex justify-center mb-8">
+            <div className="w-24 h-24 rounded-full border-2 border-primary/40 flex items-center justify-center bg-background-dark/80 shadow-[0_0_30px_rgba(218,11,11,0.2)] relative overflow-hidden">
+              <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl" />
+              <span className="material-symbols-outlined text-[48px] text-primary relative z-10 drop-shadow-md">
+                person_add
+              </span>
+            </div>
+          </div>
+
+          <p className="text-slate-300 text-center font-typewriter mb-8 leading-relaxed">
+            Kod sesji: <span className="text-primary font-bold">{state.game.code}</span>
+            <br />
+            Wybierz swoje imię i postać
+          </p>
+
+          {/* Form */}
+          <div className="flex flex-col gap-4 w-full mb-6">
+            {/* Nickname input */}
+            <label className="flex flex-col w-full group/input">
+              <p className="text-slate-400 text-sm font-typewriter leading-normal pb-2 uppercase tracking-widest pl-1 transition-colors group-focus-within/input:text-primary">
+                Twoje imię
+              </p>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-slate-500">
+                  <span className="material-symbols-outlined text-[20px]">person</span>
+                </span>
+                <input
+                  className="flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/30 bg-black/40 backdrop-blur-sm h-14 placeholder:text-slate-600 pl-12 pr-4 text-lg font-medium leading-normal transition-all"
+                  placeholder="Detektyw..."
+                  type="text"
+                  value={onboardingNickname}
+                  onChange={(e) => setOnboardingNickname(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleOnboardingSetup()}
+                />
+              </div>
+            </label>
+
+            {/* Character selection */}
+            {characters.length > 0 && (
+              <div className="flex flex-col w-full">
+                <p className="text-slate-400 text-sm font-typewriter leading-normal pb-3 uppercase tracking-widest pl-1">
+                  Wybierz postać
+                </p>
+                <CharacterPicker
+                  characters={characters}
+                  selectedId={selectedCharacterId}
+                  onSelect={setSelectedCharacterId}
+                  disabledIds={state.takenCharacterIds}
+                />
+              </div>
+            )}
+
+            {onboardingError && (
+              <p className="text-primary text-sm font-typewriter pl-1 animate-pulse">
+                {onboardingError}
+              </p>
+            )}
+          </div>
+
+          {/* Join button */}
+          <button
+            onClick={handleOnboardingSetup}
+            disabled={onboardingLoading || !onboardingNickname.trim() || !selectedCharacterId}
+            className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined mr-2 text-[20px]">login</span>
+            <span className="truncate uppercase font-typewriter tracking-wider">
+              {onboardingLoading ? "Dołączam..." : "Dołącz do gry"}
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const { game, currentPlayer, players, missions, detectiveResult } = state;
   const isHost = currentPlayer.isHost;
   const isLobby = game.status === "lobby";
@@ -500,50 +673,68 @@ export default function GameClient() {
       )}
 
       {/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-800">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => router.push("/")}
-            className="size-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
-          </button>
-          <button
-            onClick={() => router.push(`/ranking?token=${token}`)}
-            className="size-10 flex items-center justify-center text-slate-500 hover:text-amber-400 transition-colors"
-            title="Ranking sesji"
-          >
-            <span className="material-symbols-outlined text-[20px]">leaderboard</span>
-          </button>
-          {!isHost && (
-            <button
-              onClick={handleLeaveGame}
-              className="size-10 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors"
-              title="Opuść grę"
-            >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
-            </button>
+      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <button
+          onClick={() => router.push("/")}
+          className="size-9 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+        </button>
+        <div className="text-center">
+          <h2 className="font-typewriter text-white text-sm font-semibold">
+            {PHASE_LABELS[phase]}
+          </h2>
+          {game.round > 0 && (
+            <p className="text-slate-500 text-xs font-typewriter">Runda {game.round}</p>
           )}
         </div>
-        <div className="text-center">
-          <h2 className="font-typewriter text-primary text-base font-bold tracking-widest drop-shadow-[0_0_6px_rgba(218,11,11,0.5)]">
-            MAFIA
-          </h2>
-          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
-            {PHASE_LABELS[phase]}
-            {game.round > 0 && ` · Runda ${game.round}`}
-          </p>
-        </div>
-        <div className="size-10 flex items-center justify-center">
-          <span
-            className={`text-xs font-typewriter px-2 py-1 rounded-full border font-bold uppercase tracking-wider ${
-              isHost
-                ? "text-primary border-primary/40 bg-primary/10"
-                : "text-slate-400 border-slate-700 bg-slate-800/50"
-            }`}
-          >
-            {isHost ? "MG" : "Gracz"}
-          </span>
+        <div className="size-9 flex items-center justify-center">
+          {isHost ? (
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="w-8 h-8 rounded-full border-2 border-primary/50 hover:border-primary transition-colors bg-primary/10 flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-[16px] text-primary">
+                manage_accounts
+              </span>
+            </button>
+          ) : currentPlayer.character ? (
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors overflow-hidden flex items-center justify-center"
+            >
+              {currentPlayer.character.avatarUrl ? (
+                <>
+                  <img
+                    src={currentPlayer.character.avatarUrl}
+                    alt={currentPlayer.character.namePl}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                      const placeholder =
+                        target.parentElement?.querySelector(".header-placeholder");
+                      if (placeholder) (placeholder as HTMLElement).style.display = "flex";
+                    }}
+                  />
+                  <div className="header-placeholder hidden w-full h-full bg-primary/20 text-primary font-bold items-center justify-center text-xs">
+                    {currentPlayer.character.namePl.charAt(0).toUpperCase()}
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
+                  {currentPlayer.character.namePl.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors bg-slate-800 flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-[16px] text-slate-400">person</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -1094,7 +1285,7 @@ export default function GameClient() {
                 currentPlayerRole={currentPlayer.role}
                 roleVisible={roleVisible}
                 onKick={isLobby && isHost ? handleKick : undefined}
-                onRename={p.isYou ? handleRename : undefined}
+                onRename={undefined}
               />
             ))}
           </div>
@@ -1214,6 +1405,74 @@ export default function GameClient() {
           </div>
         )}
       </div>
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-white font-bold text-lg mb-4 font-typewriter">Ustawienia gracza</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-slate-400 text-sm mb-2 font-typewriter">Nazwa</label>
+                <input
+                  type="text"
+                  value={state?.currentPlayer?.nickname || ""}
+                  readOnly
+                  className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white"
+                />
+              </div>
+
+              {characters.length > 0 && !currentPlayer.isHost && (
+                <div>
+                  <label className="block text-slate-400 text-sm mb-3 font-typewriter">
+                    Postać
+                  </label>
+                  <CharacterPicker
+                    characters={characters}
+                    selectedId={selectedCharacterId}
+                    onSelect={setSelectedCharacterId}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded font-typewriter transition-colors"
+              >
+                Anuluj
+              </button>
+              {!currentPlayer.isHost && (
+                <button
+                  onClick={handleCharacterUpdate}
+                  disabled={
+                    !selectedCharacterId ||
+                    selectedCharacterId === state?.currentPlayer?.character?.id
+                  }
+                  className="flex-1 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded font-typewriter transition-colors"
+                >
+                  Zapisz
+                </button>
+              )}
+            </div>
+
+            {!currentPlayer.isHost && (
+              <button
+                onClick={() => {
+                  setShowSettingsModal(false);
+                  handleLeaveGame();
+                }}
+                className="w-full mt-4 py-2 bg-red-900/50 hover:bg-red-800/50 border border-red-700/50 text-red-300 rounded font-typewriter transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+                Opuść grę
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1280,9 +1539,38 @@ function PlayerRow({
           player.isHost ? "border-primary/50 bg-primary/10" : "border-slate-700 bg-slate-800"
         }`}
       >
-        <span className="material-symbols-outlined text-[18px] text-slate-400">
-          {player.isHost ? "manage_accounts" : "person"}
-        </span>
+        {player.character ? (
+          <>
+            {player.character.avatarUrl ? (
+              <>
+                <img
+                  src={player.character.avatarUrl}
+                  alt={player.character.namePl}
+                  className="w-9 h-9 rounded-full object-cover"
+                  onError={(e) => {
+                    // Hide image and show placeholder on error
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                    const placeholder =
+                      target.parentElement?.querySelector(".character-placeholder");
+                    if (placeholder) (placeholder as HTMLElement).style.display = "flex";
+                  }}
+                />
+                <div className="character-placeholder hidden w-9 h-9 rounded-full bg-primary/20 text-primary font-bold items-center justify-center text-sm">
+                  {player.character.namePl.charAt(0).toUpperCase()}
+                </div>
+              </>
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-sm">
+                {player.character.namePl.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="material-symbols-outlined text-[18px] text-slate-400">
+            {player.isHost ? "manage_accounts" : "person"}
+          </span>
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -1318,24 +1606,20 @@ function PlayerRow({
             </div>
           ) : (
             <>
-              <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
-              {player.isYou && (
-                <span className="text-xs text-emerald-400/70 font-typewriter">(Ty)</span>
-              )}
-              {isLobby && player.isYou && onRename && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-slate-400 hover:text-primary transition-colors"
-                  title="Edytuj nazwę"
-                >
-                  <span className="material-symbols-outlined text-[14px]">edit</span>
-                </button>
-              )}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
+                  {player.isYou && (
+                    <span className="text-xs text-emerald-400/70 font-typewriter">(Ty)</span>
+                  )}
+                </div>
+                {player.character && (
+                  <span className="text-[11px] text-slate-500 font-typewriter">
+                    {player.character.namePl}
+                  </span>
+                )}
+              </div>
             </>
-          )}
-
-          {player.isHost && (
-            <span className="text-xs text-primary/70 font-typewriter uppercase">MG</span>
           )}
           {isMafiaTeammate && (
             <span className="text-xs" title="Członek mafii">

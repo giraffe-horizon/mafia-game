@@ -75,6 +75,18 @@ interface MissionRow {
   created_at: string;
 }
 
+interface CharacterRow {
+  id: string;
+  slug: string;
+  name: string;
+  name_pl: string;
+  gender: string;
+  description: string | null;
+  avatar_url: string;
+  is_active: number;
+  sort_order: number;
+}
+
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
@@ -89,6 +101,7 @@ export interface PublicPlayer {
   isHost: boolean;
   role: Role | null;
   isYou: boolean;
+  character: { id: string; slug: string; namePl: string; avatarUrl: string } | null;
 }
 
 export interface GameStateResponse {
@@ -107,7 +120,10 @@ export interface GameStateResponse {
     role: Role | null;
     isAlive: boolean;
     isHost: boolean;
+    isSetupComplete: boolean;
+    character: { id: string; slug: string; namePl: string; avatarUrl: string } | null;
   };
+  takenCharacterIds: string[];
   players: PublicPlayer[];
   messages: { id: string; content: string; createdAt: string }[];
   missions: {
@@ -173,7 +189,11 @@ function now(): string {
 // ---------------------------------------------------------------------------
 // createGame
 // ---------------------------------------------------------------------------
-export async function createGame(db: D1Database, hostNickname: string): Promise<{ token: string }> {
+export async function createGame(
+  db: D1Database,
+  hostNickname?: string,
+  characterId?: string
+): Promise<{ token: string }> {
   const gameId = nanoid();
   const hostPlayerId = nanoid();
   const hostToken = nanoid();
@@ -191,9 +211,15 @@ export async function createGame(db: D1Database, hostNickname: string): Promise<
       .bind(gameId, code, hostPlayerId, now()),
     db
       .prepare(
-        "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host) VALUES (?, ?, ?, ?, NULL, 1, 1)"
+        "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host, character_id) VALUES (?, ?, ?, ?, NULL, 1, 1, ?)"
       )
-      .bind(gameId, hostPlayerId, hostToken, hostNickname.trim()),
+      .bind(
+        gameId,
+        hostPlayerId,
+        hostToken,
+        hostNickname?.trim() || "Mistrz Gry",
+        characterId || null
+      ),
   ]);
 
   return { token: hostToken };
@@ -205,7 +231,8 @@ export async function createGame(db: D1Database, hostNickname: string): Promise<
 export async function joinGame(
   db: D1Database,
   code: string,
-  nickname: string
+  nickname?: string,
+  characterId?: string
 ): Promise<{ token: string } | null> {
   const normalizedCode = code.toUpperCase().trim();
   const game = await db
@@ -220,12 +247,79 @@ export async function joinGame(
 
   await db
     .prepare(
-      "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host) VALUES (?, ?, ?, ?, NULL, 1, 0)"
+      "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host, character_id) VALUES (?, ?, ?, ?, NULL, 1, 0, ?)"
     )
-    .bind(game.id, playerId, token, nickname.trim())
+    .bind(game.id, playerId, token, nickname?.trim() || "", characterId || null)
     .run();
 
   return { token };
+}
+
+// ---------------------------------------------------------------------------
+// setupPlayer
+// ---------------------------------------------------------------------------
+export async function setupPlayer(
+  db: D1Database,
+  token: string,
+  nickname: string,
+  characterId: string
+): Promise<{ success: boolean; error?: string }> {
+  // Validate nickname length
+  if (!nickname.trim() || nickname.trim().length < 1 || nickname.trim().length > 20) {
+    return { success: false, error: "Nazwa musi mieć 1-20 znaków" };
+  }
+
+  // Get player's game info
+  const playerRow = await db
+    .prepare("SELECT game_id, player_id FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<{ game_id: string; player_id: string }>();
+
+  if (!playerRow) {
+    return { success: false, error: "Nieprawidłowy token gracza" };
+  }
+
+  // Check if nickname is unique in this game
+  const existingNickname = await db
+    .prepare(
+      "SELECT player_id FROM game_players WHERE game_id = ? AND nickname = ? AND player_id != ?"
+    )
+    .bind(playerRow.game_id, nickname.trim(), playerRow.player_id)
+    .first();
+
+  if (existingNickname) {
+    return { success: false, error: "Ta nazwa jest już zajęta" };
+  }
+
+  // Validate character exists and is active
+  const character = await db
+    .prepare("SELECT id FROM characters WHERE id = ? AND is_active = 1")
+    .bind(characterId)
+    .first<{ id: string }>();
+
+  if (!character) {
+    return { success: false, error: "Nieprawidłowa postać" };
+  }
+
+  // Check if character is not taken in this game
+  const existingCharacter = await db
+    .prepare(
+      "SELECT player_id FROM game_players WHERE game_id = ? AND character_id = ? AND player_id != ?"
+    )
+    .bind(playerRow.game_id, characterId, playerRow.player_id)
+    .first();
+
+  if (existingCharacter) {
+    return { success: false, error: "Ta postać jest już wybrana" };
+  }
+
+  // Update player
+  await db
+    .prepare("UPDATE game_players SET nickname = ?, character_id = ? WHERE token = ?")
+    .bind(nickname.trim(), characterId, token)
+    .run();
+
+  return { success: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -236,9 +330,23 @@ export async function getGameState(
   token: string
 ): Promise<GameStateResponse | null> {
   const playerRow = await db
-    .prepare("SELECT * FROM game_players WHERE token = ?")
+    .prepare(
+      `
+      SELECT gp.*, c.id as character_id, c.slug as character_slug, c.name_pl as character_name_pl, c.avatar_url as character_avatar_url
+      FROM game_players gp
+      LEFT JOIN characters c ON gp.character_id = c.id
+      WHERE gp.token = ?
+    `
+    )
     .bind(token)
-    .first<GamePlayerRow>();
+    .first<
+      GamePlayerRow & {
+        character_id: string | null;
+        character_slug: string | null;
+        character_name_pl: string | null;
+        character_avatar_url: string | null;
+      }
+    >();
   if (!playerRow) return null;
 
   const gameRow = await db
@@ -248,9 +356,24 @@ export async function getGameState(
   if (!gameRow) return null;
 
   const { results: allPlayers } = await db
-    .prepare("SELECT * FROM game_players WHERE game_id = ? ORDER BY is_host DESC, nickname ASC")
+    .prepare(
+      `
+      SELECT gp.*, c.id as character_id, c.slug as character_slug, c.name_pl as character_name_pl, c.avatar_url as character_avatar_url
+      FROM game_players gp
+      LEFT JOIN characters c ON gp.character_id = c.id
+      WHERE gp.game_id = ?
+      ORDER BY gp.is_host DESC, gp.nickname ASC
+    `
+    )
     .bind(playerRow.game_id)
-    .all<GamePlayerRow>();
+    .all<
+      GamePlayerRow & {
+        character_id: string | null;
+        character_slug: string | null;
+        character_name_pl: string | null;
+        character_avatar_url: string | null;
+      }
+    >();
 
   // Get messages:
   //   - Broadcast (to_player_id IS NULL): all recent ones — never mark as read globally
@@ -388,7 +511,17 @@ export async function getGameState(
       role: playerRow.role as Role | null,
       isAlive: playerRow.is_alive === 1,
       isHost,
+      isSetupComplete: !!playerRow.nickname,
+      character: playerRow.character_id
+        ? {
+            id: playerRow.character_id,
+            slug: playerRow.character_slug!,
+            namePl: playerRow.character_name_pl!,
+            avatarUrl: playerRow.character_avatar_url!,
+          }
+        : null,
     },
+    takenCharacterIds: allPlayers.filter((p) => p.character_id != null).map((p) => p.character_id!),
     players: allPlayers.map((p) => ({
       playerId: p.player_id,
       nickname: p.nickname,
@@ -405,6 +538,14 @@ export async function getGameState(
           ? (p.role as Role | null)
           : null,
       isYou: p.token === token,
+      character: p.character_id
+        ? {
+            id: p.character_id,
+            slug: p.character_slug!,
+            namePl: p.character_name_pl!,
+            avatarUrl: p.character_avatar_url!,
+          }
+        : null,
     })),
     messages: messages.map((m) => ({
       id: m.id,
@@ -1332,4 +1473,45 @@ export async function leaveGame(
     .run();
 
   return { success: true, gameEnded: false };
+}
+
+// ---------------------------------------------------------------------------
+// getCharacters - Returns list of active characters
+// ---------------------------------------------------------------------------
+export async function getCharacters(db: D1Database): Promise<CharacterRow[]> {
+  const { results } = await db
+    .prepare("SELECT * FROM characters WHERE is_active = 1 ORDER BY sort_order ASC")
+    .all<CharacterRow>();
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// updateCharacter - Update player's character selection
+// ---------------------------------------------------------------------------
+export async function updateCharacter(
+  db: D1Database,
+  token: string,
+  characterId: string
+): Promise<boolean> {
+  // Validate that the character exists and is active
+  const character = await db
+    .prepare("SELECT id FROM characters WHERE id = ? AND is_active = 1")
+    .bind(characterId)
+    .first<{ id: string }>();
+  if (!character) return false;
+
+  // Find the player by token
+  const player = await db
+    .prepare("SELECT game_id, player_id FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<{ game_id: string; player_id: string }>();
+  if (!player) return false;
+
+  // Update the character
+  await db
+    .prepare("UPDATE game_players SET character_id = ? WHERE token = ?")
+    .bind(characterId, token)
+    .run();
+
+  return true;
 }

@@ -3,16 +3,20 @@ name: Deploy Staging
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 concurrency:
-  group: deploy-staging
+  group: deploy-staging-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   deploy:
     name: 🚀 Deploy to Staging
     runs-on: ubuntu-latest
-    environment: staging
+    environment:
+      name: staging
+      url: https://mafia-game-staging.liske.workers.dev
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
