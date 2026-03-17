@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci
+      - run: npm ci --force
       - name: ESLint
         run: npm run lint
       - name: Prettier check
@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci
+      - run: npm ci --force
       - run: npm run typecheck
 
   test:
@@ -47,7 +47,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci
+      - run: npm ci --force
       - name: Run tests with coverage
         run: npx vitest run --coverage --reporter=json --outputFile=test-results.json
       - name: Coverage report
@@ -66,7 +66,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci
+      - run: npm ci --force
       - name: Audit dependencies
         run: npm audit --audit-level=high || true
 
@@ -80,7 +80,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-      - run: npm ci
+      - run: npm ci --force
       - name: Build for Cloudflare Pages
         run: npm run build:cf
       - name: Report bundle size
