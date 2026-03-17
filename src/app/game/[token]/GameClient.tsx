@@ -320,6 +320,21 @@ export default function GameClient() {
     }
   }
 
+  async function handleLeaveGame() {
+    if (!confirm("Czy na pewno chcesz opuścić grę?")) return;
+    try {
+      const res = await fetch(`/api/game/${token}/leave`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Błąd");
+        return;
+      }
+      router.push("/");
+    } catch {
+      setError("Błąd połączenia");
+    }
+  }
+
   async function handleTransferGm(newHostPlayerId: string) {
     setTransferGmPending(true);
     setTransferGmError("");
@@ -500,6 +515,15 @@ export default function GameClient() {
           >
             <span className="material-symbols-outlined text-[20px]">leaderboard</span>
           </button>
+          {!isHost && (
+            <button
+              onClick={handleLeaveGame}
+              className="size-10 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors"
+              title="Opuść grę"
+            >
+              <span className="material-symbols-outlined text-[20px]">logout</span>
+            </button>
+          )}
         </div>
         <div className="text-center">
           <h2 className="font-typewriter text-primary text-base font-bold tracking-widest drop-shadow-[0_0_6px_rgba(218,11,11,0.5)]">

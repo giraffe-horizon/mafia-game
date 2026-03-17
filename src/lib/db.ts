@@ -1245,3 +1245,91 @@ export async function renamePlayer(
 
   return { success: true };
 }
+
+// ---------------------------------------------------------------------------
+// leaveGame
+// ---------------------------------------------------------------------------
+export async function leaveGame(
+  db: D1Database,
+  token: string
+): Promise<{ success: boolean; error?: string; gameEnded?: boolean }> {
+  const playerRow = await db
+    .prepare("SELECT * FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<GamePlayerRow>();
+  if (!playerRow) return { success: false, error: "Nie znaleziono gracza" };
+
+  // GM cannot leave — must transfer first
+  if (playerRow.is_host)
+    return { success: false, error: "Mistrz gry nie może opuścić gry. Najpierw przekaż rolę MG." };
+
+  const gameRow = await db
+    .prepare("SELECT * FROM games WHERE id = ?")
+    .bind(playerRow.game_id)
+    .first<GameRow>();
+  if (!gameRow) return { success: false, error: "Gra nie istnieje" };
+
+  // Lobby — just remove the player
+  if (gameRow.status === "lobby") {
+    await db
+      .prepare("DELETE FROM game_players WHERE game_id = ? AND player_id = ?")
+      .bind(playerRow.game_id, playerRow.player_id)
+      .run();
+    return { success: true };
+  }
+
+  // Finished — nothing to do
+  if (gameRow.status === "finished") return { success: true };
+
+  // Playing — mark as eliminated + clean up actions
+  await db
+    .prepare("UPDATE game_players SET is_alive = 0 WHERE game_id = ? AND player_id = ?")
+    .bind(playerRow.game_id, playerRow.player_id)
+    .run();
+
+  // Remove their current round/phase actions
+  await db
+    .prepare(
+      "DELETE FROM game_actions WHERE game_id = ? AND player_id = ? AND round = ? AND phase = ?"
+    )
+    .bind(playerRow.game_id, playerRow.player_id, gameRow.round, gameRow.phase)
+    .run();
+
+  // Check win conditions
+  const winner = await checkWinConditions(db, playerRow.game_id);
+  if (winner) {
+    await db
+      .prepare("UPDATE games SET status = 'finished', phase = 'ended', winner = ? WHERE id = ?")
+      .bind(winner, playerRow.game_id)
+      .run();
+
+    const endMsg =
+      winner === "mafia"
+        ? "Mafia wygrała! Przejęli kontrolę nad miastem."
+        : "Miasto wygrało! Wszyscy mafiosi zostali wyeliminowani.";
+    await db
+      .prepare(
+        "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, NULL, ?, 0, ?)"
+      )
+      .bind(nanoid(), playerRow.game_id, playerRow.player_id, endMsg, now())
+      .run();
+
+    return { success: true, gameEnded: true };
+  }
+
+  // Send GM notification
+  await db
+    .prepare(
+      "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, NULL, ?, 0, ?)"
+    )
+    .bind(
+      nanoid(),
+      playerRow.game_id,
+      playerRow.player_id,
+      `${playerRow.nickname} opuścił grę.`,
+      now()
+    )
+    .run();
+
+  return { success: true, gameEnded: false };
+}

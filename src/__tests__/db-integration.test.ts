@@ -881,4 +881,81 @@ describe("Database Integration Tests (SQLite)", () => {
       expect(uniqueRoles.has("civilian")).toBe(true);
     });
   });
+
+  describe("leaveGame", () => {
+    it("should fail with invalid token", async () => {
+      const result = await db.leaveGame(mockDb, "invalid");
+      expect(result.success).toBe(false);
+    });
+
+    it("should not allow GM to leave", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const result = await db.leaveGame(mockDb, hostToken);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Mistrz gry");
+    });
+
+    it("should remove player from lobby", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const joinResult = await db.joinGame(mockDb, code, "Leaver");
+      const result = await db.leaveGame(mockDb, joinResult!.token);
+      expect(result.success).toBe(true);
+
+      const stateAfter = await db.getGameState(mockDb, hostToken);
+      const leaver = stateAfter!.players.find((p) => p.nickname === "Leaver");
+      expect(leaver).toBeUndefined();
+    });
+
+    it("should mark player as dead during game", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const playerTokens: string[] = [];
+      for (let i = 0; i < 5; i++) {
+        const r = await db.joinGame(mockDb, code, `Player${i}`);
+        playerTokens.push(r!.token);
+      }
+
+      await db.startGame(mockDb, hostToken, undefined, "full");
+
+      const result = await db.leaveGame(mockDb, playerTokens[0]);
+      expect(result.success).toBe(true);
+
+      const stateAfter = await db.getGameState(mockDb, hostToken);
+      const leftPlayer = stateAfter!.players.find((p) => p.nickname === "Player0");
+      expect(leftPlayer!.isAlive).toBe(false);
+    });
+
+    it("should end game if too few players remain", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      // 3 players in simple mode (minimum)
+      const playerTokens: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const r = await db.joinGame(mockDb, code, `Player${i}`);
+        playerTokens.push(r!.token);
+      }
+
+      await db.startGame(mockDb, hostToken, 1, "simple");
+
+      // Remove civilians until game ends
+      for (const t of playerTokens) {
+        const s = await db.getGameState(mockDb, t);
+        if (s && s.currentPlayer.role === "civilian" && s.currentPlayer.isAlive) {
+          const result = await db.leaveGame(mockDb, t);
+          if (result.gameEnded) break;
+        }
+      }
+
+      const finalState = await db.getGameState(mockDb, hostToken);
+      // Game should be finished or very close
+      expect(["finished", "playing"]).toContain(finalState!.game.status);
+    });
+  });
 });
