@@ -92,7 +92,9 @@ function CodeInput({
       {Array.from({ length }, (_, i) => (
         <input
           key={i}
-          ref={(el) => { inputRefs.current[i] = el; }}
+          ref={(el) => {
+            inputRefs.current[i] = el;
+          }}
           type="text"
           inputMode="text"
           autoComplete="one-time-code"
@@ -249,9 +251,7 @@ export default function Home() {
             </p>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-slate-500">
-                <span className="material-symbols-outlined text-[20px]">
-                  person
-                </span>
+                <span className="material-symbols-outlined text-[20px]">person</span>
               </span>
               <input
                 className="flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/30 bg-black/40 backdrop-blur-sm h-14 placeholder:text-slate-600 pl-12 pr-4 text-lg font-medium leading-normal transition-all"
@@ -279,9 +279,7 @@ export default function Home() {
           )}
 
           {error && (
-            <p className="text-primary text-sm font-typewriter pl-1 animate-pulse">
-              {error}
-            </p>
+            <p className="text-primary text-sm font-typewriter pl-1 animate-pulse">{error}</p>
           )}
         </div>
 
@@ -293,9 +291,7 @@ export default function Home() {
               disabled={loading}
               className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span className="material-symbols-outlined mr-2 text-[20px]">
-                add_circle
-              </span>
+              <span className="material-symbols-outlined mr-2 text-[20px]">add_circle</span>
               <span className="truncate uppercase font-typewriter tracking-wider">
                 {loading ? "Tworzę..." : "Stwórz grę"}
               </span>
@@ -307,15 +303,9 @@ export default function Home() {
             disabled={loading}
             className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-transparent border-2 border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <span className="material-symbols-outlined mr-2 text-[20px]">
-              login
-            </span>
+            <span className="material-symbols-outlined mr-2 text-[20px]">login</span>
             <span className="truncate uppercase font-typewriter tracking-wider">
-              {joinMode
-                ? loading
-                  ? "Dołączam..."
-                  : "Wejdź do gry"
-                : "Dołącz do gry"}
+              {joinMode ? (loading ? "Dołączam..." : "Wejdź do gry") : "Dołącz do gry"}
             </span>
           </button>
 
@@ -332,16 +322,6 @@ export default function Home() {
             </button>
           )}
         </div>
-      </div>
-
-      <div className="relative z-20 pb-6 flex justify-center">
-        <button
-          onClick={() => router.push("/ranking")}
-          className="flex items-center gap-1.5 text-slate-600 hover:text-slate-400 text-xs font-typewriter uppercase tracking-widest transition-colors"
-        >
-          <span className="material-symbols-outlined text-[14px]">leaderboard</span>
-          Ranking
-        </button>
       </div>
     </div>
   );

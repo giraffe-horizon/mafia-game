@@ -173,10 +173,7 @@ function now(): string {
 // ---------------------------------------------------------------------------
 // createGame
 // ---------------------------------------------------------------------------
-export async function createGame(
-  db: D1Database,
-  hostNickname: string
-): Promise<{ token: string }> {
+export async function createGame(db: D1Database, hostNickname: string): Promise<{ token: string }> {
   const gameId = nanoid();
   const hostPlayerId = nanoid();
   const hostToken = nanoid();
@@ -187,12 +184,16 @@ export async function createGame(
   }
 
   await db.batch([
-    db.prepare(
-      "INSERT INTO games (id, code, host_player_id, status, phase, round, winner, config, created_at) VALUES (?, ?, ?, 'lobby', 'lobby', 0, NULL, '{}', ?)"
-    ).bind(gameId, code, hostPlayerId, now()),
-    db.prepare(
-      "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host) VALUES (?, ?, ?, ?, NULL, 1, 1)"
-    ).bind(gameId, hostPlayerId, hostToken, hostNickname.trim()),
+    db
+      .prepare(
+        "INSERT INTO games (id, code, host_player_id, status, phase, round, winner, config, created_at) VALUES (?, ?, ?, 'lobby', 'lobby', 0, NULL, '{}', ?)"
+      )
+      .bind(gameId, code, hostPlayerId, now()),
+    db
+      .prepare(
+        "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host) VALUES (?, ?, ?, ?, NULL, 1, 1)"
+      )
+      .bind(gameId, hostPlayerId, hostToken, hostNickname.trim()),
   ]);
 
   return { token: hostToken };
@@ -282,9 +283,7 @@ export async function getGameState(
 
   // Get all missions for this player (including completed so player can see status)
   const { results: missionRows } = await db
-    .prepare(
-      "SELECT * FROM missions WHERE game_id = ? AND player_id = ? ORDER BY created_at ASC"
-    )
+    .prepare("SELECT * FROM missions WHERE game_id = ? AND player_id = ? ORDER BY created_at ASC")
     .bind(playerRow.game_id, playerRow.player_id)
     .all<MissionRow>();
 
@@ -324,7 +323,12 @@ export async function getGameState(
         "SELECT ga.player_id, gp.nickname, ga.action_type, ga.target_player_id FROM game_actions ga JOIN game_players gp ON gp.game_id = ga.game_id AND gp.player_id = ga.player_id WHERE ga.game_id = ? AND ga.round = ? AND ga.phase = ? ORDER BY ga.created_at ASC"
       )
       .bind(playerRow.game_id, gameRow.round, gameRow.phase)
-      .all<{ player_id: string; nickname: string; action_type: string; target_player_id: string | null }>();
+      .all<{
+        player_id: string;
+        nickname: string;
+        action_type: string;
+        target_player_id: string | null;
+      }>();
 
     // Build nickname lookup for targets
     const playerNicknameMap = new Map(allPlayers.map((p) => [p.player_id, p.nickname]));
@@ -334,7 +338,9 @@ export async function getGameState(
       nickname: a.nickname,
       actionType: a.action_type,
       targetPlayerId: a.target_player_id,
-      targetNickname: a.target_player_id ? (playerNicknameMap.get(a.target_player_id) ?? null) : null,
+      targetNickname: a.target_player_id
+        ? (playerNicknameMap.get(a.target_player_id) ?? null)
+        : null,
     }));
   }
 
@@ -346,7 +352,15 @@ export async function getGameState(
         "SELECT m.id, m.player_id, m.description, m.is_secret, m.is_completed, m.points, gp.nickname FROM missions m JOIN game_players gp ON gp.game_id = m.game_id AND gp.player_id = m.player_id WHERE m.game_id = ? ORDER BY m.created_at ASC"
       )
       .bind(playerRow.game_id)
-      .all<{ id: string; player_id: string; description: string; is_secret: number; is_completed: number; points: number; nickname: string }>();
+      .all<{
+        id: string;
+        player_id: string;
+        description: string;
+        is_secret: number;
+        is_completed: number;
+        points: number;
+        nickname: string;
+      }>();
     hostMissions = allMissions.map((m) => ({
       id: m.id,
       playerId: m.player_id,
@@ -469,7 +483,7 @@ async function getMafiaTeamActions(
     nickname: r.nickname,
     targetPlayerId: r.target_player_id,
     targetNickname: r.target_player_id
-      ? allPlayers.find((p) => p.player_id === r.target_player_id)?.nickname ?? null
+      ? (allPlayers.find((p) => p.player_id === r.target_player_id)?.nickname ?? null)
       : null,
   }));
 }
@@ -482,7 +496,11 @@ async function getMafiaTeamActions(
 // Always: 1 detective, 1 doctor, rest civilians
 // mode: "full" = mafia + detective + doctor + civilians (min 4 players)
 //       "simple" = mafia + civilians only (min 2 players, no special roles)
-function buildRoles(n: number, customMafiaCount?: number, mode: "full" | "simple" = "full"): Role[] {
+function buildRoles(
+  n: number,
+  customMafiaCount?: number,
+  mode: "full" | "simple" = "full"
+): Role[] {
   let mafiaCount: number;
 
   if (mode === "simple") {
@@ -541,7 +559,8 @@ export async function startGame(
     .all<{ player_id: string }>();
 
   const minPlayers = mode === "simple" ? 3 : 5;
-  if (players.length < minPlayers) return { success: false, error: `Potrzeba minimum ${minPlayers} graczy (nie licząc MG)` };
+  if (players.length < minPlayers)
+    return { success: false, error: `Potrzeba minimum ${minPlayers} graczy (nie licząc MG)` };
 
   const n = players.length;
   const roles = buildRoles(n, customMafiaCount, mode);
@@ -554,9 +573,13 @@ export async function startGame(
 
   // Save mode in game config for rematch
   await db.batch([
-    db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1, config = ? WHERE id = ?")
+    db
+      .prepare(
+        "UPDATE games SET status = 'playing', phase = 'night', round = 1, config = ? WHERE id = ?"
+      )
       .bind(JSON.stringify({ mode }), playerRow.game_id),
-    db.prepare("UPDATE game_players SET role = 'gm' WHERE game_id = ? AND player_id = ?")
+    db
+      .prepare("UPDATE game_players SET role = 'gm' WHERE game_id = ? AND player_id = ?")
       .bind(playerRow.game_id, playerRow.player_id),
     ...players.map((p, i) =>
       db
@@ -575,7 +598,11 @@ export async function changePhase(
   db: D1Database,
   token: string,
   newPhase: GamePhase
-): Promise<{ success: boolean; error?: string; pendingMissions?: { id: string; description: string; nickname: string }[] }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  pendingMissions?: { id: string; description: string; nickname: string }[];
+}> {
   const playerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
     .bind(token)
@@ -695,16 +722,12 @@ async function resolveNight(
 
     if (!protectAction) {
       await db
-        .prepare(
-          "UPDATE game_players SET is_alive = 0 WHERE game_id = ? AND player_id = ?"
-        )
+        .prepare("UPDATE game_players SET is_alive = 0 WHERE game_id = ? AND player_id = ?")
         .bind(gameRow.id, killAction.target_player_id)
         .run();
 
       const killed = await db
-        .prepare(
-          "SELECT nickname FROM game_players WHERE game_id = ? AND player_id = ?"
-        )
+        .prepare("SELECT nickname FROM game_players WHERE game_id = ? AND player_id = ?")
         .bind(gameRow.id, killAction.target_player_id)
         .first<{ nickname: string }>();
 
@@ -724,9 +747,7 @@ async function resolveNight(
 
   if (investigateAction?.target_player_id) {
     const target = await db
-      .prepare(
-        "SELECT role, nickname FROM game_players WHERE game_id = ? AND player_id = ?"
-      )
+      .prepare("SELECT role, nickname FROM game_players WHERE game_id = ? AND player_id = ?")
       .bind(gameRow.id, investigateAction.target_player_id)
       .first<{ role: string | null; nickname: string }>();
 
@@ -766,16 +787,12 @@ async function resolveVoting(
 
   if (topVote?.target_player_id) {
     await db
-      .prepare(
-        "UPDATE game_players SET is_alive = 0 WHERE game_id = ? AND player_id = ?"
-      )
+      .prepare("UPDATE game_players SET is_alive = 0 WHERE game_id = ? AND player_id = ?")
       .bind(gameRow.id, topVote.target_player_id)
       .run();
 
     const eliminated = await db
-      .prepare(
-        "SELECT nickname FROM game_players WHERE game_id = ? AND player_id = ?"
-      )
+      .prepare("SELECT nickname FROM game_players WHERE game_id = ? AND player_id = ?")
       .bind(gameRow.id, topVote.target_player_id)
       .first<{ nickname: string }>();
 
@@ -839,7 +856,8 @@ export async function submitAction(
     return { success: false, error: "Tylko MG może działać za innych graczy" };
   }
 
-  if (!playerRow.is_alive) return { success: false, error: "Wyeliminowani gracze nie mogą działać" };
+  if (!playerRow.is_alive)
+    return { success: false, error: "Wyeliminowani gracze nie mogą działać" };
 
   const phase = gameRow.phase as GamePhase;
   const role = playerRow.role as Role | null;
@@ -863,9 +881,7 @@ export async function submitAction(
   // Validate target
   if (targetPlayerId) {
     const target = await db
-      .prepare(
-        "SELECT is_alive FROM game_players WHERE game_id = ? AND player_id = ?"
-      )
+      .prepare("SELECT is_alive FROM game_players WHERE game_id = ? AND player_id = ?")
       .bind(playerRow.game_id, targetPlayerId)
       .first<{ is_alive: number }>();
     if (!target) return { success: false, error: "Cel nie istnieje" };
@@ -880,10 +896,7 @@ export async function submitAction(
     .bind(playerRow.game_id, playerRow.player_id, gameRow.round, phase)
     .first<{ id: string }>();
   if (existing) {
-    await db
-      .prepare("DELETE FROM game_actions WHERE id = ?")
-      .bind(existing.id)
-      .run();
+    await db.prepare("DELETE FROM game_actions WHERE id = ?").bind(existing.id).run();
   }
 
   await db
@@ -955,9 +968,11 @@ export async function kickPlayer(
     .prepare("SELECT * FROM games WHERE id = ?")
     .bind(playerRow.game_id)
     .first<GameRow>();
-  if (!gameRow || gameRow.status !== "lobby") return { success: false, error: "Można usuwać graczy tylko w lobby" };
+  if (!gameRow || gameRow.status !== "lobby")
+    return { success: false, error: "Można usuwać graczy tylko w lobby" };
 
-  if (targetPlayerId === playerRow.player_id) return { success: false, error: "Nie możesz usunąć siebie" };
+  if (targetPlayerId === playerRow.player_id)
+    return { success: false, error: "Nie możesz usunąć siebie" };
 
   await db
     .prepare("DELETE FROM game_players WHERE game_id = ? AND player_id = ?")
@@ -1023,8 +1038,7 @@ export async function transferGm(
     .first<GamePlayerRow>();
   if (!playerRow?.is_host) return { success: false, error: "Tylko MG może przekazać rolę" };
 
-  if (playerRow.player_id === newHostPlayerId)
-    return { success: false, error: "Już jesteś MG" };
+  if (playerRow.player_id === newHostPlayerId) return { success: false, error: "Już jesteś MG" };
 
   const target = await db
     .prepare("SELECT player_id FROM game_players WHERE game_id = ? AND player_id = ?")
@@ -1033,11 +1047,14 @@ export async function transferGm(
   if (!target) return { success: false, error: "Gracz nie istnieje" };
 
   await db.batch([
-    db.prepare("UPDATE game_players SET is_host = 0 WHERE game_id = ? AND player_id = ?")
+    db
+      .prepare("UPDATE game_players SET is_host = 0 WHERE game_id = ? AND player_id = ?")
       .bind(playerRow.game_id, playerRow.player_id),
-    db.prepare("UPDATE game_players SET is_host = 1 WHERE game_id = ? AND player_id = ?")
+    db
+      .prepare("UPDATE game_players SET is_host = 1 WHERE game_id = ? AND player_id = ?")
       .bind(playerRow.game_id, newHostPlayerId),
-    db.prepare("UPDATE games SET host_player_id = ? WHERE id = ?")
+    db
+      .prepare("UPDATE games SET host_player_id = ? WHERE id = ?")
       .bind(newHostPlayerId, playerRow.game_id),
   ]);
 
@@ -1076,7 +1093,8 @@ export async function rematch(
   const savedConfig = JSON.parse(gameRow.config || "{}");
   const effectiveMode = mode ?? savedConfig.mode ?? "full";
   const minPlayers = effectiveMode === "simple" ? 3 : 5;
-  if (players.length < minPlayers) return { success: false, error: `Potrzeba minimum ${minPlayers} graczy (nie licząc MG)` };
+  if (players.length < minPlayers)
+    return { success: false, error: `Potrzeba minimum ${minPlayers} graczy (nie licząc MG)` };
 
   const n = players.length;
   const roles = buildRoles(n, customMafiaCount, effectiveMode);
@@ -1089,12 +1107,21 @@ export async function rematch(
     db.prepare("DELETE FROM missions WHERE game_id = ?").bind(playerRow.game_id),
     db.prepare("DELETE FROM game_actions WHERE game_id = ?").bind(playerRow.game_id),
     db.prepare("DELETE FROM messages WHERE game_id = ?").bind(playerRow.game_id),
-    db.prepare("UPDATE games SET status = 'playing', phase = 'night', round = 1, winner = NULL, config = ? WHERE id = ?")
+    db
+      .prepare(
+        "UPDATE games SET status = 'playing', phase = 'night', round = 1, winner = NULL, config = ? WHERE id = ?"
+      )
       .bind(JSON.stringify({ mode: effectiveMode }), playerRow.game_id),
-    db.prepare("UPDATE game_players SET role = 'gm', is_alive = 1 WHERE game_id = ? AND player_id = ?")
+    db
+      .prepare(
+        "UPDATE game_players SET role = 'gm', is_alive = 1 WHERE game_id = ? AND player_id = ?"
+      )
       .bind(playerRow.game_id, playerRow.player_id),
     ...players.map((p, i) =>
-      db.prepare("UPDATE game_players SET role = ?, is_alive = 1 WHERE game_id = ? AND player_id = ?")
+      db
+        .prepare(
+          "UPDATE game_players SET role = ?, is_alive = 1 WHERE game_id = ? AND player_id = ?"
+        )
         .bind(roles[i], playerRow.game_id, p.player_id)
     ),
   ]);
@@ -1120,7 +1147,8 @@ export async function finalizeGame(
     .prepare("SELECT * FROM games WHERE id = ?")
     .bind(playerRow.game_id)
     .first<GameRow>();
-  if (!gameRow || gameRow.phase !== "review") return { success: false, error: "Gra nie jest w fazie przeglądu misji" };
+  if (!gameRow || gameRow.phase !== "review")
+    return { success: false, error: "Gra nie jest w fazie przeglądu misji" };
 
   const winner = await checkWinConditions(db, playerRow.game_id);
 
@@ -1129,9 +1157,10 @@ export async function finalizeGame(
     .bind(winner ?? "town", playerRow.game_id)
     .run();
 
-  const endMsg = winner === "mafia"
-    ? "Mafia wygrała! Przejęli kontrolę nad miastem."
-    : "Miasto wygrało! Wszyscy mafiosi zostali wyeliminowani.";
+  const endMsg =
+    winner === "mafia"
+      ? "Mafia wygrała! Przejęli kontrolę nad miastem."
+      : "Miasto wygrało! Wszyscy mafiosi zostali wyeliminowani.";
   await db
     .prepare(
       "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, NULL, ?, 0, ?)"
@@ -1184,6 +1213,35 @@ export async function completeMission(
   if (!mission) return { success: false, error: "Misja nie istnieje" };
 
   await db.prepare("UPDATE missions SET is_completed = 1 WHERE id = ?").bind(missionId).run();
+
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// renamePlayer
+// ---------------------------------------------------------------------------
+export async function renamePlayer(
+  db: D1Database,
+  token: string,
+  newNickname: string
+): Promise<{ success: boolean; error?: string }> {
+  // Validate nickname length
+  if (newNickname.length < 1 || newNickname.length > 20) {
+    return { success: false, error: "Nazwa gracza musi mieć 1-20 znaków" };
+  }
+
+  // Check if player exists
+  const playerRow = await db
+    .prepare("SELECT * FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<GamePlayerRow>();
+  if (!playerRow) return { success: false, error: "Nie znaleziono gracza" };
+
+  // Update player nickname
+  await db
+    .prepare("UPDATE game_players SET nickname = ? WHERE token = ?")
+    .bind(newNickname, token)
+    .run();
 
   return { success: true };
 }

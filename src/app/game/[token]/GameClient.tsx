@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
 import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
+import { useGameStore } from "@/stores/gameStore";
 
 // ---------------------------------------------------------------------------
 // Lookup tables
@@ -69,6 +70,7 @@ interface Toast {
 export default function GameClient() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
+  const { setNickname } = useGameStore();
 
   // Core state
   const [state, setState] = useState<GameStateResponse | null>(null);
@@ -252,6 +254,29 @@ export default function GameClient() {
       setMsgError("Błąd połączenia");
     } finally {
       setMsgPending(false);
+    }
+  }
+
+  async function handleRename(newNickname: string) {
+    try {
+      const res = await fetch(`/api/game/${token}/rename`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: newNickname }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Błąd zmiany nazwy");
+        return;
+      }
+
+      // Update the local store
+      setNickname(newNickname);
+
+      // Refetch game state to get updated nickname
+      await fetchState();
+    } catch {
+      setError("Błąd połączenia podczas zmiany nazwy");
     }
   }
 
@@ -673,7 +698,9 @@ export default function GameClient() {
         {isPlaying && !isHost && !currentPlayer.isAlive && (
           <div className="mx-5 mt-5">
             <div className="p-5 rounded-xl bg-black/50 border border-slate-700 text-center mb-4">
-              <span className="material-symbols-outlined text-[48px] text-slate-600 mb-2 block">skull</span>
+              <span className="material-symbols-outlined text-[48px] text-slate-600 mb-2 block">
+                skull
+              </span>
               <p className="font-typewriter text-slate-400 text-lg uppercase tracking-widest">
                 Nie żyjesz
               </p>
@@ -682,44 +709,70 @@ export default function GameClient() {
               </p>
               {currentPlayer.role && (
                 <p className="text-slate-500 text-xs mt-3 font-typewriter">
-                  Byłeś: <span className={`font-bold ${
-                    currentPlayer.role === "mafia" ? "text-red-400" :
-                    currentPlayer.role === "detective" ? "text-blue-400" :
-                    currentPlayer.role === "doctor" ? "text-green-400" :
-                    "text-slate-300"
-                  }`}>{ROLE_LABELS[currentPlayer.role] ?? currentPlayer.role}</span>
+                  Byłeś:{" "}
+                  <span
+                    className={`font-bold ${
+                      currentPlayer.role === "mafia"
+                        ? "text-red-400"
+                        : currentPlayer.role === "detective"
+                          ? "text-blue-400"
+                          : currentPlayer.role === "doctor"
+                            ? "text-green-400"
+                            : "text-slate-300"
+                    }`}
+                  >
+                    {ROLE_LABELS[currentPlayer.role] ?? currentPlayer.role}
+                  </span>
                 </p>
               )}
             </div>
             <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2 pl-1">
-              <span className="material-symbols-outlined text-[12px] align-middle mr-1">visibility</span>
+              <span className="material-symbols-outlined text-[12px] align-middle mr-1">
+                visibility
+              </span>
               Widok widza — role graczy
             </p>
             <div className="flex flex-col gap-2">
-              {players.filter((p) => !p.isHost).map((p) => (
-                <div key={p.playerId} className={`flex items-center gap-3 p-3 rounded-lg border border-slate-800 bg-black/20 ${!p.isAlive ? "opacity-50" : ""}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${
-                    p.isAlive ? "border-slate-700 bg-slate-800" : "border-slate-800 bg-slate-900"
-                  }`}>
-                    <span className="material-symbols-outlined text-[16px] text-slate-500">
-                      {p.isAlive ? "person" : "skull"}
+              {players
+                .filter((p) => !p.isHost)
+                .map((p) => (
+                  <div
+                    key={p.playerId}
+                    className={`flex items-center gap-3 p-3 rounded-lg border border-slate-800 bg-black/20 ${!p.isAlive ? "opacity-50" : ""}`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center border ${
+                        p.isAlive
+                          ? "border-slate-700 bg-slate-800"
+                          : "border-slate-800 bg-slate-900"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[16px] text-slate-500">
+                        {p.isAlive ? "person" : "skull"}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-sm font-medium flex-1 ${p.isAlive ? "text-white" : "text-slate-600 line-through"}`}
+                    >
+                      {p.nickname}
                     </span>
+                    {p.role && (
+                      <span
+                        className={`text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border ${
+                          p.role === "mafia"
+                            ? "text-red-400 border-red-900/50 bg-red-950/30"
+                            : p.role === "detective"
+                              ? "text-blue-400 border-blue-900/50 bg-blue-950/30"
+                              : p.role === "doctor"
+                                ? "text-green-400 border-green-900/50 bg-green-950/30"
+                                : "text-slate-400 border-slate-700 bg-slate-900/30"
+                        }`}
+                      >
+                        {ROLE_LABELS[p.role] ?? p.role}
+                      </span>
+                    )}
                   </div>
-                  <span className={`text-sm font-medium flex-1 ${p.isAlive ? "text-white" : "text-slate-600 line-through"}`}>
-                    {p.nickname}
-                  </span>
-                  {p.role && (
-                    <span className={`text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border ${
-                      p.role === "mafia" ? "text-red-400 border-red-900/50 bg-red-950/30" :
-                      p.role === "detective" ? "text-blue-400 border-blue-900/50 bg-blue-950/30" :
-                      p.role === "doctor" ? "text-green-400 border-green-900/50 bg-green-950/30" :
-                      "text-slate-400 border-slate-700 bg-slate-900/30"
-                    }`}>
-                      {ROLE_LABELS[p.role] ?? p.role}
-                    </span>
-                  )}
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         )}
@@ -1017,6 +1070,7 @@ export default function GameClient() {
                 currentPlayerRole={currentPlayer.role}
                 roleVisible={roleVisible}
                 onKick={isLobby && isHost ? handleKick : undefined}
+                onRename={p.isYou ? handleRename : undefined}
               />
             ))}
           </div>
@@ -1027,7 +1081,7 @@ export default function GameClient() {
           <div className="mx-5 mt-6 flex flex-col gap-3">
             {nonHostPlayers.length < (gameMode === "simple" ? 3 : 5) && (
               <p className="text-slate-500 text-sm font-typewriter text-center">
-                Potrzeba minimum {gameMode === "simple" ? 3 : 5} graczy ({players.length}/
+                Potrzeba minimum {gameMode === "simple" ? 3 : 5} graczy ({nonHostPlayers.length}/
                 {gameMode === "simple" ? 3 : 5})
               </p>
             )}
@@ -1152,6 +1206,7 @@ function PlayerRow({
   currentPlayerRole,
   roleVisible,
   onKick,
+  onRename,
 }: {
   player: PublicPlayer;
   isGamePlaying: boolean;
@@ -1161,7 +1216,24 @@ function PlayerRow({
   currentPlayerRole?: string | null;
   roleVisible?: boolean;
   onKick?: (playerId: string) => void;
+  onRename?: (newNickname: string) => void;
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editNickname, setEditNickname] = useState(player.nickname);
+
+  const handleSaveRename = () => {
+    const trimmedName = editNickname.trim();
+    if (trimmedName.length >= 1 && trimmedName.length <= 20 && trimmedName !== player.nickname) {
+      onRename?.(trimmedName);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditNickname(player.nickname);
+    setIsEditing(false);
+  };
+
   // Determine if we show role badge and what color
   const showRoleBadge = isHost && isGamePlaying && player.role != null;
 
@@ -1189,7 +1261,50 @@ function PlayerRow({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
+          {isEditing && isLobby && player.isYou ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={editNickname}
+                onChange={(e) => setEditNickname(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveRename();
+                  if (e.key === "Escape") handleCancelEdit();
+                }}
+                className="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white max-w-[120px]"
+                placeholder="Nazwa gracza"
+                maxLength={20}
+                autoFocus
+              />
+              <button
+                onClick={handleSaveRename}
+                className="text-green-400 hover:text-green-300 transition-colors"
+                title="Zapisz"
+              >
+                <span className="material-symbols-outlined text-[16px]">check</span>
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="text-slate-400 hover:text-slate-300 transition-colors"
+                title="Anuluj"
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
+              {isLobby && player.isYou && onRename && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-slate-400 hover:text-primary transition-colors"
+                  title="Edytuj nazwę"
+                >
+                  <span className="material-symbols-outlined text-[14px]">edit</span>
+                </button>
+              )}
+            </>
+          )}
 
           {player.isHost && (
             <span className="text-xs text-primary/70 font-typewriter uppercase">MG</span>
