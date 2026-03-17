@@ -94,10 +94,17 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           du -sh .open-next/worker.js 2>/dev/null | awk '{print "Worker: **" $1 "**"}' >> $GITHUB_STEP_SUMMARY
           du -sh .open-next/assets/ 2>/dev/null | awk '{print "Assets: **" $1 "**"}' >> $GITHUB_STEP_SUMMARY
-      - name: Deploy to Cloudflare Workers
+      - name: Deploy production
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+      - name: Deploy preview
+        if: github.event_name == 'pull_request'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: versions upload

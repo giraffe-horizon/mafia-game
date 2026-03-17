@@ -447,7 +447,7 @@ export default function GameClient() {
 
   const actionTargets = players.filter((p) => p.isAlive && !p.isYou && !p.isHost);
   const nonHostPlayers = players.filter((p) => !p.isHost);
-  const joinUrl = `https://mafia-game-bev.pages.dev/?code=${game.code}`;
+  const joinUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/?code=${game.code}`;
 
   // ---------------------------------------------------------------------------
   // Render
