@@ -249,7 +249,7 @@ export async function joinGame(
     .prepare(
       "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host, character_id) VALUES (?, ?, ?, ?, NULL, 1, 0, ?)"
     )
-    .bind(game.id, playerId, token, nickname?.trim() || null, characterId || null)
+    .bind(game.id, playerId, token, nickname?.trim() || "", characterId || null)
     .run();
 
   return { token };
@@ -511,7 +511,7 @@ export async function getGameState(
       role: playerRow.role as Role | null,
       isAlive: playerRow.is_alive === 1,
       isHost,
-      isSetupComplete: playerRow.nickname != null,
+      isSetupComplete: !!playerRow.nickname,
       character: playerRow.character_id
         ? {
             id: playerRow.character_id,
