@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
 import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
-import { useGameStore } from "@/stores/gameStore";
 import CharacterPicker from "@/components/CharacterPicker";
 
 // ---------------------------------------------------------------------------
@@ -71,7 +70,6 @@ interface Toast {
 export default function GameClient() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
-  const { setNickname } = useGameStore();
 
   // Core state
   const [state, setState] = useState<GameStateResponse | null>(null);
@@ -98,28 +96,27 @@ export default function GameClient() {
   // Decision changing (must be before conditional returns!)
   const [changingDecision, setChangingDecision] = useState(false);
 
+  // Onboarding state
+  const [characters, setCharacters] = useState<
+    Array<{
+      id: string;
+      slug: string;
+      name: string;
+      name_pl: string;
+      avatar_url: string;
+    }>
+  >([]);
+  const [onboardingNickname, setOnboardingNickname] = useState("");
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+  const [onboardingError, setOnboardingError] = useState("");
+
   // Reset changingDecision when phase changes (must be before conditional returns!)
   const currentPhase = state?.game?.phase;
   const currentRound = state?.game?.round;
   useEffect(() => {
     setChangingDecision(false);
   }, [currentPhase, currentRound]);
-
-  // Fetch characters and set selected character based on current player
-  useEffect(() => {
-    async function fetchCharacters() {
-      try {
-        const res = await fetch("/api/characters");
-        if (res.ok) {
-          const data = await res.json();
-          setCharacters(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch characters:", error);
-      }
-    }
-    fetchCharacters();
-  }, []);
 
   useEffect(() => {
     if (state?.currentPlayer?.character) {
@@ -177,16 +174,6 @@ export default function GameClient() {
 
   // Settings modal
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [characters, setCharacters] = useState<
-    Array<{
-      id: string;
-      slug: string;
-      name: string;
-      name_pl: string;
-      avatar_url: string;
-    }>
-  >([]);
-  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
   // ---------------------------------------------------------------------------
   // Polling
@@ -223,6 +210,22 @@ export default function GameClient() {
     return () => clearInterval(interval);
   }, [fetchState]);
 
+  // Fetch characters for onboarding
+  useEffect(() => {
+    async function fetchCharacters() {
+      try {
+        const res = await fetch("/api/characters");
+        if (res.ok) {
+          const data = await res.json();
+          setCharacters(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch characters:", error);
+      }
+    }
+    fetchCharacters();
+  }, []);
+
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
@@ -244,6 +247,40 @@ export default function GameClient() {
       setError("Błąd połączenia");
     } finally {
       setStarting(false);
+    }
+  }
+
+  async function handleOnboardingSetup() {
+    if (!onboardingNickname.trim()) {
+      setOnboardingError("Podaj swoje imię");
+      return;
+    }
+    if (!selectedCharacterId) {
+      setOnboardingError("Wybierz postać");
+      return;
+    }
+    setOnboardingError("");
+    setOnboardingLoading(true);
+    try {
+      const res = await fetch(`/api/game/${token}/setup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: onboardingNickname.trim(),
+          characterId: selectedCharacterId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOnboardingError(data.error ?? "Błąd");
+        return;
+      }
+      // Refresh state to show lobby
+      await fetchState();
+    } catch {
+      setOnboardingError("Błąd połączenia");
+    } finally {
+      setOnboardingLoading(false);
     }
   }
 
@@ -308,29 +345,6 @@ export default function GameClient() {
       setMsgError("Błąd połączenia");
     } finally {
       setMsgPending(false);
-    }
-  }
-
-  async function handleRename(newNickname: string) {
-    try {
-      const res = await fetch(`/api/game/${token}/rename`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: newNickname }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Błąd zmiany nazwy");
-        return;
-      }
-
-      // Update the local store
-      setNickname(newNickname);
-
-      // Refetch game state to get updated nickname
-      await fetchState();
-    } catch {
-      setError("Błąd połączenia podczas zmiany nazwy");
     }
   }
 
@@ -506,6 +520,101 @@ export default function GameClient() {
     );
   }
 
+  // Onboarding screen
+  if (state && !state.currentPlayer.isSetupComplete && !state.currentPlayer.isHost) {
+    return (
+      <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-dark overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        </div>
+
+        {/* Header */}
+        <div className="relative z-20 flex items-center p-4 pb-2 justify-between">
+          <div className="size-12 shrink-0 opacity-0 pointer-events-none" />
+          <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-typewriter text-primary drop-shadow-[0_0_8px_rgba(218,11,11,0.5)]">
+            DOŁĄCZANIE DO GRY
+          </h2>
+          <div className="size-12 shrink-0" />
+        </div>
+
+        <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
+          {/* Info */}
+          <div className="flex justify-center mb-8">
+            <div className="w-24 h-24 rounded-full border-2 border-primary/40 flex items-center justify-center bg-background-dark/80 shadow-[0_0_30px_rgba(218,11,11,0.2)] relative overflow-hidden">
+              <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl" />
+              <span className="material-symbols-outlined text-[48px] text-primary relative z-10 drop-shadow-md">
+                person_add
+              </span>
+            </div>
+          </div>
+
+          <p className="text-slate-300 text-center font-typewriter mb-8 leading-relaxed">
+            Kod sesji: <span className="text-primary font-bold">{state.game.code}</span>
+            <br />
+            Wybierz swoje imię i postać
+          </p>
+
+          {/* Form */}
+          <div className="flex flex-col gap-4 w-full mb-6">
+            {/* Nickname input */}
+            <label className="flex flex-col w-full group/input">
+              <p className="text-slate-400 text-sm font-typewriter leading-normal pb-2 uppercase tracking-widest pl-1 transition-colors group-focus-within/input:text-primary">
+                Twoje imię
+              </p>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-slate-500">
+                  <span className="material-symbols-outlined text-[20px]">person</span>
+                </span>
+                <input
+                  className="flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/30 bg-black/40 backdrop-blur-sm h-14 placeholder:text-slate-600 pl-12 pr-4 text-lg font-medium leading-normal transition-all"
+                  placeholder="Detektyw..."
+                  type="text"
+                  value={onboardingNickname}
+                  onChange={(e) => setOnboardingNickname(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleOnboardingSetup()}
+                />
+              </div>
+            </label>
+
+            {/* Character selection */}
+            {characters.length > 0 && (
+              <div className="flex flex-col w-full">
+                <p className="text-slate-400 text-sm font-typewriter leading-normal pb-3 uppercase tracking-widest pl-1">
+                  Wybierz postać
+                </p>
+                <CharacterPicker
+                  characters={characters}
+                  selectedId={selectedCharacterId}
+                  onSelect={setSelectedCharacterId}
+                  disabledIds={state.takenCharacterIds}
+                />
+              </div>
+            )}
+
+            {onboardingError && (
+              <p className="text-primary text-sm font-typewriter pl-1 animate-pulse">
+                {onboardingError}
+              </p>
+            )}
+          </div>
+
+          {/* Join button */}
+          <button
+            onClick={handleOnboardingSetup}
+            disabled={onboardingLoading || !onboardingNickname.trim() || !selectedCharacterId}
+            className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined mr-2 text-[20px]">login</span>
+            <span className="truncate uppercase font-typewriter tracking-wider">
+              {onboardingLoading ? "Dołączam..." : "Dołącz do gry"}
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const { game, currentPlayer, players, missions, detectiveResult } = state;
   const isHost = currentPlayer.isHost;
   const isLobby = game.status === "lobby";
@@ -612,7 +721,7 @@ export default function GameClient() {
                     : "text-slate-400 border-slate-700 bg-slate-800/50"
                 }`}
               >
-                {isHost ? "MG" : "Gracz"}
+                ⚙️
               </span>
             </button>
           ) : (
@@ -624,7 +733,7 @@ export default function GameClient() {
                   : "text-slate-400 border-slate-700 bg-slate-800/50"
               }`}
             >
-              {isHost ? "MG" : "Gracz"}
+              ⚙️
             </button>
           )}
         </div>
@@ -1177,7 +1286,7 @@ export default function GameClient() {
                 currentPlayerRole={currentPlayer.role}
                 roleVisible={roleVisible}
                 onKick={isLobby && isHost ? handleKick : undefined}
-                onRename={p.isYou ? handleRename : undefined}
+                onRename={undefined}
               />
             ))}
           </div>
@@ -1470,24 +1579,20 @@ function PlayerRow({
             </div>
           ) : (
             <>
-              <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
-              {player.isYou && (
-                <span className="text-xs text-emerald-400/70 font-typewriter">(Ty)</span>
-              )}
-              {isLobby && player.isYou && onRename && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-slate-400 hover:text-primary transition-colors"
-                  title="Edytuj nazwę"
-                >
-                  <span className="material-symbols-outlined text-[14px]">edit</span>
-                </button>
-              )}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
+                  {player.isYou && (
+                    <span className="text-xs text-emerald-400/70 font-typewriter">(Ty)</span>
+                  )}
+                </div>
+                {player.character && (
+                  <span className="text-[11px] text-slate-500 font-typewriter">
+                    {player.character.namePl}
+                  </span>
+                )}
+              </div>
             </>
-          )}
-
-          {player.isHost && (
-            <span className="text-xs text-primary/70 font-typewriter uppercase">MG</span>
           )}
           {isMafiaTeammate && (
             <span className="text-xs" title="Członek mafii">

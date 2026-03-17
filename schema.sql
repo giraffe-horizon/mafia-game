@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS game_players (
   game_id      TEXT NOT NULL,
   player_id    TEXT NOT NULL,
   token        TEXT NOT NULL UNIQUE,
-  nickname     TEXT NOT NULL,
+  nickname     TEXT,            -- Can be NULL for incomplete setup
   role         TEXT,            -- mafia | detective | doctor | civilian | NULL
   is_alive     INTEGER NOT NULL DEFAULT 1,  -- 0 | 1
   is_host      INTEGER NOT NULL DEFAULT 0,  -- 0 | 1

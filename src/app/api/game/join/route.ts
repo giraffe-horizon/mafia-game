@@ -8,9 +8,6 @@ export async function POST(req: NextRequest) {
     if (!code || typeof code !== "string") {
       return NextResponse.json({ error: "Podaj kod sesji" }, { status: 400 });
     }
-    if (!nickname || typeof nickname !== "string" || nickname.trim().length < 1) {
-      return NextResponse.json({ error: "Podaj imię" }, { status: 400 });
-    }
     const { env } = await getCloudflareContext();
     const db = (env as { DB: D1Database }).DB;
     const result = await joinGame(db, code, nickname, characterId);

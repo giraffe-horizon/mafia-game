@@ -120,8 +120,10 @@ export interface GameStateResponse {
     role: Role | null;
     isAlive: boolean;
     isHost: boolean;
+    isSetupComplete: boolean;
     character: { id: string; slug: string; namePl: string; avatarUrl: string } | null;
   };
+  takenCharacterIds: string[];
   players: PublicPlayer[];
   messages: { id: string; content: string; createdAt: string }[];
   missions: {
@@ -189,7 +191,7 @@ function now(): string {
 // ---------------------------------------------------------------------------
 export async function createGame(
   db: D1Database,
-  hostNickname: string,
+  hostNickname?: string,
   characterId?: string
 ): Promise<{ token: string }> {
   const gameId = nanoid();
@@ -211,7 +213,13 @@ export async function createGame(
       .prepare(
         "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host, character_id) VALUES (?, ?, ?, ?, NULL, 1, 1, ?)"
       )
-      .bind(gameId, hostPlayerId, hostToken, hostNickname.trim(), characterId || null),
+      .bind(
+        gameId,
+        hostPlayerId,
+        hostToken,
+        hostNickname?.trim() || "Mistrz Gry",
+        characterId || null
+      ),
   ]);
 
   return { token: hostToken };
@@ -223,7 +231,7 @@ export async function createGame(
 export async function joinGame(
   db: D1Database,
   code: string,
-  nickname: string,
+  nickname?: string,
   characterId?: string
 ): Promise<{ token: string } | null> {
   const normalizedCode = code.toUpperCase().trim();
@@ -241,10 +249,77 @@ export async function joinGame(
     .prepare(
       "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host, character_id) VALUES (?, ?, ?, ?, NULL, 1, 0, ?)"
     )
-    .bind(game.id, playerId, token, nickname.trim(), characterId || null)
+    .bind(game.id, playerId, token, nickname?.trim() || null, characterId || null)
     .run();
 
   return { token };
+}
+
+// ---------------------------------------------------------------------------
+// setupPlayer
+// ---------------------------------------------------------------------------
+export async function setupPlayer(
+  db: D1Database,
+  token: string,
+  nickname: string,
+  characterId: string
+): Promise<{ success: boolean; error?: string }> {
+  // Validate nickname length
+  if (!nickname.trim() || nickname.trim().length < 1 || nickname.trim().length > 20) {
+    return { success: false, error: "Nazwa musi mieć 1-20 znaków" };
+  }
+
+  // Get player's game info
+  const playerRow = await db
+    .prepare("SELECT game_id, player_id FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<{ game_id: string; player_id: string }>();
+
+  if (!playerRow) {
+    return { success: false, error: "Nieprawidłowy token gracza" };
+  }
+
+  // Check if nickname is unique in this game
+  const existingNickname = await db
+    .prepare(
+      "SELECT player_id FROM game_players WHERE game_id = ? AND nickname = ? AND player_id != ?"
+    )
+    .bind(playerRow.game_id, nickname.trim(), playerRow.player_id)
+    .first();
+
+  if (existingNickname) {
+    return { success: false, error: "Ta nazwa jest już zajęta" };
+  }
+
+  // Validate character exists and is active
+  const character = await db
+    .prepare("SELECT id FROM characters WHERE id = ? AND is_active = 1")
+    .bind(characterId)
+    .first<{ id: string }>();
+
+  if (!character) {
+    return { success: false, error: "Nieprawidłowa postać" };
+  }
+
+  // Check if character is not taken in this game
+  const existingCharacter = await db
+    .prepare(
+      "SELECT player_id FROM game_players WHERE game_id = ? AND character_id = ? AND player_id != ?"
+    )
+    .bind(playerRow.game_id, characterId, playerRow.player_id)
+    .first();
+
+  if (existingCharacter) {
+    return { success: false, error: "Ta postać jest już wybrana" };
+  }
+
+  // Update player
+  await db
+    .prepare("UPDATE game_players SET nickname = ?, character_id = ? WHERE token = ?")
+    .bind(nickname.trim(), characterId, token)
+    .run();
+
+  return { success: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -436,6 +511,7 @@ export async function getGameState(
       role: playerRow.role as Role | null,
       isAlive: playerRow.is_alive === 1,
       isHost,
+      isSetupComplete: playerRow.nickname != null,
       character: playerRow.character_id
         ? {
             id: playerRow.character_id,
@@ -445,6 +521,7 @@ export async function getGameState(
           }
         : null,
     },
+    takenCharacterIds: allPlayers.filter((p) => p.character_id != null).map((p) => p.character_id!),
     players: allPlayers.map((p) => ({
       playerId: p.player_id,
       nickname: p.nickname,

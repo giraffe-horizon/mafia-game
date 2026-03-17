@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import type { D1Database, D1PreparedStatement } from "@/lib/db";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { resolve } from "path";
 
 class SqlitePreparedStatement implements D1PreparedStatement {
@@ -52,10 +52,33 @@ export class SqliteD1Database implements D1Database {
 
   constructor() {
     this.db = new Database(":memory:");
-    // Load schema
+    // Load base schema
     const schemaPath = resolve(__dirname, "../../../schema.sql");
     const schema = readFileSync(schemaPath, "utf-8");
     this.db.exec(schema);
+    // Load migrations
+    const migrationsDir = resolve(__dirname, "../../../migrations");
+    try {
+      const files = readdirSync(migrationsDir).sort();
+      for (const file of files) {
+        if (file.endsWith(".sql") && file !== "0001_initial_schema.sql") {
+          const migration = readFileSync(resolve(migrationsDir, file), "utf-8");
+          // Split by semicolons and execute each statement (ALTER TABLE can't be batched)
+          for (const stmt of migration.split(";")) {
+            const trimmed = stmt.trim();
+            if (trimmed && !trimmed.startsWith("--")) {
+              try {
+                this.db.exec(trimmed);
+              } catch {
+                // Ignore errors (e.g. column already exists)
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Migrations dir might not exist
+    }
   }
 
   prepare(query: string): D1PreparedStatement {

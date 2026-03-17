@@ -5,9 +5,6 @@ import { createGame, type D1Database } from "@/lib/db";
 export async function POST(req: NextRequest) {
   try {
     const { nickname, characterId } = await req.json();
-    if (!nickname || typeof nickname !== "string" || nickname.trim().length < 1) {
-      return NextResponse.json({ error: "Podaj imię" }, { status: 400 });
-    }
     const { env } = await getCloudflareContext();
     const db = (env as { DB: D1Database }).DB;
     const { token } = await createGame(db, nickname, characterId);
