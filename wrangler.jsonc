@@ -1,13 +1,30 @@
 {
   "name": "mafia-game",
+  "account_id": "67ffcd3e6a0a421156f625214d812dbd",
   "compatibility_date": "2024-09-23",
   "compatibility_flags": ["nodejs_compat"],
-  "pages_build_output_dir": ".vercel/output/static",
+  "main": ".open-next/worker.js",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "mafia-game-db",
       "database_id": "2171f8bf-4d09-4176-91e3-ff643ded53bf"
     }
-  ]
+  ],
+  "env": {
+    "staging": {
+      "name": "mafia-game-staging",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "mafia-game-staging-db",
+          "database_id": "90a576a5-ca00-4edb-b721-927725dfc65b"
+        }
+      ]
+    }
+  }
 }

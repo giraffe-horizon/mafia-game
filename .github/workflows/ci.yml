@@ -86,11 +86,11 @@ jobs:
           node-version: "22"
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
-      - name: Build for Cloudflare Pages
+      - name: Build with OpenNext
         run: pnpm build:cf
       - name: Report bundle size
         run: |
           echo "## 📦 Bundle Size" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          du -sh .vercel/output/static/_worker.js/ 2>/dev/null | awk '{print "Worker: **" $1 "**"}' >> $GITHUB_STEP_SUMMARY
-          du -sh .vercel/output/static/ 2>/dev/null | awk '{print "Total static: **" $1 "**"}' >> $GITHUB_STEP_SUMMARY
+          du -sh .open-next/worker.js 2>/dev/null | awk '{print "Worker: **" $1 "**"}' >> $GITHUB_STEP_SUMMARY
+          du -sh .open-next/assets/ 2>/dev/null | awk '{print "Assets: **" $1 "**"}' >> $GITHUB_STEP_SUMMARY

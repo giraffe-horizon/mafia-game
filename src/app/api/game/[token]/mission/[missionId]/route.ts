@@ -1,7 +1,5 @@
-export const runtime = "edge";
-
 import { NextRequest, NextResponse } from "next/server";
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { deleteMission, type D1Database } from "@/lib/db";
 
 export async function DELETE(
@@ -10,8 +8,8 @@ export async function DELETE(
 ) {
   const { token, missionId } = await params;
   try {
-    const { env } = getRequestContext();
-    const db = (env as unknown as { DB: D1Database }).DB;
+    const { env } = await getCloudflareContext();
+    const db = (env as { DB: D1Database }).DB;
     const result = await deleteMission(db, token, missionId);
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
