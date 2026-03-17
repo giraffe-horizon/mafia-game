@@ -169,6 +169,13 @@ export interface GameStateResponse {
     isCompleted: boolean;
     points: number;
   }[];
+  // Host only: phase progress tracking
+  phaseProgress?: {
+    phase: string;
+    requiredActions: { playerId: string; nickname: string; role: string; done: boolean }[];
+    allDone: boolean;
+    hint: string;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +191,92 @@ function generateSessionCode(): string {
 
 function now(): string {
   return new Date().toISOString();
+}
+
+async function getPhaseProgress(
+  db: D1Database,
+  gameRow: GameRow,
+  allPlayers: GamePlayerRow[]
+): Promise<GameStateResponse["phaseProgress"]> {
+  const { phase, round } = gameRow;
+
+  // Only return progress for specific phases during gameplay
+  if (gameRow.status !== "playing") return undefined;
+  if (phase === "review" || phase === "lobby" || phase === "ended") return undefined;
+
+  const alivePlayers = allPlayers.filter((p) => p.is_alive === 1);
+  const aliveNonHost = alivePlayers.filter((p) => p.is_host === 0);
+
+  if (phase === "day") {
+    return {
+      phase,
+      requiredActions: [],
+      allDone: true,
+      hint: "Czas na dyskusję. Przejdź do głosowania gdy gracze są gotowi.",
+    };
+  }
+
+  // Get actions for current phase/round
+  const { results: actions } = await db
+    .prepare("SELECT player_id FROM game_actions WHERE game_id = ? AND round = ? AND phase = ?")
+    .bind(gameRow.id, round, phase)
+    .all<{ player_id: string }>();
+
+  const actedPlayerIds = new Set(actions.map((a) => a.player_id));
+
+  if (phase === "night") {
+    // Required: mafia (kill), detective (investigate), doctor (protect)
+    const requiredRoles = ["mafia", "detective", "doctor"];
+    const requiredActions = aliveNonHost
+      .filter((p) => requiredRoles.includes(p.role!))
+      .map((p) => ({
+        playerId: p.player_id,
+        nickname: p.nickname,
+        role: p.role!,
+        done: actedPlayerIds.has(p.player_id),
+      }));
+
+    const missingRoles = requiredActions.filter((a) => !a.done).map((a) => a.role);
+
+    const allDone = missingRoles.length === 0;
+    const hint = allDone
+      ? "Wszystkie akcje złożone! Przejdź do dnia."
+      : `Czekaj na akcje nocne. Brakuje: ${missingRoles.join(", ")}.`;
+
+    return {
+      phase,
+      requiredActions,
+      allDone,
+      hint,
+    };
+  }
+
+  if (phase === "voting") {
+    // Required: ALL alive non-host players
+    const requiredActions = aliveNonHost.map((p) => ({
+      playerId: p.player_id,
+      nickname: p.nickname,
+      role: p.role!,
+      done: actedPlayerIds.has(p.player_id),
+    }));
+
+    const votedCount = requiredActions.filter((a) => a.done).length;
+    const totalVoters = requiredActions.length;
+    const allDone = votedCount === totalVoters;
+
+    const hint = allDone
+      ? "Wszyscy zagłosowali! Ogłoś wynik."
+      : `Trwa głosowanie. ${votedCount}/${totalVoters} głosów.`;
+
+    return {
+      phase,
+      requiredActions,
+      allDone,
+      hint,
+    };
+  }
+
+  return undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -495,6 +588,12 @@ export async function getGameState(
     }));
   }
 
+  // For host: get phase progress during game
+  const phaseProgress =
+    isHost && gameRow.status === "playing"
+      ? await getPhaseProgress(db, gameRow, allPlayers)
+      : undefined;
+
   return {
     game: {
       id: gameRow.id,
@@ -570,6 +669,7 @@ export async function getGameState(
     voteTally: await getVoteTally(db, gameRow, allPlayers),
     hostActions,
     hostMissions,
+    phaseProgress,
   };
 }
 

@@ -1229,4 +1229,191 @@ describe("Database Integration Tests (SQLite)", () => {
       expect(state!.takenCharacterIds).toEqual([]);
     });
   });
+
+  describe("phaseProgress", () => {
+    it("should return null for non-host players", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const playerToken = await db.joinGame(mockDb, code, "Player1");
+      await db.joinGame(mockDb, code, "Player2");
+      await db.joinGame(mockDb, code, "Player3");
+      await db.startGame(mockDb, hostToken, undefined, "simple");
+
+      const playerState = await db.getGameState(mockDb, playerToken.token);
+      expect(playerState!.phaseProgress).toBeUndefined();
+
+      // Also check that host gets phaseProgress in night phase
+      const hostStateAfterStart = await db.getGameState(mockDb, hostToken);
+      expect(hostStateAfterStart!.phaseProgress).toBeDefined();
+    });
+
+    it("should return progress for host during night phase with incomplete actions", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      // Add players to get required roles for full mode (need 5+ players)
+      await db.joinGame(mockDb, code, "Mafia1");
+      await db.joinGame(mockDb, code, "Detective1");
+      await db.joinGame(mockDb, code, "Doctor1");
+      await db.joinGame(mockDb, code, "Civilian1");
+      await db.joinGame(mockDb, code, "Civilian2");
+
+      await db.startGame(mockDb, hostToken, undefined, "full");
+      // Game starts in night phase, so no need to change phase
+
+      const state = await db.getGameState(mockDb, hostToken);
+      expect(state!.phaseProgress).toBeDefined();
+      expect(state!.phaseProgress!.phase).toBe("night");
+      expect(state!.phaseProgress!.allDone).toBe(false);
+      expect(state!.phaseProgress!.hint).toContain("Brakuje:");
+      expect(state!.phaseProgress!.requiredActions.length).toBeGreaterThan(0);
+
+      const incompleteActions = state!.phaseProgress!.requiredActions.filter((a) => !a.done);
+      expect(incompleteActions.length).toBeGreaterThan(0);
+    });
+
+    it("should show all done when all night actions are submitted", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      // Add specific players to control roles
+      const mafiaToken = await db.joinGame(mockDb, code, "Mafia1");
+      const detectiveToken = await db.joinGame(mockDb, code, "Detective1");
+      const doctorToken = await db.joinGame(mockDb, code, "Doctor1");
+      await db.joinGame(mockDb, code, "Civilian1");
+
+      await db.startGame(mockDb, hostToken, undefined, "full");
+      await db.changePhase(mockDb, hostToken, "night");
+
+      // Get state to see role assignments and submit actions for required roles
+      const mafiaState = await db.getGameState(mockDb, mafiaToken.token);
+      const detectiveState = await db.getGameState(mockDb, detectiveToken.token);
+      const doctorState = await db.getGameState(mockDb, doctorToken.token);
+
+      // Find players and submit actions
+      const nonMafiaPlayer = mafiaState!.players.find((p) => !p.isHost && p.role !== "mafia");
+      if (nonMafiaPlayer && mafiaState!.currentPlayer.role === "mafia") {
+        await db.submitAction(mockDb, mafiaToken.token, "kill", nonMafiaPlayer.playerId);
+      }
+
+      const investigateTarget = detectiveState!.players.find(
+        (p) => !p.isHost && p.playerId !== detectiveState!.currentPlayer.playerId
+      );
+      if (investigateTarget && detectiveState!.currentPlayer.role === "detective") {
+        await db.submitAction(
+          mockDb,
+          detectiveToken.token,
+          "investigate",
+          investigateTarget.playerId
+        );
+      }
+
+      const protectTarget = doctorState!.players.find(
+        (p) => !p.isHost && p.playerId !== doctorState!.currentPlayer.playerId
+      );
+      if (protectTarget && doctorState!.currentPlayer.role === "doctor") {
+        await db.submitAction(mockDb, doctorToken.token, "protect", protectTarget.playerId);
+      }
+
+      const finalState = await db.getGameState(mockDb, hostToken);
+      if (finalState!.phaseProgress && finalState!.phaseProgress.requiredActions.length > 0) {
+        expect(finalState!.phaseProgress.allDone).toBe(true);
+        expect(finalState!.phaseProgress.hint).toBe("Wszystkie akcje złożone! Przejdź do dnia.");
+      }
+    });
+
+    it("should show voting progress with partial votes", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const player1Token = await db.joinGame(mockDb, code, "Player1");
+      await db.joinGame(mockDb, code, "Player2");
+      await db.joinGame(mockDb, code, "Player3");
+
+      await db.startGame(mockDb, hostToken, undefined, "simple");
+      // Transition: night -> day -> voting
+      await db.changePhase(mockDb, hostToken, "day");
+      await db.changePhase(mockDb, hostToken, "voting");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      expect(state!.phaseProgress).toBeDefined();
+      expect(state!.phaseProgress!.phase).toBe("voting");
+      expect(state!.phaseProgress!.allDone).toBe(false);
+      expect(state!.phaseProgress!.hint).toContain("Trwa głosowanie");
+
+      // Submit one vote
+      const targetPlayer = state!.players.find(
+        (p) => !p.isHost && p.playerId !== player1Token.playerId
+      );
+      if (targetPlayer) {
+        await db.submitAction(mockDb, player1Token.token, "vote", targetPlayer.playerId);
+      }
+
+      const updatedState = await db.getGameState(mockDb, hostToken);
+      expect(updatedState!.phaseProgress!.allDone).toBe(false);
+      expect(updatedState!.phaseProgress!.hint).toMatch(/\d+\/\d+ głosów/);
+    });
+
+    it("should show all done when all players voted", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const player1Token = await db.joinGame(mockDb, code, "Player1");
+      const player2Token = await db.joinGame(mockDb, code, "Player2");
+      const player3Token = await db.joinGame(mockDb, code, "Player3");
+
+      await db.startGame(mockDb, hostToken, undefined, "simple");
+      // Transition: night -> day -> voting
+      await db.changePhase(mockDb, hostToken, "day");
+      await db.changePhase(mockDb, hostToken, "voting");
+
+      // All players vote
+      const state = await db.getGameState(mockDb, hostToken);
+      const targetPlayer = state!.players.find((p) => !p.isHost);
+
+      if (targetPlayer) {
+        await db.submitAction(mockDb, player1Token.token, "vote", targetPlayer.playerId);
+        await db.submitAction(mockDb, player2Token.token, "vote", targetPlayer.playerId);
+        await db.submitAction(mockDb, player3Token.token, "vote", targetPlayer.playerId);
+      }
+
+      const finalState = await db.getGameState(mockDb, hostToken);
+      expect(finalState!.phaseProgress!.allDone).toBe(true);
+      expect(finalState!.phaseProgress!.hint).toBe("Wszyscy zagłosowali! Ogłoś wynik.");
+    });
+
+    it("should return progress for day phase", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      await db.joinGame(mockDb, code, "Player1");
+      await db.joinGame(mockDb, code, "Player2");
+      await db.joinGame(mockDb, code, "Player3");
+      await db.startGame(mockDb, hostToken, undefined, "simple");
+      await db.changePhase(mockDb, hostToken, "day");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      expect(state!.phaseProgress).toBeDefined();
+      expect(state!.phaseProgress!.phase).toBe("day");
+      expect(state!.phaseProgress!.allDone).toBe(true);
+      expect(state!.phaseProgress!.hint).toBe(
+        "Czas na dyskusję. Przejdź do głosowania gdy gracze są gotowi."
+      );
+    });
+
+    it("should return undefined for non-playing game status", async () => {
+      const { token } = await db.createGame(mockDb, "Host");
+      const state = await db.getGameState(mockDb, token);
+
+      // Game is in lobby status
+      expect(state!.phaseProgress).toBeUndefined();
+    });
+  });
 });

@@ -1268,6 +1268,7 @@ export default function GameClient() {
             onDeleteMission={handleDeleteMission}
             hostActions={state.hostActions}
             voteTally={state.voteTally}
+            phaseProgress={state.phaseProgress}
             onGmAction={handleGmAction}
             transferGmPending={transferGmPending}
             transferGmError={transferGmError}
@@ -1908,6 +1909,7 @@ function MGPanel({
   onDeleteMission,
   hostActions,
   voteTally,
+  phaseProgress,
   onGmAction,
   transferGmPending,
   transferGmError,
@@ -1944,6 +1946,7 @@ function MGPanel({
   onDeleteMission: (id: string) => void;
   hostActions?: GameStateResponse["hostActions"];
   voteTally?: GameStateResponse["voteTally"];
+  phaseProgress?: GameStateResponse["phaseProgress"];
   onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
   transferGmPending: boolean;
   transferGmError: string;
@@ -2218,7 +2221,9 @@ function MGPanel({
             hostActions={hostActions}
             players={players}
             phase={phase}
+            phaseProgress={phaseProgress}
             onGmAction={onGmAction}
+            onPhase={onPhase}
           />
         )}
 
@@ -2515,12 +2520,16 @@ function GmActionsTab({
   hostActions,
   players,
   phase,
+  phaseProgress,
   onGmAction,
+  onPhase,
 }: {
   hostActions?: GameStateResponse["hostActions"];
   players: PublicPlayer[];
   phase: string;
+  phaseProgress?: GameStateResponse["phaseProgress"];
   onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
+  onPhase: (p: string) => void;
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState<string>("");
   const [selectedTarget, setSelectedTarget] = useState<string>("");
@@ -2545,6 +2554,105 @@ function GmActionsTab({
 
   return (
     <div>
+      {/* Phase Progress Section */}
+      {phaseProgress && (
+        <div className="mb-6">
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
+                Postęp fazy: {phaseProgress.phase}
+              </p>
+              <span className="text-xs text-slate-400">
+                {phaseProgress.requiredActions.filter((a) => a.done).length}/
+                {phaseProgress.requiredActions.length}
+              </span>
+            </div>
+            <div className="w-full bg-slate-800 rounded-full h-2">
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-300"
+                style={{
+                  width: `${
+                    phaseProgress.requiredActions.length === 0
+                      ? 100
+                      : (phaseProgress.requiredActions.filter((a) => a.done).length /
+                          phaseProgress.requiredActions.length) *
+                        100
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="mb-4 p-3 bg-slate-800 rounded-lg border-l-4 border-primary">
+            <p className="text-sm text-slate-300">{phaseProgress.hint}</p>
+          </div>
+
+          {phaseProgress.requiredActions.length > 0 && (
+            <div className="mb-4">
+              <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2">
+                Status graczy
+              </p>
+              <div className="flex flex-col gap-1">
+                {[...phaseProgress.requiredActions]
+                  .sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
+                  .map((action) => (
+                    <div
+                      key={action.playerId}
+                      className="flex items-center gap-3 p-2 rounded-lg bg-black/20"
+                    >
+                      <span
+                        className={`material-symbols-outlined text-[16px] ${
+                          action.done ? "text-green-500" : "text-yellow-500"
+                        }`}
+                      >
+                        {action.done ? "check_circle" : "schedule"}
+                      </span>
+                      <span className="text-white text-xs font-medium flex-1">
+                        {action.nickname}
+                      </span>
+                      <span className="text-slate-400 text-xs font-typewriter">{action.role}</span>
+                      <span
+                        className={`text-xs font-typewriter ${
+                          action.done ? "text-green-400" : "text-yellow-400"
+                        }`}
+                      >
+                        {action.done ? "Gotowe" : "Oczekuje"}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          <button
+            disabled={!phaseProgress.allDone}
+            className={`w-full py-2 px-4 rounded-lg font-medium text-sm transition-all ${
+              phaseProgress.allDone
+                ? "bg-primary hover:bg-primary/80 text-black"
+                : "bg-slate-700 text-slate-500 cursor-not-allowed"
+            }`}
+            onClick={() => {
+              const nextPhaseMap: Record<string, string> = {
+                night: "day",
+                day: "voting",
+                voting: "night",
+              };
+              const nextPhase = nextPhaseMap[phaseProgress.phase];
+              if (nextPhase) {
+                onPhase(nextPhase);
+              }
+            }}
+          >
+            {phaseProgress.allDone
+              ? "Dalej"
+              : `Czekaj na: ${phaseProgress.requiredActions
+                  .filter((a) => !a.done)
+                  .map((a) => a.nickname)
+                  .join(", ")}`}
+          </button>
+        </div>
+      )}
+
       <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
         Akcje graczy — bieżąca faza
       </p>
