@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/giraffe-horizon/mafia-game/compare/v1.1.1...v1.1.2) (2026-03-17)
+
+
+### Bug Fixes
+
+* resolve all 20 lint warnings ([db0cc1c](https://github.com/giraffe-horizon/mafia-game/commit/db0cc1cde2cde518533b26ba1239427ed4f52a50))
+
 ## [1.1.1](https://github.com/giraffe-horizon/mafia-game/compare/v1.1.0...v1.1.1) (2026-03-17)
 
 
