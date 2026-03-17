@@ -1195,7 +1195,7 @@ describe("Database Integration Tests (SQLite)", () => {
 
       const playerState = await db.getGameState(mockDb, result!.token);
       expect(playerState).not.toBeNull();
-      expect(playerState!.currentPlayer.nickname).toBe(null);
+      expect(playerState!.currentPlayer.nickname).toBe("");
       expect(playerState!.currentPlayer.isHost).toBe(false);
       expect(playerState!.currentPlayer.isSetupComplete).toBe(false);
     });
