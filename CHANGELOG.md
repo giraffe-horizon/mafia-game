@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/giraffe-horizon/mafia-game/compare/v1.3.0...v1.3.1) (2026-03-17)
+
+
+### Bug Fixes
+
+* restore ranking button in game header ([bd7f830](https://github.com/giraffe-horizon/mafia-game/commit/bd7f83031c35118232bd2dcc2f2ae7159f3cccdb))
+
 # [1.3.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.2.0...v1.3.0) (2026-03-17)
 
 
