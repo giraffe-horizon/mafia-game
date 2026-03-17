@@ -16,40 +16,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-      - run: npm ci --force
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
       - name: ESLint
-        run: npm run lint
+        run: pnpm lint
       - name: Prettier check
-        run: npm run format:check
+        run: pnpm format:check
 
   typecheck:
     name: 🏷️ Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-      - run: npm ci --force
-      - run: npm run typecheck
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
 
   test:
     name: 🧪 Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-      - run: npm ci --force
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
       - name: Run tests with coverage
-        run: npx vitest run --coverage --reporter=json --outputFile=test-results.json
+        run: pnpm vitest run --coverage
       - name: Coverage report
         if: github.event_name == 'pull_request'
         uses: davelosert/vitest-coverage-report-action@v2
@@ -62,13 +65,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-      - run: npm ci --force
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
       - name: Audit dependencies
-        run: npm audit --audit-level=high || true
+        run: pnpm audit --prod || true
 
   build:
     name: 🏗️ Build
@@ -76,23 +80,17 @@ jobs:
     needs: [lint, typecheck, test]
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-      - run: npm ci --force
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
       - name: Build for Cloudflare Pages
-        run: npm run build:cf
+        run: pnpm build:cf
       - name: Report bundle size
         run: |
           echo "## 📦 Bundle Size" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           du -sh .vercel/output/static/_worker.js/ 2>/dev/null | awk '{print "Worker: **" $1 "**"}' >> $GITHUB_STEP_SUMMARY
           du -sh .vercel/output/static/ 2>/dev/null | awk '{print "Total static: **" $1 "**"}' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Files" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          find .vercel/output/static -type f -name "*.js" -o -name "*.css" -o -name "*.html" | head -30 | while read f; do
-            du -sh "$f"
-          done >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY

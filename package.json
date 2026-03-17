@@ -49,5 +49,14 @@
       "eslint --fix",
       "prettier --write"
     ]
-  }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "sharp",
+      "workerd"
+    ]
+  },
+  "packageManager": "pnpm@10.32.1"
 }

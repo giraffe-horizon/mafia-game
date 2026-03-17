@@ -411,7 +411,7 @@ export default function GameClient() {
   // ---------------------------------------------------------------------------
   if (error) {
     return (
-      <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark md:mx-auto md:my-8 md:rounded-[2.5rem]">
+      <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark">
         <span className="material-symbols-outlined text-[48px] text-primary mb-4">error</span>
         <p className="text-slate-300 font-typewriter text-lg text-center px-8">{error}</p>
         <button
@@ -426,7 +426,7 @@ export default function GameClient() {
 
   if (!state) {
     return (
-      <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark md:mx-auto md:my-8 md:rounded-[2.5rem]">
+      <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark">
         <span className="material-symbols-outlined text-[40px] text-primary animate-spin mb-4">
           refresh
         </span>
@@ -453,7 +453,7 @@ export default function GameClient() {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-dark overflow-hidden shadow-2xl md:mx-auto md:my-8 md:rounded-[2.5rem]">
+    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-dark overflow-hidden">
       {/* Background glow */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
