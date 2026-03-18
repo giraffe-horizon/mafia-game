@@ -1,15 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ROLE_LABELS, ROLE_ICONS, ROLE_COLORS } from "@/lib/constants";
-import { SectionHeader, StatusItem, Badge, Button } from "@/components/ui";
+import { SectionHeader, StatusItem, Badge, Button, Card } from "@/components/ui";
 import { useGameStore } from "../_stores/gameStore";
+import * as apiClient from "@/lib/api-client";
+
+interface RoundScore {
+  playerId: string;
+  nickname: string;
+  missionPoints: number;
+  survived: boolean;
+  won: boolean;
+  totalScore: number;
+}
+
+interface RankingEntry {
+  playerId: string;
+  nickname: string;
+  totalScore: number;
+  roundsPlayed: number;
+}
 
 export default function EndScreen(_props: Record<string, never> = {}) {
-  // Get data from store
   const state = useGameStore((s) => s.state);
   const rematchGame = useGameStore((s) => s.rematchGame);
   const [rematchPending, setRematchPending] = useState(false);
+  const [roundScores, setRoundScores] = useState<RoundScore[]>([]);
+  const [roundNumber, setRoundNumber] = useState(0);
+  const [ranking, setRanking] = useState<RankingEntry[]>([]);
+  const [totalRounds, setTotalRounds] = useState(0);
+
+  const token = state?.currentPlayer.token;
+
+  useEffect(() => {
+    if (!token) return;
+
+    async function fetchScoring() {
+      try {
+        const [scoresData, rankingData] = await Promise.all([
+          apiClient.fetchRoundScores(token!),
+          apiClient.fetchRanking(token!),
+        ]);
+
+        if (scoresData.scores) {
+          setRoundScores(scoresData.scores);
+          setRoundNumber(scoresData.round);
+        }
+
+        if (rankingData.ranking) {
+          setRanking(
+            rankingData.ranking.map((r) => ({
+              playerId: r.playerId,
+              nickname: r.nickname,
+              totalScore: r.totalScore,
+              roundsPlayed: r.roundsPlayed,
+            }))
+          );
+          setTotalRounds(rankingData.round);
+        }
+      } catch {
+        // Scores are optional — don't break the end screen
+      }
+    }
+
+    fetchScoring();
+  }, [token]);
 
   if (!state) return null;
 
@@ -24,6 +80,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
       setRematchPending(false);
     }
   };
+
   const winnerLabel = game.winner === "mafia" ? "Mafia wygrała!" : "Miasto wygrało!";
   const winnerIcon = game.winner === "mafia" ? "masks" : "groups";
   const winnerColor = game.winner === "mafia" ? "text-red-500" : "text-green-400";
@@ -50,8 +107,27 @@ export default function EndScreen(_props: Record<string, never> = {}) {
         )
       : [];
 
+  const positionColor = (i: number) =>
+    i === 0
+      ? "text-amber-400"
+      : i === 1
+        ? "text-slate-300"
+        : i === 2
+          ? "text-orange-400"
+          : "text-slate-500";
+
+  const positionBg = (i: number) =>
+    i === 0
+      ? "bg-amber-500/20 border-amber-600/50"
+      : i === 1
+        ? "bg-slate-500/20 border-slate-600/50"
+        : i === 2
+          ? "bg-orange-500/20 border-orange-600/50"
+          : "bg-slate-800 border-slate-700";
+
   return (
     <div className="mx-5 mt-5">
+      {/* Section 1: Winner */}
       <div className="p-6 rounded-xl bg-black/60 border border-primary/20 text-center">
         <span className={`material-symbols-outlined text-[56px] ${winnerColor} mb-3 block`}>
           {winnerIcon}
@@ -83,6 +159,100 @@ export default function EndScreen(_props: Record<string, never> = {}) {
         )}
       </div>
 
+      {/* Section 2: Round scores */}
+      {roundScores.length > 0 && (
+        <div className="mt-5">
+          <SectionHeader className="mb-3 pl-1">Punkty za rundę {roundNumber}</SectionHeader>
+          <Card className="overflow-hidden">
+            <table className="w-full text-sm font-typewriter">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-500 text-xs uppercase tracking-wider">
+                  <th className="text-left py-2 px-3">Gracz</th>
+                  <th className="text-center py-2 px-1">📋</th>
+                  <th className="text-center py-2 px-1">💀</th>
+                  <th className="text-center py-2 px-1">⭐</th>
+                  <th className="text-right py-2 px-3">Suma</th>
+                </tr>
+              </thead>
+              <tbody>
+                {roundScores.map((s, i) => (
+                  <tr
+                    key={s.playerId}
+                    className={`border-b border-slate-800/50 ${i === 0 ? "bg-amber-950/10" : ""}`}
+                  >
+                    <td className="py-2 px-3 text-white">{s.nickname}</td>
+                    <td className="text-center py-2 px-1 text-slate-400">
+                      {s.missionPoints > 0 ? `+${s.missionPoints}` : "—"}
+                    </td>
+                    <td className="text-center py-2 px-1 text-slate-400">
+                      {s.survived ? "+1" : "—"}
+                    </td>
+                    <td className="text-center py-2 px-1 text-slate-400">{s.won ? "+3" : "—"}</td>
+                    <td className={`text-right py-2 px-3 font-bold ${positionColor(i)}`}>
+                      {s.totalScore}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+          <div className="mt-2 flex gap-3 text-xs text-slate-600 font-typewriter px-1">
+            <span>📋 Misje</span>
+            <span>💀 Przeżycie (+1)</span>
+            <span>⭐ Wygrana (+3)</span>
+          </div>
+        </div>
+      )}
+
+      {/* Section 3: Session ranking (cumulative) */}
+      {ranking.length > 0 && (
+        <div className="mt-5">
+          <SectionHeader className="mb-3 pl-1">
+            Ranking sesji {totalRounds > 1 ? `(${totalRounds} rund)` : ""}
+          </SectionHeader>
+          <div className="flex flex-col gap-2">
+            {ranking.map((r, i) => (
+              <div
+                key={r.playerId}
+                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                  i === 0
+                    ? "border-amber-700/50 bg-amber-950/20"
+                    : i === 1
+                      ? "border-slate-600/50 bg-slate-900/20"
+                      : i === 2
+                        ? "border-orange-900/50 bg-orange-950/10"
+                        : "border-slate-800 bg-black/20"
+                }`}
+              >
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm font-typewriter border ${positionBg(i)} ${positionColor(i)}`}
+                >
+                  {i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-white text-sm font-medium truncate block">
+                    {r.nickname}
+                  </span>
+                  {r.roundsPlayed > 0 && (
+                    <span className="text-slate-600 text-xs font-typewriter">
+                      {r.roundsPlayed}{" "}
+                      {r.roundsPlayed === 1 ? "runda" : r.roundsPlayed < 5 ? "rundy" : "rund"}
+                    </span>
+                  )}
+                </div>
+                <div className="text-right">
+                  <span className={`text-lg font-bold font-typewriter ${positionColor(i)}`}>
+                    {r.totalScore}
+                  </span>
+                  <p className="text-slate-600 text-xs">pkt</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Mission summary (GM only) */}
       {isHost && missionSummary.length > 0 && (
         <div className="mt-5">
           <SectionHeader className="mb-3 pl-1">Podsumowanie misji</SectionHeader>
@@ -115,6 +285,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
         </div>
       )}
 
+      {/* Player roles */}
       <SectionHeader className="mt-5 mb-3 pl-1">Role graczy</SectionHeader>
       <div className="flex flex-col gap-2">
         {players

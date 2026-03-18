@@ -55,6 +55,38 @@ export interface GameService {
     targetPlayerId?: string
   ): Promise<ActionResult>;
 
+  // Ranking & scores
+  fetchRanking(token: string): Promise<{
+    ranking: Array<{
+      playerId: string;
+      nickname: string;
+      role: string | null;
+      isAlive: boolean;
+      missionPoints: number;
+      missionsDone: number;
+      missionsTotal: number;
+      survived: boolean;
+      won: boolean;
+      totalScore: number;
+      roundsPlayed: number;
+    }>;
+    gameStatus: string;
+    winner: string | null;
+    round: number;
+  }>;
+  fetchRoundScores(token: string): Promise<{
+    round: number;
+    winner: string | null;
+    scores: Array<{
+      playerId: string;
+      nickname: string;
+      missionPoints: number;
+      survived: boolean;
+      won: boolean;
+      totalScore: number;
+    }>;
+  }>;
+
   // Mission management
   createMission(
     token: string,
@@ -153,6 +185,10 @@ export function createHttpGameService(): GameService {
     ): Promise<ActionResult> => {
       return apiClient.createMission(token, { targetPlayerId, description, isSecret, points });
     },
+
+    fetchRanking: apiClient.fetchRanking,
+
+    fetchRoundScores: apiClient.fetchRoundScores,
 
     completeMission: apiClient.completeMission,
 

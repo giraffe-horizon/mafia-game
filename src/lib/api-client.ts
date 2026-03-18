@@ -176,6 +176,22 @@ export async function deleteMission(
   return deleteRequest(`/api/game/${token}/mission/${missionId}`);
 }
 
+// Round scores (per-round breakdown)
+export async function fetchRoundScores(token: string): Promise<{
+  round: number;
+  winner: string | null;
+  scores: Array<{
+    playerId: string;
+    nickname: string;
+    missionPoints: number;
+    survived: boolean;
+    won: boolean;
+    totalScore: number;
+  }>;
+}> {
+  return getRequest(`/api/game/${token}/round-scores`);
+}
+
 // Ranking
 export async function fetchRanking(token: string): Promise<{
   ranking: Array<{
