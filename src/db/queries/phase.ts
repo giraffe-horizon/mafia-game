@@ -119,6 +119,9 @@ export async function changePhase(
       .bind(nanoid(), playerRow.game_id, round, winner, now())
       .run();
 
+    // Save per-player scores for this round
+    await savePlayerRoundScores(db, playerRow.game_id, round, winner);
+
     // Check for unrated missions before ending
     const { results: unratedMissions } = await db
       .prepare("SELECT COUNT(*) as count FROM missions WHERE game_id = ? AND points IS NULL")
@@ -309,6 +312,60 @@ export async function resolveVoting(
     await Promise.all(messagePromises);
   }
   // If tied, no elimination happens (could add tiebreaker logic here)
+}
+
+async function savePlayerRoundScores(
+  db: D1Database,
+  gameId: string,
+  round: number,
+  winner: string
+): Promise<void> {
+  const { results: players } = await db
+    .prepare("SELECT player_id, role, is_alive FROM game_players WHERE game_id = ? AND is_host = 0")
+    .bind(gameId)
+    .all<{ player_id: string; role: string; is_alive: number }>();
+
+  const timestamp = now();
+  const statements = [];
+
+  for (const p of players) {
+    const missionPointsRow = await db
+      .prepare(
+        "SELECT COALESCE(SUM(points), 0) as pts FROM missions WHERE game_id = ? AND player_id = ? AND is_completed = 1"
+      )
+      .bind(gameId, p.player_id)
+      .first<{ pts: number }>();
+
+    const missionPoints = missionPointsRow?.pts ?? 0;
+    const survived = p.is_alive === 1 ? 1 : 0;
+    const won =
+      (winner === "mafia" && p.role === "mafia") || (winner === "town" && p.role !== "mafia")
+        ? 1
+        : 0;
+    const totalScore = missionPoints + (survived ? 1 : 0) + (won ? 3 : 0);
+
+    statements.push(
+      db
+        .prepare(
+          "INSERT INTO player_round_scores (id, game_id, round, player_id, mission_points, survived, won, total_score, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(
+          nanoid(),
+          gameId,
+          round,
+          p.player_id,
+          missionPoints,
+          survived,
+          won,
+          totalScore,
+          timestamp
+        )
+    );
+  }
+
+  if (statements.length > 0) {
+    await db.batch(statements);
+  }
 }
 
 export async function checkWinConditions(db: D1Database, gameId: string): Promise<string | null> {

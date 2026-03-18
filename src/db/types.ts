@@ -74,6 +74,18 @@ export interface MissionRow {
   created_at: string;
 }
 
+export interface PlayerRoundScoreRow {
+  id: string;
+  game_id: string;
+  round: number;
+  player_id: string;
+  mission_points: number;
+  survived: number;
+  won: number;
+  total_score: number;
+  created_at: string;
+}
+
 export interface CharacterRow {
   id: string;
   slug: string;
