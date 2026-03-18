@@ -159,40 +159,52 @@ export default function EndScreen(_props: Record<string, never> = {}) {
         )}
       </div>
 
-      {/* Section 2: Round scores */}
+      {/* Combined scoring table: round breakdown + cumulative total */}
       {roundScores.length > 0 && (
         <div className="mt-5">
-          <SectionHeader className="mb-3 pl-1">Punkty za rundę {totalRounds || 1}</SectionHeader>
+          <SectionHeader className="mb-3 pl-1">
+            Punktacja {totalRounds > 1 ? `— runda ${totalRounds}` : ""}
+          </SectionHeader>
           <Card className="overflow-hidden">
             <table className="w-full text-sm font-typewriter">
               <thead>
                 <tr className="border-b border-slate-800 text-slate-500 text-xs uppercase tracking-wider">
-                  <th className="text-left py-2 px-3">Gracz</th>
+                  <th className="text-left py-2 px-3">#</th>
+                  <th className="text-left py-2 px-1">Gracz</th>
                   <th className="text-center py-2 px-1">📋</th>
                   <th className="text-center py-2 px-1">💀</th>
                   <th className="text-center py-2 px-1">⭐</th>
-                  <th className="text-right py-2 px-3">Suma</th>
+                  <th className="text-center py-2 px-1">Runda</th>
+                  <th className="text-right py-2 px-3 text-primary">Ogółem</th>
                 </tr>
               </thead>
               <tbody>
-                {roundScores.map((s, i) => (
-                  <tr
-                    key={s.playerId}
-                    className={`border-b border-slate-800/50 ${i === 0 ? "bg-amber-950/10" : ""}`}
-                  >
-                    <td className="py-2 px-3 text-white">{s.nickname}</td>
-                    <td className="text-center py-2 px-1 text-slate-400">
-                      {s.missionPoints > 0 ? `+${s.missionPoints}` : "—"}
-                    </td>
-                    <td className="text-center py-2 px-1 text-slate-400">
-                      {s.survived ? "+1" : "—"}
-                    </td>
-                    <td className="text-center py-2 px-1 text-slate-400">{s.won ? "+3" : "—"}</td>
-                    <td className={`text-right py-2 px-3 font-bold ${positionColor(i)}`}>
-                      {s.totalScore}
-                    </td>
-                  </tr>
-                ))}
+                {[...roundScores]
+                  .map((s) => {
+                    const cumulative = ranking.find((r) => r.playerId === s.playerId);
+                    return { ...s, cumulativeScore: cumulative?.totalScore ?? s.totalScore };
+                  })
+                  .sort((a, b) => b.cumulativeScore - a.cumulativeScore)
+                  .map((s, i) => (
+                    <tr
+                      key={s.playerId}
+                      className={`border-b border-slate-800/50 ${i === 0 ? "bg-amber-950/10" : ""}`}
+                    >
+                      <td className={`py-2 px-3 font-bold ${positionColor(i)}`}>{i + 1}</td>
+                      <td className="py-2 px-1 text-white">{s.nickname}</td>
+                      <td className="text-center py-2 px-1 text-slate-400">
+                        {s.missionPoints > 0 ? `+${s.missionPoints}` : "—"}
+                      </td>
+                      <td className="text-center py-2 px-1 text-slate-400">
+                        {s.survived ? "+1" : "—"}
+                      </td>
+                      <td className="text-center py-2 px-1 text-slate-400">{s.won ? "+3" : "—"}</td>
+                      <td className="text-center py-2 px-1 text-slate-500">{s.totalScore}</td>
+                      <td className={`text-right py-2 px-3 font-bold text-lg ${positionColor(i)}`}>
+                        {s.cumulativeScore}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </Card>
@@ -200,54 +212,6 @@ export default function EndScreen(_props: Record<string, never> = {}) {
             <span>📋 Misje</span>
             <span>💀 Przeżycie (+1)</span>
             <span>⭐ Wygrana (+3)</span>
-          </div>
-        </div>
-      )}
-
-      {/* Section 3: Session ranking (cumulative) */}
-      {ranking.length > 0 && (
-        <div className="mt-5">
-          <SectionHeader className="mb-3 pl-1">
-            Ranking sesji {totalRounds > 1 ? `(${totalRounds} rund)` : ""}
-          </SectionHeader>
-          <div className="flex flex-col gap-2">
-            {ranking.map((r, i) => (
-              <div
-                key={r.playerId}
-                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                  i === 0
-                    ? "border-amber-700/50 bg-amber-950/20"
-                    : i === 1
-                      ? "border-slate-600/50 bg-slate-900/20"
-                      : i === 2
-                        ? "border-orange-900/50 bg-orange-950/10"
-                        : "border-slate-800 bg-black/20"
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm font-typewriter border ${positionBg(i)} ${positionColor(i)}`}
-                >
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-white text-sm font-medium truncate block">
-                    {r.nickname}
-                  </span>
-                  {r.roundsPlayed > 0 && (
-                    <span className="text-slate-600 text-xs font-typewriter">
-                      {r.roundsPlayed}{" "}
-                      {r.roundsPlayed === 1 ? "runda" : r.roundsPlayed < 5 ? "rundy" : "rund"}
-                    </span>
-                  )}
-                </div>
-                <div className="text-right">
-                  <span className={`text-lg font-bold font-typewriter ${positionColor(i)}`}>
-                    {r.totalScore}
-                  </span>
-                  <p className="text-slate-600 text-xs">pkt</p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       )}
