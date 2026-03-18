@@ -1,5 +1,6 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } from "@/lib/constants";
 import NightActionPanel, { type ActionState, type MafiaState } from "./NightActionPanel"; // Updated to use _components
+import { Card, Badge } from "@/components/ui";
 
 export interface PlayerState {
   isAlive: boolean;
@@ -44,9 +45,12 @@ export default function NightView({
           <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2 pl-1">
             Twoja rola
           </p>
-          <button
+          <Card
+            variant="highlighted"
             onClick={() => setRoleVisible((v) => !v)}
-            className="w-full p-5 rounded-xl bg-black/60 border border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98]"
+            className="w-full p-5 cursor-pointer transition-all active:scale-[0.98]"
+            role="button"
+            tabIndex={0}
           >
             {roleVisible ? (
               <div className="flex items-center gap-4">
@@ -79,7 +83,7 @@ export default function NightView({
                 </p>
               </div>
             )}
-          </button>
+          </Card>
         </div>
       )}
 
@@ -98,7 +102,7 @@ export default function NightView({
       {/* Dead spectator view */}
       {!isHost && !currentPlayer.isAlive && (
         <div className="mx-5 mt-5">
-          <div className="p-5 rounded-xl bg-black/50 border border-slate-700 text-center mb-4">
+          <Card className="p-5 text-center mb-4">
             <span className="material-symbols-outlined text-[48px] text-slate-600 mb-2 block">
               skull
             </span>
@@ -118,7 +122,7 @@ export default function NightView({
                 </span>
               </p>
             )}
-          </div>
+          </Card>
           <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2 pl-1">
             <span className="material-symbols-outlined text-[12px] align-middle mr-1">
               visibility
@@ -146,11 +150,9 @@ export default function NightView({
                     {p.nickname}
                   </span>
                   {p.role && (
-                    <span
-                      className={`text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border ${p.role === "mafia" ? "text-red-400 border-red-900/50 bg-red-950/30" : p.role === "detective" ? "text-blue-400 border-blue-900/50 bg-blue-950/30" : p.role === "doctor" ? "text-green-400 border-green-900/50 bg-green-950/30" : "text-slate-400 border-slate-700 bg-slate-900/30"}`}
-                    >
+                    <Badge variant={p.role as "mafia" | "detective" | "doctor" | "civilian"}>
                       {ROLE_LABELS[p.role] ?? p.role}
-                    </span>
+                    </Badge>
                   )}
                 </div>
               ))}

@@ -3,6 +3,7 @@
 import type { PublicPlayer, GameStateResponse } from "@/lib/db";
 import { ACTION_CONFIRMED } from "@/lib/constants";
 import MafiaConsensusStatus from "./MafiaConsensusStatus";
+import { Button } from "@/components/ui";
 
 export interface ActionState {
   pending: boolean;
@@ -71,13 +72,15 @@ export default function NightActionPanel({
             mafiaTeamActions={mafiaTeamActions}
             currentNickname={currentNickname}
           />
-          <button
+          <Button
             onClick={() => onChangeDecision()}
-            className="mt-3 w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-slate-200 font-typewriter uppercase tracking-wider text-xs transition-all"
+            variant="ghost"
+            size="sm"
+            icon="edit"
+            className="mt-3 w-full"
           >
-            <span className="material-symbols-outlined text-[14px]">edit</span>
             Zmień głos
-          </button>
+          </Button>
         </div>
       );
     }
@@ -102,13 +105,15 @@ export default function NightActionPanel({
         {roleHidden && (
           <p className="text-slate-600 text-xs mt-1">Odkryj rolę by zobaczyć szczegóły</p>
         )}
-        <button
+        <Button
           onClick={() => onChangeDecision()}
-          className="mt-3 w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-slate-200 font-typewriter uppercase tracking-wider text-xs transition-all"
+          variant="ghost"
+          size="sm"
+          icon="edit"
+          className="mt-3 w-full"
         >
-          <span className="material-symbols-outlined text-[14px]">edit</span>
           Zmień decyzję
-        </button>
+        </Button>
       </div>
     );
   }

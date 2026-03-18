@@ -1,4 +1,5 @@
 import CharacterPicker from "@/components/CharacterPicker";
+import { Button } from "@/components/ui";
 
 export interface PlayerInfo {
   playerNickname: string;
@@ -73,33 +74,32 @@ export default function SettingsModal({
           )}
         </div>
         <div className="flex gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded font-typewriter transition-colors"
-          >
+          <Button onClick={onClose} variant="secondary" className="flex-1">
             Anuluj
-          </button>
+          </Button>
           {!currentPlayer.isHost && (
-            <button
+            <Button
               onClick={onSave}
               disabled={!selectedCharacterId || selectedCharacterId === currentPlayer.character?.id}
-              className="flex-1 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded font-typewriter transition-colors"
+              variant="primary"
+              className="flex-1"
             >
               Zapisz
-            </button>
+            </Button>
           )}
         </div>
         {!currentPlayer.isHost && (
-          <button
+          <Button
             onClick={() => {
               onClose();
               onLeaveGame();
             }}
-            className="w-full mt-4 py-2 bg-red-900/50 hover:bg-red-800/50 border border-red-700/50 text-red-300 rounded font-typewriter transition-colors flex items-center justify-center gap-2"
+            variant="danger"
+            icon="logout"
+            className="w-full mt-4"
           >
-            <span className="material-symbols-outlined text-[16px]">logout</span>
             Opuść grę
-          </button>
+          </Button>
         )}
       </div>
     </div>

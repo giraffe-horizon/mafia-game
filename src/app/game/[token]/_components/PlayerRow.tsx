@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { PublicPlayer } from "@/lib/db";
-
-function roleBadgeClass(role: string) {
-  if (role === "mafia") return "text-red-400 border-red-900/50 bg-red-950/30";
-  if (role === "detective") return "text-blue-400 border-blue-900/50 bg-blue-950/30";
-  if (role === "doctor") return "text-green-400 border-green-900/50 bg-green-950/30";
-  return "text-slate-400 border-slate-700 bg-slate-900/30";
-}
+import { Badge } from "@/components/ui";
 
 export default function PlayerRow({
   player,
@@ -177,18 +171,14 @@ export default function PlayerRow({
         )}
       </div>
       {showRoleBadge && player.role && (
-        <span
-          className={`text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border ${roleBadgeClass(player.role)}`}
-        >
+        <Badge variant={player.role as "mafia" | "detective" | "doctor" | "civilian"}>
           {ROLE_LABELS[player.role]}
-        </span>
+        </Badge>
       )}
       {isFinished && !isHost && player.role && !isChoosingCharacter && (
-        <span
-          className={`text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border ${roleBadgeClass(player.role)}`}
-        >
+        <Badge variant={player.role as "mafia" | "detective" | "doctor" | "civilian"}>
           {ROLE_LABELS[player.role]}
-        </span>
+        </Badge>
       )}
       {isLobby && isHost && !player.isHost && onKick && (
         <button

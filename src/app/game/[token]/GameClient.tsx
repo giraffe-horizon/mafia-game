@@ -49,6 +49,7 @@ import { useGameActions } from "./_hooks/useGameActions";
 import { useOnboarding } from "./_hooks/useOnboarding";
 import { useMessageForm } from "./_hooks/useMessageForm";
 import { useMissionForm } from "./_hooks/useMissionForm";
+import { GameLayout } from "@/components/ui";
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -279,11 +280,7 @@ export default function GameClient() {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-dark overflow-hidden">
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-      </div>
-
+    <GameLayout>
       <ToastOverlay toasts={toasts} onDismiss={dismissToast} />
 
       <GameHeader
@@ -504,6 +501,6 @@ export default function GameClient() {
           },
         }}
       />
-    </div>
+    </GameLayout>
   );
 }

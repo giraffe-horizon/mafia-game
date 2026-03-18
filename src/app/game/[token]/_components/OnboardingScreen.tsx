@@ -1,6 +1,7 @@
 "use client";
 
 import CharacterPicker from "@/components/CharacterPicker";
+import { Button, GameLayout } from "@/components/ui";
 
 export interface FormData {
   onboardingNickname: string;
@@ -45,11 +46,7 @@ export default function OnboardingScreen({
     characterSelection;
   const { onboardingLoading, onboardingError } = loadingState;
   return (
-    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-dark overflow-hidden">
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-      </div>
-
+    <GameLayout>
       <div className="relative z-20 flex items-center p-4 pb-2 justify-between">
         <div className="size-12 shrink-0 opacity-0 pointer-events-none" />
         <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-typewriter text-primary drop-shadow-[0_0_8px_rgba(218,11,11,0.5)]">
@@ -115,17 +112,17 @@ export default function OnboardingScreen({
           )}
         </div>
 
-        <button
+        <Button
           onClick={onSubmit}
           disabled={onboardingLoading || !onboardingNickname.trim() || !selectedCharacterId}
-          className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          size="lg"
+          loading={onboardingLoading}
+          icon="login"
+          className="w-full"
         >
-          <span className="material-symbols-outlined mr-2 text-[20px]">login</span>
-          <span className="truncate uppercase font-typewriter tracking-wider">
-            {onboardingLoading ? "Dołączam..." : "Dołącz do gry"}
-          </span>
-        </button>
+          {onboardingLoading ? "Dołączam..." : "Dołącz do gry"}
+        </Button>
       </div>
-    </div>
+    </GameLayout>
   );
 }
