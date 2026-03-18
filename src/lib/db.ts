@@ -175,6 +175,7 @@ export interface GameStateResponse {
     requiredActions: { playerId: string; nickname: string; role: string; done: boolean }[];
     allDone: boolean;
     hint: string;
+    mafiaUnanimous: boolean;
   };
   // Whether to show points/missions to players (only during review/finished)
   showPoints: boolean;
@@ -240,6 +241,7 @@ async function getPhaseProgress(
       requiredActions: [],
       allDone: true,
       hint: "Czas na dyskusję. Przejdź do głosowania gdy gracze są gotowi.",
+      mafiaUnanimous: true, // Not applicable during day
     };
   }
 
@@ -269,6 +271,7 @@ async function getPhaseProgress(
     const { aliveMafia, killActions } = await getMafiaKillActions(db, gameRow.id, round);
 
     let consensusWarning = "";
+    let mafiaUnanimous: boolean;
 
     if (aliveMafia.length > 1) {
       const mafiaPlayerIds = new Set(aliveMafia.map((m) => m.player_id));
@@ -276,13 +279,29 @@ async function getPhaseProgress(
 
       if (mafiaKillActions.length > 0) {
         const targets = [...new Set(mafiaKillActions.map((action) => action.target_player_id))];
+        const allMafiaVoted = mafiaKillActions.length === aliveMafia.length;
+        const unanimous = targets.length === 1 && allMafiaVoted;
+
+        mafiaUnanimous = unanimous;
+
         if (targets.length > 1) {
           consensusWarning = " ⚠️ Mafia nie jest zgodna!";
+        } else if (!allMafiaVoted) {
+          mafiaUnanimous = false;
         }
+      } else {
+        // No votes yet, not unanimous
+        mafiaUnanimous = false;
       }
+    } else if (aliveMafia.length === 1) {
+      // Single mafia member, unanimous if they voted
+      mafiaUnanimous = killActions.length > 0;
+    } else {
+      // No mafia alive, considered unanimous
+      mafiaUnanimous = true;
     }
 
-    const allDone = missingRoles.length === 0;
+    const allDone = missingRoles.length === 0 && mafiaUnanimous;
     const baseHint = allDone
       ? "Wszystkie akcje złożone! Przejdź do dnia."
       : `Czekaj na akcje nocne. Brakuje: ${missingRoles.join(", ")}.`;
@@ -294,6 +313,7 @@ async function getPhaseProgress(
       requiredActions,
       allDone,
       hint,
+      mafiaUnanimous,
     };
   }
 
@@ -319,6 +339,7 @@ async function getPhaseProgress(
       requiredActions,
       allDone,
       hint,
+      mafiaUnanimous: true, // Not applicable during voting
     };
   }
 

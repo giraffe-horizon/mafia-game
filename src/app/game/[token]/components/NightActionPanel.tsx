@@ -1,6 +1,7 @@
 "use client";
 
-import type { PublicPlayer } from "@/lib/db";
+import type { PublicPlayer, GameStateResponse } from "@/lib/db";
+import MafiaConsensusStatus from "./MafiaConsensusStatus";
 
 const ACTION_CONFIRMED: Record<string, string> = {
   kill: "Wytypowałeś ofiarę:",
@@ -19,6 +20,7 @@ export default function NightActionPanel({
   onAction,
   roleHidden = false,
   onChangeDecision,
+  mafiaTeamActions,
 }: {
   role: string | null;
   targets: PublicPlayer[];
@@ -28,6 +30,7 @@ export default function NightActionPanel({
   onAction: (type: string, targetId: string) => void;
   roleHidden?: boolean;
   onChangeDecision: () => void;
+  mafiaTeamActions?: GameStateResponse["mafiaTeamActions"];
 }) {
   const actionMap: Record<string, { type: string; label: string; icon: string; color: string }> = {
     mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
@@ -52,6 +55,27 @@ export default function NightActionPanel({
   };
 
   if (myAction) {
+    // Special handling for mafia: show voting consensus status instead of simple confirmation
+    if (role === "mafia" && !roleHidden && mafiaTeamActions) {
+      return (
+        <div className="mx-5 mt-4">
+          <p className="text-red-400 text-xs font-typewriter uppercase tracking-widest mb-3 pl-1">
+            <span className="material-symbols-outlined text-[14px] align-middle mr-1">skull</span>
+            Status głosowania mafii
+          </p>
+          <MafiaConsensusStatus mafiaTeamActions={mafiaTeamActions} />
+          <button
+            onClick={() => onChangeDecision()}
+            className="mt-3 w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-slate-200 font-typewriter uppercase tracking-wider text-xs transition-all"
+          >
+            <span className="material-symbols-outlined text-[14px]">edit</span>
+            Zmień głos
+          </button>
+        </div>
+      );
+    }
+
+    // Standard handling for other roles
     const targetName =
       targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ??
       myAction.targetPlayerId;

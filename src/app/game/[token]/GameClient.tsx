@@ -754,6 +754,7 @@ export default function GameClient() {
               handleAction(type, targetId);
             }}
             roleHidden={!roleVisible}
+            mafiaTeamActions={state.mafiaTeamActions}
             onChangeDecision={() => setChangingDecision(true)}
           />
         )}

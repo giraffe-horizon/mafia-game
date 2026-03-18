@@ -61,8 +61,9 @@ function GmGameTab({
     setSelectedTarget("");
   }
 
-  // Fix 6 + Fix 7: single source of truth — phaseProgress.allDone covers voting too
-  const canAdvancePhase = (phaseProgress?.allDone ?? true) && !phasePending;
+  // GM can advance phase when all actions are done AND mafia is unanimous (for night phase)
+  const canAdvancePhase =
+    (phaseProgress?.allDone ?? true) && (phaseProgress?.mafiaUnanimous ?? true) && !phasePending;
 
   return (
     <div>
@@ -205,11 +206,11 @@ function GmGameTab({
           {phasePending
             ? "Czekaj..."
             : phase === "night"
-              ? "☀️ Zacznij dzień"
+              ? "Zacznij dzień"
               : phase === "day"
-                ? "🗳️ Zacznij głosowanie"
+                ? "Zacznij głosowanie"
                 : phase === "voting"
-                  ? "🌙 Zacznij noc"
+                  ? "Zacznij noc"
                   : nextPhase.label}
         </button>
       ) : (
