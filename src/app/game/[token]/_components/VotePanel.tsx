@@ -1,7 +1,6 @@
 "use client";
 
 import type { PublicPlayer } from "@/db";
-import type { ActionType } from "@/db/types";
 import { SectionHeader } from "@/components/ui";
 
 export default function VotePanel({
@@ -13,7 +12,7 @@ export default function VotePanel({
   onChangeDecision,
 }: {
   targets: PublicPlayer[];
-  myAction: { actionType: ActionType; targetPlayerId: string | null } | null;
+  myAction: { actionType: string; targetPlayerId: string | null } | null;
   pending: boolean;
   error: string;
   onVote: (targetId: string) => void;

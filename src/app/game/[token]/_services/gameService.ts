@@ -2,19 +2,6 @@
 // In the future: replace HTTP implementation with WebSocket without changing consumers
 
 import type { GameStateResponse } from "@/db";
-import type {
-  ActionInput,
-  PhaseInput,
-  StartGameInput,
-  MessageInput,
-  SetupPlayerInput,
-  RenamePlayerInput,
-  KickPlayerInput,
-  CreateMissionInput,
-  UpdateCharacterInput,
-  RematchInput,
-  TransferGmInput,
-} from "@/app/api/lib/schemas";
 import * as apiClient from "@/lib/api-client";
 
 // Common result types
@@ -57,6 +44,14 @@ export interface GameService {
   transferGameMaster(token: string, newHostPlayerId: string): Promise<ActionResult>;
   rematchGame(token: string, opts?: StartGameOpts): Promise<ActionResult>;
   finalizeGame(token: string): Promise<ActionResult>;
+
+  // GM override
+  submitGmAction(
+    token: string,
+    forPlayerId: string,
+    actionType: string,
+    targetPlayerId?: string
+  ): Promise<ActionResult>;
 
   // Mission management
   createMission(
@@ -133,6 +128,19 @@ export function createHttpGameService(): GameService {
     },
 
     finalizeGame: apiClient.finalizeGame,
+
+    submitGmAction: async (
+      token: string,
+      forPlayerId: string,
+      actionType: string,
+      targetPlayerId?: string
+    ): Promise<ActionResult> => {
+      return apiClient.submitAction(token, {
+        type: actionType,
+        forPlayerId,
+        ...(targetPlayerId && { targetPlayerId }),
+      });
+    },
 
     createMission: async (
       token: string,

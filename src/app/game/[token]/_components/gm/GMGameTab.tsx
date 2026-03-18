@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { Role, ActionType, GamePhase } from "@/db/types";
-import { SectionHeader, Button } from "@/components/ui";
+import { SectionHeader } from "@/components/ui";
 
 const ACTION_ROLE_MAP: Record<Role, ActionType> = {
   mafia: "kill",

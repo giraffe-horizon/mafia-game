@@ -21,7 +21,7 @@ export interface MafiaState {
 interface NightActionPanelProps {
   role: Role | null;
   targets: PublicPlayer[];
-  myAction: { actionType: ActionType; targetPlayerId: string | null } | null;
+  myAction: { actionType: string; targetPlayerId: string | null } | null;
   roleHidden?: boolean;
   actionState: ActionState;
   mafiaState: MafiaState;

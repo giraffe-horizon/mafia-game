@@ -1,21 +1,14 @@
-import { useState } from "react";
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
-import { SectionHeader, InfoCard } from "@/components/ui";
+import { SectionHeader, Card, InfoCard } from "@/components/ui";
 import { useGameStore } from "../_stores/gameStore";
 
-interface DetectiveResult {
-  round: number;
-  targetNickname: string;
-  isMafia: boolean;
+interface DayViewProps {
+  roleVisible: boolean;
+  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface DayViewProps {}
-
-export default function DayView(_props: DayViewProps = {} as DayViewProps) {
-  // Get data from store
+export default function DayView({ roleVisible, setRoleVisible }: DayViewProps) {
   const state = useGameStore((s) => s.state);
-  const [roleVisible, setRoleVisible] = useState(false);
 
   if (!state) return null;
 
@@ -23,17 +16,18 @@ export default function DayView(_props: DayViewProps = {} as DayViewProps) {
   const currentPlayer = state.currentPlayer;
   const phase = state.game.phase;
 
-  // Find detective result from game state (TODO: implement proper detective result tracking)
-  // const detectiveResult: DetectiveResult | undefined = state.game.phase === "day" ? undefined : undefined;
   return (
     <>
       {/* Role card for non-host players */}
       {!isHost && (
         <div className="mx-5 mt-5">
           <SectionHeader className="pl-1">Twoja rola</SectionHeader>
-          <button
+          <Card
+            variant="highlighted"
             onClick={() => setRoleVisible((v) => !v)}
-            className="w-full p-5 rounded-xl bg-black/60 border border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98]"
+            className="w-full p-5 cursor-pointer transition-all active:scale-[0.98]"
+            role="button"
+            tabIndex={0}
           >
             {roleVisible ? (
               <div className="flex items-center gap-4">
@@ -66,7 +60,7 @@ export default function DayView(_props: DayViewProps = {} as DayViewProps) {
                 </p>
               </div>
             )}
-          </button>
+          </Card>
         </div>
       )}
 
@@ -84,27 +78,6 @@ export default function DayView(_props: DayViewProps = {} as DayViewProps) {
           </div>
         </div>
       )}
-
-      {/* Detective result - TODO: implement proper detective result tracking
-      {detectiveResult && !isHost && (
-        <div className="mx-5 mt-4 p-4 rounded-xl bg-blue-950/30 border border-blue-800/40">
-          <p className="text-blue-400 text-xs font-typewriter uppercase tracking-widest mb-2">
-            Wynik przesłuchania — Runda {detectiveResult?.round}
-          </p>
-          <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-[28px] text-blue-400">search</span>
-            <div>
-              <p className="text-white font-medium">{detectiveResult?.targetNickname}</p>
-              <p
-                className={`text-sm font-typewriter font-bold ${detectiveResult?.isMafia ? "text-red-400" : "text-green-400"}`}
-              >
-                {detectiveResult?.isMafia ? "MAFIA" : "NIE MAFIA"}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-      */}
 
       {/* Day message for non-host players */}
       {!isHost && (

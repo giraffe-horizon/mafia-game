@@ -18,7 +18,7 @@ interface GMPanelProps {
   onPhase: (p: GamePhase) => void;
   messageForm: MessageFormProps;
   missionForm: MissionFormProps & {
-    hostMissions?: any[];
+    hostMissions?: GameStateResponse["hostMissions"];
     onCompleteMission: (id: string) => void;
     onDeleteMission: (id: string) => void;
   };

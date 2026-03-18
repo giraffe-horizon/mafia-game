@@ -1,5 +1,6 @@
 import QRCode from "react-qr-code";
-import LobbyTransferGm from "./LobbyTransferGm"; // Updated to use _components
+import type { PublicPlayer } from "@/db";
+import LobbyTransferGm from "./LobbyTransferGm";
 import { SectionHeader, InfoCard } from "@/components/ui";
 
 interface LobbyViewProps {
@@ -9,7 +10,7 @@ interface LobbyViewProps {
   copied: boolean;
   copyCode: () => void;
   setCopied: (copied: boolean) => void;
-  nonHostPlayers: Array<any>;
+  nonHostPlayers: PublicPlayer[];
   gameMode: "full" | "simple";
   setGameMode: (mode: "full" | "simple") => void;
   mafiaCount: number;

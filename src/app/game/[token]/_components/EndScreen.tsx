@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { GameStateResponse, PublicPlayer } from "@/db";
 import { ROLE_LABELS, ROLE_ICONS, ROLE_COLORS } from "@/lib/constants";
-import { SectionHeader, StatusItem, Badge } from "@/components/ui";
+import { SectionHeader, StatusItem, Badge, Button } from "@/components/ui";
 import { useGameStore } from "../_stores/gameStore";
 
 export default function EndScreen(_props: Record<string, never> = {}) {
@@ -78,14 +77,15 @@ export default function EndScreen(_props: Record<string, never> = {}) {
                 {mafiaCountSetting === 1 ? "mafioz" : "mafiozy/ów"}
               </p>
             )}
-            <button
+            <Button
               onClick={handleRematch}
               disabled={rematchPending}
-              className="flex items-center justify-center gap-2 mx-auto px-6 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider text-sm transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-50"
+              loading={rematchPending}
+              icon="replay"
+              className="mx-auto"
             >
-              <span className="material-symbols-outlined text-[18px]">replay</span>
               {rematchPending ? "Resetuję..." : "NASTĘPNA RUNDA"}
-            </button>
+            </Button>
           </div>
         )}
       </div>

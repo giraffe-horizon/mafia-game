@@ -1,14 +1,6 @@
 import { useGameStore } from "../_stores/gameStore";
 
-interface Toast {
-  id: string;
-  content: string;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface ToastOverlayProps {}
-
-export default function ToastOverlay(_props: ToastOverlayProps = {} as ToastOverlayProps) {
+export default function ToastOverlay() {
   // Get data from store
   const toasts = useGameStore((s) => s.toasts);
   const dismissToast = useGameStore((s) => s.dismissToast);

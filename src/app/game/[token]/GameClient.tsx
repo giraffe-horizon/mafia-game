@@ -3,17 +3,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import QRCode from "react-qr-code";
-import type { PublicPlayer } from "@/db";
-import { ROLE_LABELS, ROLE_COLORS, PHASE_LABELS, PHASE_ICONS, ROLE_ICONS } from "@/lib/constants";
-import * as apiClient from "@/lib/api-client";
-import CharacterPicker from "@/components/CharacterPicker";
+import type { ActionType, GamePhase, GameStateResponse } from "@/db";
 import OnboardingScreen, {
   type FormData,
   type CharacterSelection,
   type LoadingState,
 } from "./_components/OnboardingScreen";
-import PlayerRow from "./_components/PlayerRow";
 import GMPanel from "./_components/gm/GMPanel";
 import EndScreen from "./_components/EndScreen";
 import ToastOverlay from "./_components/ToastOverlay";
@@ -30,23 +25,12 @@ import VotingView, {
   type VotingViewState,
   type VoteState,
 } from "./_components/VotingView";
-import SettingsModal, {
-  type PlayerInfo,
-  type CharacterData,
-  type ModalActions,
-} from "./_components/SettingsModal";
-import NightActionPanel, {
-  type ActionState,
-  type MafiaState,
-} from "./_components/NightActionPanel";
-import VotePanel from "./_components/VotePanel";
-import LobbyTransferGm from "./_components/LobbyTransferGm";
+import SettingsModal from "./_components/SettingsModal";
+import type { ActionState, MafiaState } from "./_components/NightActionPanel";
 import ReviewView from "./_components/ReviewView";
 import PlayersList from "./_components/PlayersList";
 import MissionsList from "./_components/MissionsList";
 import type { MessageFormProps, MissionFormProps } from "./types";
-import { useGamePolling } from "./_hooks/useGamePolling";
-import { useGameActions } from "./_hooks/useGameActions";
 import { useOnboarding } from "./_hooks/useOnboarding";
 import { useMessageForm } from "./_hooks/useMessageForm";
 import { useMissionForm } from "./_hooks/useMissionForm";
@@ -79,7 +63,6 @@ export default function GameClient() {
   const startGame = useGameStore((s) => s.startGame);
   const kickPlayer = useGameStore((s) => s.kickPlayer);
   const leaveGame = useGameStore((s) => s.leaveGame);
-  const rematchGame = useGameStore((s) => s.rematchGame);
   const transferGameMaster = useGameStore((s) => s.transferGameMaster);
   const submitGmAction = useGameStore((s) => s.submitGmAction);
 
@@ -93,7 +76,6 @@ export default function GameClient() {
     onboardingError,
     setOnboardingNickname,
     setSelectedCharacterId,
-    setOnboardingError,
     handleSetup,
     handleCharacterUpdate,
   } = useOnboarding({ token, refetch });
@@ -104,23 +86,19 @@ export default function GameClient() {
     msgError,
     setMsgTarget,
     setMsgContent,
-    setMsgError,
     handleSendMessage,
   } = useMessageForm({ token, refetch });
   const {
     msnTarget,
     msnDesc,
-    msnSecret,
     msnPoints,
     msnPreset,
     msnPending,
     msnError,
     setMsnTarget,
     setMsnDesc,
-    setMsnSecret,
     setMsnPoints,
     setMsnPreset,
-    setMsnError,
     handleCreateMission,
     handleCompleteMission,
     handleDeleteMission,
@@ -131,7 +109,6 @@ export default function GameClient() {
   const [copied, setCopied] = useState(false);
   const [mafiaCount, setMafiaCount] = useState(0);
   const [gameMode, setGameMode] = useState<"full" | "simple">("full");
-  const [rematchPending, setRematchPending] = useState(false);
   const [mafiaCountSetting, setMafiaCountSetting] = useState(0);
   const [mgTab, setMgTab] = useState<"game" | "message" | "mission" | "settings">("game");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -151,13 +128,12 @@ export default function GameClient() {
     setChangingDecision(false);
   }, [currentPhase, currentRound, setChangingDecision]);
 
-  // Action handlers (adapted from store methods to match legacy signatures)
-  const handleAction = async (actionType: string, targetPlayerId: string) => {
-    await submitAction(actionType as any, targetPlayerId);
+  const handleAction = async (actionType: ActionType, targetPlayerId: string) => {
+    await submitAction(actionType, targetPlayerId);
   };
 
-  const handlePhase = async (newPhase: string) => {
-    await advancePhase(newPhase as any);
+  const handlePhase = async (newPhase: GamePhase) => {
+    await advancePhase(newPhase);
   };
 
   const handleStart = async (gameMode: "full" | "simple", mafiaCount: number) => {
@@ -176,16 +152,12 @@ export default function GameClient() {
     }
   };
 
-  const handleRematch = async (mafiaCountSetting: number) => {
-    await rematchGame(mafiaCountSetting);
-  };
-
   const handleGmAction = async (
     forPlayerId: string,
-    actionType: string,
+    actionType: ActionType,
     targetPlayerId: string
   ) => {
-    await submitGmAction(forPlayerId, actionType as any, targetPlayerId);
+    await submitGmAction(forPlayerId, actionType, targetPlayerId);
   };
 
   const handleTransferGm = async (newHostPlayerId: string) => {
@@ -209,10 +181,6 @@ export default function GameClient() {
   // UI helper functions
   const handleOnboardingSetup = () => handleSetup();
   const handleCharacterUpdateWrapper = () => handleCharacterUpdate(setShowSettingsModal);
-  const handleRematchWrapper = () => {
-    setRematchPending(true);
-    handleRematch(mafiaCountSetting).finally(() => setRematchPending(false));
-  };
   const handleStartWrapper = () => handleStart(gameMode, mafiaCount);
 
   function copyCode() {
@@ -236,7 +204,7 @@ export default function GameClient() {
   };
 
   const missionForm: MissionFormProps & {
-    hostMissions?: any[];
+    hostMissions?: GameStateResponse["hostMissions"];
     onCompleteMission: (id: string) => void;
     onDeleteMission: (id: string) => void;
   } = {
@@ -317,7 +285,7 @@ export default function GameClient() {
     );
   }
 
-  const { game, currentPlayer, players, missions, detectiveResult } = state;
+  const { game, currentPlayer, players, missions } = state;
   const isHost = currentPlayer.isHost;
   const isLobby = game.status === "lobby";
   const isPlaying = game.status === "playing";
@@ -420,7 +388,9 @@ export default function GameClient() {
           })()}
 
         {/* ── DAY ── */}
-        {isPlaying && phase === "day" && <DayView />}
+        {isPlaying && phase === "day" && (
+          <DayView roleVisible={roleVisible} setRoleVisible={setRoleVisible} />
+        )}
 
         {/* ── VOTING ── */}
         {isPlaying &&
@@ -468,12 +438,10 @@ export default function GameClient() {
         {isPlaying && phase === "review" && (
           <ReviewView
             isHost={isHost}
-            token={token}
             showPoints={state.showPoints}
             hostMissions={state.hostMissions}
             onComplete={handleCompleteMission}
             onDelete={handleDeleteMission}
-            onRefetch={refetch}
           />
         )}
 

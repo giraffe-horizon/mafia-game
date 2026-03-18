@@ -1,4 +1,4 @@
-import * as apiClient from "@/lib/api-client";
+import { useGameStore } from "../_stores/gameStore";
 
 interface HostMission {
   id: string;
@@ -10,23 +10,20 @@ interface HostMission {
 
 interface ReviewViewProps {
   isHost: boolean;
-  token: string;
   showPoints: boolean;
   hostMissions?: HostMission[];
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
-  onRefetch: () => void;
 }
 
 export default function ReviewView({
   isHost,
-  token,
   showPoints,
   hostMissions,
   onComplete,
   onDelete,
-  onRefetch,
 }: ReviewViewProps) {
+  const finalizeGame = useGameStore((s) => s.finalizeGame);
   if (!showPoints) return null;
 
   if (isHost) {
@@ -77,10 +74,7 @@ export default function ReviewView({
           </p>
         )}
         <button
-          onClick={async () => {
-            const result = await apiClient.finalizeGame(token);
-            if (result.success) await onRefetch();
-          }}
+          onClick={() => finalizeGame()}
           className="w-full mt-3 flex items-center justify-center gap-2 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)]"
         >
           <span className="material-symbols-outlined text-[20px]">emoji_events</span>

@@ -1,5 +1,5 @@
 import CharacterPicker from "@/components/CharacterPicker";
-import { Button } from "@/components/ui";
+import { Button, Modal } from "@/components/ui";
 
 export interface PlayerInfo {
   playerNickname: string;
@@ -46,62 +46,58 @@ export default function SettingsModal({
   const { playerNickname, currentPlayer } = playerInfo;
   const { characters, selectedCharacterId, onCharacterSelect } = characterData;
   const { onSave, onLeaveGame } = modalActions;
-  if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 className="text-white font-bold text-lg mb-4 font-typewriter">Ustawienia gracza</h3>
-        <div className="space-y-4">
+    <Modal isOpen={isVisible} onClose={onClose} title="Ustawienia gracza">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-slate-400 text-sm mb-2 font-typewriter">Nazwa</label>
+          <input
+            type="text"
+            value={playerNickname || ""}
+            readOnly
+            className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white"
+          />
+        </div>
+        {characters.length > 0 && !currentPlayer.isHost && (
           <div>
-            <label className="block text-slate-400 text-sm mb-2 font-typewriter">Nazwa</label>
-            <input
-              type="text"
-              value={playerNickname || ""}
-              readOnly
-              className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white"
+            <label className="block text-slate-400 text-sm mb-3 font-typewriter">Postać</label>
+            <CharacterPicker
+              characters={characters}
+              selectedId={selectedCharacterId}
+              onSelect={onCharacterSelect}
             />
           </div>
-          {characters.length > 0 && !currentPlayer.isHost && (
-            <div>
-              <label className="block text-slate-400 text-sm mb-3 font-typewriter">Postać</label>
-              <CharacterPicker
-                characters={characters}
-                selectedId={selectedCharacterId}
-                onSelect={onCharacterSelect}
-              />
-            </div>
-          )}
-        </div>
-        <div className="flex gap-3 mt-6">
-          <Button onClick={onClose} variant="secondary" className="flex-1">
-            Anuluj
-          </Button>
-          {!currentPlayer.isHost && (
-            <Button
-              onClick={onSave}
-              disabled={!selectedCharacterId || selectedCharacterId === currentPlayer.character?.id}
-              variant="primary"
-              className="flex-1"
-            >
-              Zapisz
-            </Button>
-          )}
-        </div>
+        )}
+      </div>
+      <div className="flex gap-3 mt-6">
+        <Button onClick={onClose} variant="secondary" className="flex-1">
+          Anuluj
+        </Button>
         {!currentPlayer.isHost && (
           <Button
-            onClick={() => {
-              onClose();
-              onLeaveGame();
-            }}
-            variant="danger"
-            icon="logout"
-            className="w-full mt-4"
+            onClick={onSave}
+            disabled={!selectedCharacterId || selectedCharacterId === currentPlayer.character?.id}
+            variant="primary"
+            className="flex-1"
           >
-            Opuść grę
+            Zapisz
           </Button>
         )}
       </div>
-    </div>
+      {!currentPlayer.isHost && (
+        <Button
+          onClick={() => {
+            onClose();
+            onLeaveGame();
+          }}
+          variant="danger"
+          icon="logout"
+          className="w-full mt-4"
+        >
+          Opuść grę
+        </Button>
+      )}
+    </Modal>
   );
 }

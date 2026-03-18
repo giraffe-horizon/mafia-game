@@ -1,8 +1,9 @@
+import type { PublicPlayer } from "@/db";
 import PlayerRow from "./PlayerRow";
 import { SectionHeader } from "@/components/ui";
 
 interface PlayersListProps {
-  players: Array<any>;
+  players: PublicPlayer[];
   isPlaying: boolean;
   isFinished: boolean;
   isLobby: boolean;

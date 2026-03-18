@@ -1,6 +1,6 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } from "@/lib/constants";
-import type { Role } from "@/db/types";
-import NightActionPanel, { type ActionState, type MafiaState } from "./NightActionPanel"; // Updated to use _components
+import type { PublicPlayer, Role } from "@/db/types";
+import NightActionPanel, { type ActionState, type MafiaState } from "./NightActionPanel";
 import { Card, Badge, SectionHeader, StatusItem } from "@/components/ui";
 
 export interface PlayerState {
@@ -14,8 +14,8 @@ export interface NightViewState {
 }
 
 export interface NightActionData {
-  actionTargets: Array<any>;
-  myAction: any;
+  actionTargets: PublicPlayer[];
+  myAction: { actionType: string; targetPlayerId: string | null } | null;
   actionState: ActionState;
   mafiaState: MafiaState;
 }
@@ -25,8 +25,7 @@ interface NightViewProps {
   currentPlayer: PlayerState;
   viewState: NightViewState;
   actionData: NightActionData;
-  // Dead spectator props
-  players: Array<any>;
+  players: PublicPlayer[];
 }
 
 export default function NightView({

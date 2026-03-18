@@ -1,6 +1,7 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
-import { SectionHeader } from "@/components/ui";
-import VotePanel from "./VotePanel"; // Updated to use _components
+import type { PublicPlayer } from "@/db/types";
+import { SectionHeader, Card } from "@/components/ui";
+import VotePanel from "./VotePanel";
 
 interface VoteTally {
   votedCount: number;
@@ -24,8 +25,8 @@ export interface VotingViewState {
 }
 
 export interface VoteState {
-  players: Array<any>;
-  myAction: any;
+  players: PublicPlayer[];
+  myAction: { actionType: string; targetPlayerId: string | null } | null;
   actionPending: boolean;
   actionError: string;
   changingDecision: boolean;
@@ -48,25 +49,20 @@ export default function VotingView({
   voteState,
 }: VotingViewProps) {
   const { roleVisible, setRoleVisible, phase } = viewState;
-  const {
-    players,
-    myAction,
-    actionPending,
-    actionError,
-    changingDecision,
-    setChangingDecision,
-    onVote,
-    voteTally,
-  } = voteState;
+  const { players, myAction, actionPending, actionError, setChangingDecision, onVote, voteTally } =
+    voteState;
   return (
     <>
       {/* Role card for non-host players */}
       {!isHost && (
         <div className="mx-5 mt-5">
           <SectionHeader className="pl-1">Twoja rola</SectionHeader>
-          <button
+          <Card
+            variant="highlighted"
             onClick={() => setRoleVisible((v) => !v)}
-            className="w-full p-5 rounded-xl bg-black/60 border border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98]"
+            className="w-full p-5 cursor-pointer transition-all active:scale-[0.98]"
+            role="button"
+            tabIndex={0}
           >
             {roleVisible ? (
               <div className="flex items-center gap-4">
@@ -99,7 +95,7 @@ export default function VotingView({
                 </p>
               </div>
             )}
-          </button>
+          </Card>
         </div>
       )}
 

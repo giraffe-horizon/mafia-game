@@ -26,22 +26,3 @@ export interface MissionFormProps {
   onMsnPresetChange: (v: string) => void;
   onCreateMission: () => void;
 }
-
-export interface ActionFormProps {
-  actionTargets: any[];
-  myAction: any;
-  actionPending: boolean;
-  actionError: string;
-  changingDecision: boolean;
-  setChangingDecision: (changing: boolean) => void;
-  onAction: (type: string, targetId: string) => void;
-}
-
-export interface RoleViewProps {
-  currentPlayer: {
-    isAlive: boolean;
-    role?: string;
-  };
-  roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
-}

@@ -6,7 +6,7 @@ import type {
   LeaveResult,
   StartGameOpts,
 } from "../_services/gameService";
-import * as apiClient from "@/lib/api-client";
+import * as apiClient from "@/lib/api-client"; // only for fetchCharacters
 
 // Polling constants
 const POLL_INTERVAL = 2000;
@@ -72,6 +72,7 @@ interface GameState {
     actionType: ActionType,
     targetPlayerId?: string
   ) => Promise<ActionResult>;
+  finalizeGame: () => Promise<ActionResult>;
 
   // Toast management
   dismissToast: (id: string) => void;
@@ -393,12 +394,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!_gameService || !_token) return { success: false, error: "No service initialized" };
 
     try {
-      // For GM actions, we need to use the raw API client since our service doesn't expose forPlayerId
-      const result = await apiClient.submitAction(_token, {
-        type: actionType,
+      const result = await _gameService.submitGmAction(
+        _token,
         forPlayerId,
-        ...(targetPlayerId && { targetPlayerId }),
-      });
+        actionType,
+        targetPlayerId
+      );
 
       if (result.success) {
         await get().refetch();
@@ -409,6 +410,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
       set({ actionError: errorMsg });
+      return { success: false, error: errorMsg };
+    }
+  },
+
+  finalizeGame: async (): Promise<ActionResult> => {
+    const { _gameService, _token } = get();
+    if (!_gameService || !_token) return { success: false, error: "No service initialized" };
+
+    try {
+      const result = await _gameService.finalizeGame(_token);
+      if (result.success) {
+        await get().refetch();
+      }
+      return result;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
       return { success: false, error: errorMsg };
     }
   },
