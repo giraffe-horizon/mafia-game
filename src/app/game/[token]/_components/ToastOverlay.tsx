@@ -1,14 +1,17 @@
+import { useGameStore } from "../_stores/gameStore";
+
 interface Toast {
   id: string;
   content: string;
 }
 
-interface ToastOverlayProps {
-  toasts: Toast[];
-  onDismiss: (id: string) => void;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface ToastOverlayProps {}
 
-export default function ToastOverlay({ toasts, onDismiss }: ToastOverlayProps) {
+export default function ToastOverlay(_props: ToastOverlayProps = {} as ToastOverlayProps) {
+  // Get data from store
+  const toasts = useGameStore((s) => s.toasts);
+  const dismissToast = useGameStore((s) => s.dismissToast);
   if (toasts.length === 0) return null;
 
   return (
@@ -24,7 +27,7 @@ export default function ToastOverlay({ toasts, onDismiss }: ToastOverlayProps) {
             </span>
             <p className="text-white text-sm font-typewriter">{t.content}</p>
             <button
-              onClick={() => onDismiss(t.id)}
+              onClick={() => dismissToast(t.id)}
               className="ml-auto shrink-0 text-slate-500 hover:text-slate-300"
             >
               <span className="material-symbols-outlined text-[16px]">close</span>

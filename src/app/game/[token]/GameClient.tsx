@@ -50,6 +50,8 @@ import { useGameActions } from "./_hooks/useGameActions";
 import { useOnboarding } from "./_hooks/useOnboarding";
 import { useMessageForm } from "./_hooks/useMessageForm";
 import { useMissionForm } from "./_hooks/useMissionForm";
+import { useGameStore } from "./_stores/gameStore";
+import { createHttpGameService } from "./_services/gameService";
 import { GameLayout } from "@/components/ui";
 
 // ---------------------------------------------------------------------------
@@ -59,25 +61,31 @@ export default function GameClient() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
 
-  // Custom hooks
-  const { state, error, setError, toasts, dismissToast, refetch, characters } =
-    useGamePolling(token);
-  const {
-    actionPending,
-    actionError,
-    phasePending,
-    starting,
-    changingDecision,
-    setChangingDecision,
-    handleAction,
-    handlePhase,
-    handleStart,
-    handleKick,
-    handleLeave,
-    handleRematch,
-    handleGmAction,
-    handleTransferGm,
-  } = useGameActions({ token, refetch, setError });
+  // Zustand store
+  const state = useGameStore((s) => s.state);
+  const error = useGameStore((s) => s.error);
+  const characters = useGameStore((s) => s.characters);
+  const actionPending = useGameStore((s) => s.actionPending);
+  const actionError = useGameStore((s) => s.actionError);
+  const phasePending = useGameStore((s) => s.phasePending);
+  const starting = useGameStore((s) => s.starting);
+  const changingDecision = useGameStore((s) => s.changingDecision);
+
+  // Store actions
+  const refetch = useGameStore((s) => s.refetch);
+  const setChangingDecision = useGameStore((s) => s.setChangingDecision);
+  const submitAction = useGameStore((s) => s.submitAction);
+  const advancePhase = useGameStore((s) => s.advancePhase);
+  const startGame = useGameStore((s) => s.startGame);
+  const kickPlayer = useGameStore((s) => s.kickPlayer);
+  const leaveGame = useGameStore((s) => s.leaveGame);
+  const rematchGame = useGameStore((s) => s.rematchGame);
+  const transferGameMaster = useGameStore((s) => s.transferGameMaster);
+  const submitGmAction = useGameStore((s) => s.submitGmAction);
+
+  // Store initialization
+  const initialize = useGameStore((s) => s.initialize);
+
   const {
     onboardingNickname,
     selectedCharacterId,
@@ -128,12 +136,57 @@ export default function GameClient() {
   const [mgTab, setMgTab] = useState<"game" | "message" | "mission" | "settings">("game");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
+  // Initialize store with token and service
+  useEffect(() => {
+    if (token) {
+      const gameService = createHttpGameService();
+      initialize(token, gameService);
+    }
+  }, [token, initialize]);
+
   // Reset changingDecision when phase changes (must be before conditional returns!)
   const currentPhase = state?.game?.phase;
   const currentRound = state?.game?.round;
   useEffect(() => {
     setChangingDecision(false);
-  }, [currentPhase, currentRound]);
+  }, [currentPhase, currentRound, setChangingDecision]);
+
+  // Action handlers (adapted from store methods to match legacy signatures)
+  const handleAction = async (actionType: string, targetPlayerId: string) => {
+    await submitAction(actionType as any, targetPlayerId);
+  };
+
+  const handlePhase = async (newPhase: string) => {
+    await advancePhase(newPhase as any);
+  };
+
+  const handleStart = async (gameMode: "full" | "simple", mafiaCount: number) => {
+    await startGame(gameMode, mafiaCount);
+  };
+
+  const handleKick = async (playerId: string) => {
+    await kickPlayer(playerId);
+  };
+
+  const handleLeave = async () => {
+    if (!confirm("Czy na pewno chcesz opuścić grę?")) return;
+    const result = await leaveGame();
+    if (result.success) {
+      router.push("/");
+    }
+  };
+
+  const handleRematch = async (mafiaCountSetting: number) => {
+    await rematchGame(mafiaCountSetting);
+  };
+
+  const handleGmAction = async (forPlayerId: string, actionType: string, targetPlayerId: string) => {
+    await submitGmAction(forPlayerId, actionType as any, targetPlayerId);
+  };
+
+  const handleTransferGm = async (newHostPlayerId: string) => {
+    await transferGameMaster(newHostPlayerId);
+  };
 
   useEffect(() => {
     if (state?.currentPlayer?.character) {
@@ -282,7 +335,7 @@ export default function GameClient() {
   // ---------------------------------------------------------------------------
   return (
     <GameLayout>
-      <ToastOverlay toasts={toasts} onDismiss={dismissToast} />
+      <ToastOverlay />
 
       <GameHeader
         token={token}
@@ -363,19 +416,7 @@ export default function GameClient() {
           })()}
 
         {/* ── DAY ── */}
-        {isPlaying && phase === "day" && (
-          <DayView
-            isHost={isHost}
-            currentPlayer={{
-              isAlive: currentPlayer.isAlive,
-              role: currentPlayer.role || undefined,
-            }}
-            roleVisible={roleVisible}
-            setRoleVisible={setRoleVisible}
-            detectiveResult={detectiveResult || undefined}
-            phase={phase}
-          />
-        )}
+        {isPlaying && phase === "day" && <DayView />}
 
         {/* ── VOTING ── */}
         {isPlaying &&
@@ -433,18 +474,7 @@ export default function GameClient() {
         )}
 
         {/* ── FINISHED ── */}
-        {isFinished && (
-          <EndScreen
-            game={game}
-            players={players}
-            currentPlayer={currentPlayer}
-            isHost={isHost}
-            rematchPending={rematchPending}
-            onRematch={handleRematchWrapper}
-            hostMissions={state.hostMissions}
-            mafiaCountSetting={mafiaCountSetting}
-          />
-        )}
+        {isFinished && <EndScreen />}
 
         {/* ── MG panel ── */}
         {isPlaying && isHost && (

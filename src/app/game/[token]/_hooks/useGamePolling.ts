@@ -28,6 +28,9 @@ interface UseGamePollingReturn {
   }>;
 }
 
+/**
+ * @deprecated Use Zustand gameStore instead. This hook will be removed in the next phase.
+ */
 export function useGamePolling(token: string): UseGamePollingReturn {
   const [state, setState] = useState<GameStateResponse | null>(null);
   const [error, setError] = useState("");

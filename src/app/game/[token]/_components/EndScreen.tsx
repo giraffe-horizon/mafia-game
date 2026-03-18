@@ -1,27 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import { ROLE_LABELS, ROLE_ICONS, ROLE_COLORS } from "@/lib/constants";
+import { useGameStore } from "../_stores/gameStore";
 
-export default function EndScreen({
-  game,
-  players,
-  currentPlayer,
-  isHost,
-  rematchPending,
-  onRematch,
-  hostMissions,
-  mafiaCountSetting,
-}: {
-  game: GameStateResponse["game"];
-  players: PublicPlayer[];
-  currentPlayer: GameStateResponse["currentPlayer"];
-  isHost: boolean;
-  rematchPending: boolean;
-  onRematch: () => void;
-  hostMissions?: GameStateResponse["hostMissions"];
-  mafiaCountSetting?: number;
-}) {
+export default function EndScreen(_props: Record<string, never> = {}) {
+  // Get data from store
+  const state = useGameStore((s) => s.state);
+  const rematchGame = useGameStore((s) => s.rematchGame);
+  const [rematchPending, setRematchPending] = useState(false);
+  const [mafiaCountSetting] = useState(0); // This would be passed from parent or managed in store
+
+  if (!state) return null;
+
+  const { game, players, currentPlayer, hostMissions } = state;
+  const isHost = currentPlayer.isHost;
+
+  const handleRematch = async () => {
+    setRematchPending(true);
+    try {
+      await rematchGame(mafiaCountSetting);
+    } finally {
+      setRematchPending(false);
+    }
+  };
   const winnerLabel = game.winner === "mafia" ? "Mafia wygrała!" : "Miasto wygrało!";
   const winnerIcon = game.winner === "mafia" ? "masks" : "groups";
   const winnerColor = game.winner === "mafia" ? "text-red-500" : "text-green-400";
@@ -75,7 +78,7 @@ export default function EndScreen({
               </p>
             )}
             <button
-              onClick={onRematch}
+              onClick={handleRematch}
               disabled={rematchPending}
               className="flex items-center justify-center gap-2 mx-auto px-6 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider text-sm transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-50"
             >

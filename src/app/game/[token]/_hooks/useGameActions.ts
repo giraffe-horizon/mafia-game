@@ -30,6 +30,9 @@ interface UseGameActionsReturn {
   handleTransferGm: (newHostPlayerId: string) => Promise<void>;
 }
 
+/**
+ * @deprecated Use Zustand gameStore instead. This hook will be removed in the next phase.
+ */
 export function useGameActions({
   token,
   refetch,

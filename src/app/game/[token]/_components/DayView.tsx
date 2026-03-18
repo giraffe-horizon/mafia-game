@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
+import { useGameStore } from "../_stores/gameStore";
 
 interface DetectiveResult {
   round: number;
@@ -6,26 +8,22 @@ interface DetectiveResult {
   isMafia: boolean;
 }
 
-interface DayViewProps {
-  isHost: boolean;
-  currentPlayer: {
-    isAlive: boolean;
-    role?: string;
-  };
-  roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
-  detectiveResult?: DetectiveResult;
-  phase: string;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface DayViewProps {}
 
-export default function DayView({
-  isHost,
-  currentPlayer,
-  roleVisible,
-  setRoleVisible,
-  detectiveResult,
-  phase,
-}: DayViewProps) {
+export default function DayView(_props: DayViewProps = {} as DayViewProps) {
+  // Get data from store
+  const state = useGameStore((s) => s.state);
+  const [roleVisible, setRoleVisible] = useState(false);
+
+  if (!state) return null;
+
+  const isHost = state.currentPlayer.isHost;
+  const currentPlayer = state.currentPlayer;
+  const phase = state.game.phase;
+
+  // Find detective result from game state (TODO: implement proper detective result tracking)
+  // const detectiveResult: DetectiveResult | undefined = state.game.phase === "day" ? undefined : undefined;
   return (
     <>
       {/* Role card for non-host players */}
@@ -90,25 +88,26 @@ export default function DayView({
         </div>
       )}
 
-      {/* Detective result */}
+      {/* Detective result - TODO: implement proper detective result tracking
       {detectiveResult && !isHost && (
         <div className="mx-5 mt-4 p-4 rounded-xl bg-blue-950/30 border border-blue-800/40">
           <p className="text-blue-400 text-xs font-typewriter uppercase tracking-widest mb-2">
-            Wynik przesłuchania — Runda {detectiveResult.round}
+            Wynik przesłuchania — Runda {detectiveResult?.round}
           </p>
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-[28px] text-blue-400">search</span>
             <div>
-              <p className="text-white font-medium">{detectiveResult.targetNickname}</p>
+              <p className="text-white font-medium">{detectiveResult?.targetNickname}</p>
               <p
-                className={`text-sm font-typewriter font-bold ${detectiveResult.isMafia ? "text-red-400" : "text-green-400"}`}
+                className={`text-sm font-typewriter font-bold ${detectiveResult?.isMafia ? "text-red-400" : "text-green-400"}`}
               >
-                {detectiveResult.isMafia ? "MAFIA" : "NIE MAFIA"}
+                {detectiveResult?.isMafia ? "MAFIA" : "NIE MAFIA"}
               </p>
             </div>
           </div>
         </div>
       )}
+      */}
 
       {/* Day message for non-host players */}
       {!isHost && (
