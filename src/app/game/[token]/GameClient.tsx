@@ -7,12 +7,20 @@ import type { PublicPlayer } from "@/lib/db";
 import { ROLE_LABELS, ROLE_COLORS, PHASE_LABELS, PHASE_ICONS, ROLE_ICONS } from "@/lib/constants";
 import * as apiClient from "@/lib/api-client";
 import CharacterPicker from "@/components/CharacterPicker";
-import OnboardingScreen from "./components/OnboardingScreen";
-import PlayerRow from "./components/PlayerRow";
-import MGPanel from "./components/MGPanel";
-import NightActionPanel from "./components/NightActionPanel";
-import VotePanel from "./components/VotePanel";
-import EndScreen from "./components/EndScreen";
+import OnboardingScreen from "./_components/OnboardingScreen";
+import PlayerRow from "./_components/PlayerRow";
+import MGPanel from "./_components/MGPanel";
+import EndScreen from "./_components/EndScreen";
+import ToastOverlay from "./_components/ToastOverlay";
+import GameHeader from "./_components/GameHeader";
+import LobbyView from "./_components/LobbyView";
+import NightView from "./_components/NightView";
+import DayView from "./_components/DayView";
+import VotingView from "./_components/VotingView";
+import SettingsModal from "./_components/SettingsModal";
+import NightActionPanel from "./_components/NightActionPanel";
+import VotePanel from "./_components/VotePanel";
+import LobbyTransferGm from "./_components/LobbyTransferGm";
 import { useGamePolling } from "./_hooks/useGamePolling";
 import { useGameActions } from "./_hooks/useGameActions";
 import { useOnboarding } from "./_hooks/useOnboarding";
@@ -207,104 +215,16 @@ export default function GameClient() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Toast overlay */}
-      {toasts.length > 0 && (
-        <div className="absolute top-16 left-0 right-0 z-50 flex flex-col gap-2 px-4 pointer-events-none">
-          {toasts.map((t) => (
-            <div
-              key={t.id}
-              className="bg-slate-900 border border-primary/30 rounded-xl px-4 py-3 shadow-lg pointer-events-auto"
-            >
-              <div className="flex items-start gap-2">
-                <span className="material-symbols-outlined text-[18px] text-primary mt-0.5 shrink-0">
-                  mail
-                </span>
-                <p className="text-white text-sm font-typewriter">{t.content}</p>
-                <button
-                  onClick={() => dismissToast(t.id)}
-                  className="ml-auto shrink-0 text-slate-500 hover:text-slate-300"
-                >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <ToastOverlay toasts={toasts} onDismiss={dismissToast} />
 
-      {/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-800">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => router.push("/")}
-            className="size-9 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-          </button>
-          <button
-            onClick={() => router.push(`/ranking?token=${token}`)}
-            className="size-9 flex items-center justify-center text-slate-500 hover:text-amber-400 transition-colors"
-            title="Ranking sesji"
-          >
-            <span className="material-symbols-outlined text-[18px]">leaderboard</span>
-          </button>
-        </div>
-        <div className="text-center">
-          <h2 className="font-typewriter text-white text-sm font-semibold">
-            {PHASE_LABELS[phase]}
-          </h2>
-          {game.round > 0 && (
-            <p className="text-slate-500 text-xs font-typewriter">Runda {game.round}</p>
-          )}
-        </div>
-        <div className="size-9 flex items-center justify-center">
-          {isHost ? (
-            <button
-              onClick={() => setShowSettingsModal(true)}
-              className="w-8 h-8 rounded-full border-2 border-primary/50 hover:border-primary transition-colors bg-primary/10 flex items-center justify-center"
-            >
-              <span className="material-symbols-outlined text-[16px] text-primary">
-                manage_accounts
-              </span>
-            </button>
-          ) : currentPlayer.character ? (
-            <button
-              onClick={() => setShowSettingsModal(true)}
-              className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors overflow-hidden flex items-center justify-center"
-            >
-              {currentPlayer.character.avatarUrl ? (
-                <>
-                  <img
-                    src={currentPlayer.character.avatarUrl}
-                    alt={currentPlayer.character.namePl}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const t = e.target as HTMLImageElement;
-                      t.style.display = "none";
-                      const ph = t.parentElement?.querySelector(".header-placeholder");
-                      if (ph) (ph as HTMLElement).style.display = "flex";
-                    }}
-                  />
-                  <div className="header-placeholder hidden w-full h-full bg-primary/20 text-primary font-bold items-center justify-center text-xs">
-                    {currentPlayer.character.namePl.charAt(0).toUpperCase()}
-                  </div>
-                </>
-              ) : (
-                <div className="w-full h-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
-                  {currentPlayer.character.namePl.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowSettingsModal(true)}
-              className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors bg-slate-800 flex items-center justify-center"
-            >
-              <span className="material-symbols-outlined text-[16px] text-slate-400">person</span>
-            </button>
-          )}
-        </div>
-      </div>
+      <GameHeader
+        token={token}
+        phase={phase}
+        round={game.round}
+        isHost={isHost}
+        currentPlayer={currentPlayer}
+        onShowSettings={() => setShowSettingsModal(true)}
+      />
 
       {/* Scrollable content */}
       <div className="relative z-10 flex-1 flex flex-col overflow-y-auto pb-6">
@@ -942,49 +862,6 @@ export default function GameClient() {
               </button>
             )}
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// LobbyTransferGm — local helper component
-// ---------------------------------------------------------------------------
-function LobbyTransferGm({
-  players,
-  onTransfer,
-}: {
-  players: PublicPlayer[];
-  onTransfer: (playerId: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  if (players.length === 0) return null;
-
-  return (
-    <div>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-center gap-2 h-10 rounded-lg border border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-500 font-typewriter uppercase tracking-wider text-xs transition-all"
-      >
-        <span className="material-symbols-outlined text-[16px]">manage_accounts</span>
-        Przekaż rolę MG
-      </button>
-      {open && (
-        <div className="mt-2 rounded-lg border border-slate-700 bg-black/30 overflow-hidden">
-          {players.map((p) => (
-            <button
-              key={p.playerId}
-              onClick={() => {
-                onTransfer(p.playerId);
-                setOpen(false);
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 border-b border-slate-800 last:border-b-0 hover:bg-primary/5 transition-colors text-left"
-            >
-              <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
-              <span className="text-white text-sm">{p.nickname}</span>
-            </button>
-          ))}
         </div>
       )}
     </div>
