@@ -1,6 +1,6 @@
 "use client";
 
-import type { GameStateResponse, PublicPlayer } from "@/lib/db";
+import type { GameStateResponse, PublicPlayer } from "@/db";
 import { ROLE_LABELS, ROLE_ICONS, ROLE_COLORS } from "@/lib/constants";
 
 export default function EndScreen({

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
 import { renamePlayerSchema } from "@/app/api/lib/schemas";
-import { renamePlayer } from "@/lib/db";
+import { renamePlayer } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   const body = await req.json();

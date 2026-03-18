@@ -59,11 +59,11 @@ export default function RankingClient() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-[#1a0c0c] md:mx-auto md:my-8 md:rounded-[2.5rem]">
-        <span className="material-symbols-outlined text-[40px] text-[#da0b0b] animate-spin mb-4">
+      <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark md:mx-auto md:my-8 md:rounded-[2.5rem]">
+        <span className="material-symbols-outlined text-[40px] text-primary animate-spin mb-4">
           refresh
         </span>
-        <p className="text-slate-400 font-['Special_Elite'] uppercase tracking-widest text-sm">
+        <p className="text-slate-400 font-typewriter uppercase tracking-widest text-sm">
           Ładowanie...
         </p>
       </div>
@@ -72,12 +72,12 @@ export default function RankingClient() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-[#1a0c0c] md:mx-auto md:my-8 md:rounded-[2.5rem]">
-        <span className="material-symbols-outlined text-[48px] text-[#da0b0b] mb-4">error</span>
-        <p className="text-slate-300 font-['Special_Elite'] text-lg text-center px-8">{error}</p>
+      <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark md:mx-auto md:my-8 md:rounded-[2.5rem]">
+        <span className="material-symbols-outlined text-[48px] text-primary mb-4">error</span>
+        <p className="text-slate-300 font-typewriter text-lg text-center px-8">{error}</p>
         <Link
           href="/"
-          className="mt-6 text-[#da0b0b] font-['Special_Elite'] uppercase tracking-widest text-sm"
+          className="mt-6 text-primary font-typewriter uppercase tracking-widest text-sm"
         >
           ← Powrót
         </Link>
@@ -86,7 +86,7 @@ export default function RankingClient() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-[#1a0c0c] overflow-hidden shadow-2xl md:mx-auto md:my-8 md:rounded-[2.5rem]">
+    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-dark overflow-hidden shadow-2xl md:mx-auto md:my-8 md:rounded-[2.5rem]">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-800">
         <Link
@@ -96,10 +96,10 @@ export default function RankingClient() {
           <span className="material-symbols-outlined text-[22px]">arrow_back</span>
         </Link>
         <div className="text-center">
-          <h2 className="font-['Special_Elite'] text-[#da0b0b] text-base font-bold tracking-widest drop-shadow-[0_0_6px_rgba(218,11,11,0.5)]">
+          <h2 className="font-typewriter text-primary text-base font-bold tracking-widest drop-shadow-[0_0_6px_rgba(218,11,11,0.5)]">
             RANKING
           </h2>
-          <p className="text-slate-500 text-xs font-['Special_Elite'] uppercase tracking-widest">
+          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
             {gameStatus === "finished" ? "Koniec gry" : `Runda ${round}`}
             {winner && ` · ${winner === "mafia" ? "Mafia" : "Miasto"} wygrywa`}
           </p>
@@ -125,7 +125,7 @@ export default function RankingClient() {
             >
               {/* Position */}
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm font-['Special_Elite'] ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm font-typewriter ${
                   i === 0
                     ? "bg-amber-500/20 text-amber-400 border border-amber-600/50"
                     : i === 1
@@ -142,9 +142,7 @@ export default function RankingClient() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-white text-sm font-medium truncate">{r.nickname}</span>
-                  {!r.isAlive && (
-                    <span className="text-slate-600 text-xs font-['Special_Elite']">☠</span>
-                  )}
+                  {!r.isAlive && <span className="text-slate-600 text-xs font-typewriter">☠</span>}
                   {r.won && <span className="text-amber-400 text-xs">⭐</span>}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -159,7 +157,7 @@ export default function RankingClient() {
               {/* Score */}
               <div className="text-right">
                 <span
-                  className={`text-lg font-bold font-['Special_Elite'] ${
+                  className={`text-lg font-bold font-typewriter ${
                     i === 0 ? "text-amber-400" : "text-white"
                   }`}
                 >
@@ -173,7 +171,7 @@ export default function RankingClient() {
 
         {/* Legend */}
         <div className="mt-6 p-3 rounded-lg bg-black/30 border border-slate-800">
-          <p className="text-slate-500 text-xs font-['Special_Elite'] uppercase tracking-widest mb-2">
+          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2">
             Punktacja
           </p>
           <div className="flex flex-col gap-1 text-xs text-slate-600">

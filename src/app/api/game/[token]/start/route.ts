@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
 import { startGameSchema } from "@/app/api/lib/schemas";
-import { startGame } from "@/lib/db";
+import { startGame } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   let mafiaCount: number | undefined;

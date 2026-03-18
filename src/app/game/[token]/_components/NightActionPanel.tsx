@@ -1,6 +1,6 @@
 "use client";
 
-import type { PublicPlayer, GameStateResponse } from "@/lib/db";
+import type { PublicPlayer, GameStateResponse } from "@/db";
 import type { Role, ActionType } from "@/db/types";
 import { ACTION_CONFIRMED } from "@/lib/constants";
 import MafiaConsensusStatus from "./MafiaConsensusStatus";

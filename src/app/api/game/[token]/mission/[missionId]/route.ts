@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteMission } from "@/lib/db";
+import { deleteMission } from "@/db";
 import { withApiHandlerMission } from "@/app/api/lib/handler";
 
 export const DELETE = withApiHandlerMission(async (_req: NextRequest, { db, token, missionId }) => {

@@ -1,5 +1,5 @@
 import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
-import type { PublicPlayer } from "@/lib/db";
+import type { PublicPlayer } from "@/db";
 import type { MissionFormProps } from "../../types";
 
 interface HostMission {

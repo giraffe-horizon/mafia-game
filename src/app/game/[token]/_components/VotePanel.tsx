@@ -1,6 +1,6 @@
 "use client";
 
-import type { PublicPlayer } from "@/lib/db";
+import type { PublicPlayer } from "@/db";
 import type { ActionType } from "@/db/types";
 
 export default function VotePanel({

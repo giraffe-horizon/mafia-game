@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { PublicPlayer } from "@/lib/db";
+import type { PublicPlayer } from "@/db";
 
 interface GMSettingsTabProps {
   players: PublicPlayer[];

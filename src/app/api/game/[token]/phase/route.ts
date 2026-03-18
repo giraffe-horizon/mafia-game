@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
 import { phaseSchema } from "@/app/api/lib/schemas";
-import { changePhase, type GamePhase } from "@/lib/db";
+import { changePhase, type GamePhase } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   const body = await req.json();

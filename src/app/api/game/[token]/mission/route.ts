@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
 import { createMissionSchema } from "@/app/api/lib/schemas";
-import { createMission } from "@/lib/db";
+import { createMission } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   const body = await req.json();

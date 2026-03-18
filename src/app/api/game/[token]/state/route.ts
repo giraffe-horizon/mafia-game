@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
-import { getGameState } from "@/lib/db";
+import { getGameState } from "@/db";
 
 export const GET = withApiHandler(async (req: NextRequest, { db, token }) => {
   const state = await getGameState(db, token);

@@ -1,4 +1,4 @@
-import type { GameStateResponse } from "@/lib/db";
+import type { GameStateResponse } from "@/db";
 import type {
   CreateGameInput,
   JoinGameInput,

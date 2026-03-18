@@ -1,5 +1,5 @@
 // Shared types for game client components
-export type { GameStateResponse, PublicPlayer, GameStatus, GamePhase, Role } from "@/lib/db";
+export type { GameStateResponse, PublicPlayer, GameStatus, GamePhase, Role } from "@/db";
 
 // Grouped props interfaces to reduce prop drilling
 

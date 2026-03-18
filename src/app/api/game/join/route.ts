@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandlerNoToken } from "@/app/api/lib/handler";
 import { joinGameSchema } from "@/app/api/lib/schemas";
-import { joinGame } from "@/lib/db";
+import { joinGame } from "@/db";
 
 export const POST = withApiHandlerNoToken(async (req: NextRequest, { db }) => {
   const body = await req.json();

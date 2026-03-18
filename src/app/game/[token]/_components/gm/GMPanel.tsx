@@ -1,6 +1,6 @@
 "use client";
 
-import type { GameStateResponse, PublicPlayer } from "@/lib/db";
+import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { GamePhase, ActionType } from "@/db/types";
 import type { MessageFormProps, MissionFormProps } from "../../types";
 import GMGameTab from "./GMGameTab";

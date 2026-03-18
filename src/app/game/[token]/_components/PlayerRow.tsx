@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
-import type { PublicPlayer } from "@/lib/db";
+import type { PublicPlayer } from "@/db";
 import { Badge } from "@/components/ui";
 
 export default function PlayerRow({

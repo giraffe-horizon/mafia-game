@@ -1,4 +1,4 @@
-import type { PublicPlayer } from "@/lib/db";
+import type { PublicPlayer } from "@/db";
 import type { MessageFormProps } from "../../types";
 
 interface GMMessageTabProps extends MessageFormProps {

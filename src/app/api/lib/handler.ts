@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getDb } from "./db";
-import type { D1Database } from "@/lib/db";
+import type { D1Database } from "@/db";
 
 export interface ApiContext {
   db: D1Database;

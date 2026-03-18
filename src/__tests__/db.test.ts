@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { createMockD1Database } from "./helpers/mockD1";
-import * as db from "@/lib/db";
+import * as db from "@/db";
 
 // Mock nanoid to have predictable IDs in tests
 vi.mock("nanoid", () => ({

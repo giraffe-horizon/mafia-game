@@ -1,3 +1,3 @@
 interface CloudflareEnv {
-  DB: import("@/lib/db").D1Database;
+  DB: import("@/db").D1Database;
 }

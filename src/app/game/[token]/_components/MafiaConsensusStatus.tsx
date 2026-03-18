@@ -1,6 +1,6 @@
 "use client";
 
-import type { GameStateResponse } from "@/lib/db";
+import type { GameStateResponse } from "@/db";
 
 export default function MafiaConsensusStatus({
   mafiaTeamActions,

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
-import type { D1Database, D1PreparedStatement } from "@/lib/db";
+import type { D1Database, D1PreparedStatement } from "@/db";
 
 // Simple SQL parser for basic operations
 function parseSQL(sql: string): {

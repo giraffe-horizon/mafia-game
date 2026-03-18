@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
 import { kickPlayerSchema } from "@/app/api/lib/schemas";
-import { kickPlayer } from "@/lib/db";
+import { kickPlayer } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   const body = await req.json();

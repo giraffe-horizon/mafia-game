@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import type { GameStateResponse } from "@/lib/db";
+import type { GameStateResponse } from "@/db";
 import * as apiClient from "@/lib/api-client";
 
 // Polling constants

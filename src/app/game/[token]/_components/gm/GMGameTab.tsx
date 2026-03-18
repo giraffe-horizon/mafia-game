@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
-import type { GameStateResponse, PublicPlayer } from "@/lib/db";
+import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { Role, ActionType, GamePhase } from "@/db/types";
 
 const ACTION_ROLE_MAP: Record<Role, ActionType> = {

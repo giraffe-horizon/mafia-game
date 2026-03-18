@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { PublicPlayer } from "@/lib/db";
+import type { PublicPlayer } from "@/db";
 
 interface LobbyTransferGmProps {
   players: PublicPlayer[];

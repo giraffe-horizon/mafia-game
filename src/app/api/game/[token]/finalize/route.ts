@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
-import { finalizeGame } from "@/lib/db";
+import { finalizeGame } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   const result = await finalizeGame(db, token);

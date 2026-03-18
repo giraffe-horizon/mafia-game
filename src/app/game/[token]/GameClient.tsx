@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import QRCode from "react-qr-code";
-import type { PublicPlayer } from "@/lib/db";
+import type { PublicPlayer } from "@/db";
 import { ROLE_LABELS, ROLE_COLORS, PHASE_LABELS, PHASE_ICONS, ROLE_ICONS } from "@/lib/constants";
 import * as apiClient from "@/lib/api-client";
 import CharacterPicker from "@/components/CharacterPicker";
