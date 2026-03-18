@@ -1,14 +1,8 @@
 import type { PublicPlayer } from "@/lib/db";
+import type { MessageFormProps } from "../../types";
 
-interface GMMessageTabProps {
+interface GMMessageTabProps extends MessageFormProps {
   players: PublicPlayer[];
-  msgTarget: string;
-  msgContent: string;
-  msgPending: boolean;
-  msgError: string;
-  onMsgTargetChange: (v: string) => void;
-  onMsgContentChange: (v: string) => void;
-  onSendMessage: () => void;
 }
 
 export default function GMMessageTab({

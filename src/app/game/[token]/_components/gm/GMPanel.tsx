@@ -1,6 +1,7 @@
 "use client";
 
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
+import type { MessageFormProps, MissionFormProps } from "../../types";
 import GMGameTab from "./GMGameTab";
 import GMMessageTab from "./GMMessageTab";
 import GMMissionTab from "./GMMissionTab";
@@ -13,27 +14,12 @@ interface GMPanelProps {
   onTabChange: (t: "game" | "message" | "mission" | "settings") => void;
   phasePending: boolean;
   onPhase: (p: string) => void;
-  msgTarget: string;
-  msgContent: string;
-  msgPending: boolean;
-  msgError: string;
-  onMsgTargetChange: (v: string) => void;
-  onMsgContentChange: (v: string) => void;
-  onSendMessage: () => void;
-  msnTarget: string;
-  msnDesc: string;
-  msnPoints: number;
-  msnPreset: string;
-  msnPending: boolean;
-  msnError: string;
-  onMsnTargetChange: (v: string) => void;
-  onMsnDescChange: (v: string) => void;
-  onMsnPointsChange: (p: 1 | 2 | 3) => void;
-  onMsnPresetChange: (v: string) => void;
-  onCreateMission: () => void;
-  hostMissions?: any[];
-  onCompleteMission: (id: string) => void;
-  onDeleteMission: (id: string) => void;
+  messageForm: MessageFormProps;
+  missionForm: MissionFormProps & {
+    hostMissions?: any[];
+    onCompleteMission: (id: string) => void;
+    onDeleteMission: (id: string) => void;
+  };
   hostActions?: GameStateResponse["hostActions"];
   phaseProgress?: GameStateResponse["phaseProgress"];
   onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
@@ -49,27 +35,8 @@ export default function GMPanel({
   onTabChange,
   phasePending,
   onPhase,
-  msgTarget,
-  msgContent,
-  msgPending,
-  msgError,
-  onMsgTargetChange,
-  onMsgContentChange,
-  onSendMessage,
-  msnTarget,
-  msnDesc,
-  msnPoints,
-  msnPreset,
-  msnPending,
-  msnError,
-  onMsnTargetChange,
-  onMsnDescChange,
-  onMsnPointsChange,
-  onMsnPresetChange,
-  onCreateMission,
-  hostMissions,
-  onCompleteMission,
-  onDeleteMission,
+  messageForm,
+  missionForm,
   hostActions,
   phaseProgress,
   onGmAction,
@@ -126,38 +93,9 @@ export default function GMPanel({
           />
         )}
 
-        {tab === "message" && (
-          <GMMessageTab
-            players={players}
-            msgTarget={msgTarget}
-            msgContent={msgContent}
-            msgPending={msgPending}
-            msgError={msgError}
-            onMsgTargetChange={onMsgTargetChange}
-            onMsgContentChange={onMsgContentChange}
-            onSendMessage={onSendMessage}
-          />
-        )}
+        {tab === "message" && <GMMessageTab players={players} {...messageForm} />}
 
-        {tab === "mission" && (
-          <GMMissionTab
-            players={players}
-            hostMissions={hostMissions}
-            msnTarget={msnTarget}
-            msnDesc={msnDesc}
-            msnPoints={msnPoints}
-            msnPreset={msnPreset}
-            msnPending={msnPending}
-            msnError={msnError}
-            onMsnTargetChange={onMsnTargetChange}
-            onMsnDescChange={onMsnDescChange}
-            onMsnPointsChange={onMsnPointsChange}
-            onMsnPresetChange={onMsnPresetChange}
-            onCreateMission={onCreateMission}
-            onCompleteMission={onCompleteMission}
-            onDeleteMission={onDeleteMission}
-          />
-        )}
+        {tab === "mission" && <GMMissionTab players={players} {...missionForm} />}
 
         {tab === "settings" && (
           <GMSettingsTab

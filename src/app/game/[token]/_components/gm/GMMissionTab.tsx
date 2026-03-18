@@ -1,5 +1,6 @@
 import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
 import type { PublicPlayer } from "@/lib/db";
+import type { MissionFormProps } from "../../types";
 
 interface HostMission {
   id: string;
@@ -9,20 +10,9 @@ interface HostMission {
   isCompleted: boolean;
 }
 
-interface GMMissionTabProps {
+interface GMMissionTabProps extends MissionFormProps {
   players: PublicPlayer[];
   hostMissions?: HostMission[];
-  msnTarget: string;
-  msnDesc: string;
-  msnPoints: number;
-  msnPreset: string;
-  msnPending: boolean;
-  msnError: string;
-  onMsnTargetChange: (v: string) => void;
-  onMsnDescChange: (v: string) => void;
-  onMsnPointsChange: (p: 1 | 2 | 3) => void;
-  onMsnPresetChange: (v: string) => void;
-  onCreateMission: () => void;
   onCompleteMission: (id: string) => void;
   onDeleteMission: (id: string) => void;
 }

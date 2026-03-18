@@ -24,6 +24,7 @@ import LobbyTransferGm from "./_components/LobbyTransferGm";
 import ReviewView from "./_components/ReviewView";
 import PlayersList from "./_components/PlayersList";
 import MissionsList from "./_components/MissionsList";
+import type { MessageFormProps, MissionFormProps } from "./types";
 import { useGamePolling } from "./_hooks/useGamePolling";
 import { useGameActions } from "./_hooks/useGameActions";
 import { useOnboarding } from "./_hooks/useOnboarding";
@@ -142,6 +143,40 @@ export default function GameClient() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
+
+  // ---------------------------------------------------------------------------
+  // Grouped props for prop drilling reduction
+  // ---------------------------------------------------------------------------
+  const messageForm: MessageFormProps = {
+    msgTarget,
+    msgContent,
+    msgPending,
+    msgError,
+    onMsgTargetChange: setMsgTarget,
+    onMsgContentChange: setMsgContent,
+    onSendMessage: handleSendMessage,
+  };
+
+  const missionForm: MissionFormProps & {
+    hostMissions?: any[];
+    onCompleteMission: (id: string) => void;
+    onDeleteMission: (id: string) => void;
+  } = {
+    msnTarget,
+    msnDesc,
+    msnPoints,
+    msnPreset,
+    msnPending,
+    msnError,
+    onMsnTargetChange: setMsnTarget,
+    onMsnDescChange: setMsnDesc,
+    onMsnPointsChange: setMsnPoints,
+    onMsnPresetChange: setMsnPreset,
+    onCreateMission: handleCreateMission,
+    hostMissions: state?.hostMissions,
+    onCompleteMission: handleCompleteMission,
+    onDeleteMission: handleDeleteMission,
+  };
 
   // ---------------------------------------------------------------------------
   // Loading / Error screens
@@ -356,27 +391,8 @@ export default function GameClient() {
             onTabChange={setMgTab}
             phasePending={phasePending}
             onPhase={handlePhase}
-            msgTarget={msgTarget}
-            msgContent={msgContent}
-            msgPending={msgPending}
-            msgError={msgError}
-            onMsgTargetChange={setMsgTarget}
-            onMsgContentChange={setMsgContent}
-            onSendMessage={handleSendMessage}
-            msnTarget={msnTarget}
-            msnDesc={msnDesc}
-            msnPoints={msnPoints}
-            msnPreset={msnPreset}
-            msnPending={msnPending}
-            msnError={msnError}
-            onMsnTargetChange={setMsnTarget}
-            onMsnDescChange={setMsnDesc}
-            onMsnPointsChange={setMsnPoints}
-            onMsnPresetChange={setMsnPreset}
-            onCreateMission={handleCreateMission}
-            hostMissions={state.hostMissions}
-            onCompleteMission={handleCompleteMission}
-            onDeleteMission={handleDeleteMission}
+            messageForm={messageForm}
+            missionForm={missionForm}
             hostActions={state.hostActions}
             phaseProgress={state.phaseProgress}
             onGmAction={handleGmAction}
