@@ -55,7 +55,11 @@ export default function PlayerRow({
     setIsEditing(false);
   };
 
-  const showRoleBadge = isHost && isGamePlaying && player.role != null;
+  // Player states for choosing character
+  const isChoosingCharacter = !player.nickname && !player.character;
+  const hasNicknameNoCharacter = player.nickname && !player.character;
+
+  const showRoleBadge = isHost && isGamePlaying && player.role != null && !isChoosingCharacter;
 
   const isMafiaTeammate =
     !isHost &&
@@ -72,7 +76,7 @@ export default function PlayerRow({
       <div
         className={`w-9 h-9 rounded-full flex items-center justify-center border ${
           player.isHost ? "border-primary/50 bg-primary/10" : "border-slate-700 bg-slate-800"
-        }`}
+        } ${isChoosingCharacter || hasNicknameNoCharacter ? "animate-pulse" : ""}`}
       >
         {player.character ? (
           <>
@@ -102,7 +106,11 @@ export default function PlayerRow({
           </>
         ) : (
           <span className="material-symbols-outlined text-[18px] text-slate-400">
-            {player.isHost ? "manage_accounts" : "person"}
+            {isChoosingCharacter || hasNicknameNoCharacter
+              ? "hourglass_top"
+              : player.isHost
+                ? "manage_accounts"
+                : "person"}
           </span>
         )}
       </div>
@@ -142,9 +150,19 @@ export default function PlayerRow({
             <>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-medium text-white truncate">{player.nickname}</span>
-                  {player.isYou && (
-                    <span className="text-xs text-emerald-400/70 font-typewriter">(Ty)</span>
+                  {isChoosingCharacter ? (
+                    <span className="text-sm font-medium text-slate-400 italic animate-pulse">
+                      Wybiera postać...
+                    </span>
+                  ) : (
+                    <>
+                      <span className="text-sm font-medium text-white truncate">
+                        {player.nickname}
+                      </span>
+                      {player.isYou && (
+                        <span className="text-xs text-emerald-400/70 font-typewriter">(Ty)</span>
+                      )}
+                    </>
                   )}
                 </div>
                 {player.character && (
@@ -172,7 +190,7 @@ export default function PlayerRow({
           {ROLE_LABELS[player.role]}
         </span>
       )}
-      {isFinished && !isHost && player.role && (
+      {isFinished && !isHost && player.role && !isChoosingCharacter && (
         <span
           className={`text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border ${roleBadgeClass(player.role)}`}
         >
