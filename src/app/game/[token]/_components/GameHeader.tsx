@@ -3,7 +3,6 @@ import Link from "next/link";
 import { PHASE_LABELS } from "@/lib/constants";
 
 interface GameHeaderProps {
-  token: string;
   phase: string;
   round: number;
   isHost: boolean;
@@ -16,15 +15,16 @@ interface GameHeaderProps {
     } | null;
   };
   onShowSettings: () => void;
+  onShowRanking: () => void;
 }
 
 export default function GameHeader({
-  token,
   phase,
   round,
   isHost,
   currentPlayer,
   onShowSettings,
+  onShowRanking,
 }: GameHeaderProps) {
   const [imgError, setImgError] = useState(false);
   const handleImgError = useCallback(() => setImgError(true), []);
@@ -38,13 +38,13 @@ export default function GameHeader({
         >
           <span className="material-symbols-outlined text-[20px]">arrow_back</span>
         </Link>
-        <Link
-          href={`/ranking?token=${token}`}
+        <button
+          onClick={onShowRanking}
           className="size-9 flex items-center justify-center text-slate-500 hover:text-amber-400 transition-colors"
           title="Ranking sesji"
         >
           <span className="material-symbols-outlined text-[18px]">leaderboard</span>
-        </Link>
+        </button>
       </div>
       <div className="text-center">
         <h2 className="font-typewriter text-white text-sm font-semibold">{PHASE_LABELS[phase]}</h2>

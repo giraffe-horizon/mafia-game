@@ -26,6 +26,7 @@ import VotingView, {
   type VoteState,
 } from "./_components/VotingView";
 import SettingsModal from "./_components/SettingsModal";
+import RankingModal from "./_components/RankingModal";
 import type { ActionState, MafiaState } from "./_components/NightActionPanel";
 import ReviewView from "./_components/ReviewView";
 import PlayersList from "./_components/PlayersList";
@@ -115,6 +116,7 @@ export default function GameClient() {
   const [mafiaCountSetting, setMafiaCountSetting] = useState(0);
   const [mgTab, setMgTab] = useState<"game" | "message" | "mission" | "settings">("game");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
 
   // Initialize store with token and service
   useEffect(() => {
@@ -315,12 +317,12 @@ export default function GameClient() {
       <ToastOverlay />
 
       <GameHeader
-        token={token}
         phase={phase}
         round={game.round}
         isHost={isHost}
         currentPlayer={currentPlayer}
         onShowSettings={() => setShowSettingsModal(true)}
+        onShowRanking={() => setShowRanking(true)}
       />
 
       {/* Scrollable content */}
@@ -485,6 +487,8 @@ export default function GameClient() {
           onKick={handleKick}
         />
       </div>
+
+      <RankingModal isOpen={showRanking} onClose={() => setShowRanking(false)} token={token} />
 
       <SettingsModal
         isVisible={showSettingsModal}
