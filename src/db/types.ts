@@ -38,6 +38,7 @@ export interface GamePlayerRow {
   role: string | null;
   is_alive: number;
   is_host: number;
+  character_id?: string;
 }
 
 export interface MessageRow {
