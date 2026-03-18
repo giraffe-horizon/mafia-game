@@ -1,8 +1,5 @@
 import type { D1Database } from "@/db/types";
 
-const SURVIVAL_BONUS = 1;
-const WINNING_BONUS = 3;
-
 interface RankingPlayer {
   playerId: string;
   nickname: string;

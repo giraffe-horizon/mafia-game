@@ -152,7 +152,7 @@ async function seedGame(
   return buildResult(db, stage, gameCode, gmToken, playerTokens);
 }
 
-async function playNight(db: D1Database, gmToken: string, playerTokens: string[]): Promise<void> {
+async function playNight(db: D1Database, gmToken: string, _playerTokens: string[]): Promise<void> {
   // Get game state to know roles
   const state = await getGameState(db, gmToken);
   if (!state) throw new Error("Failed to get game state");

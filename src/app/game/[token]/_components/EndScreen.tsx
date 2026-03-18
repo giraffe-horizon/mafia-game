@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ROLE_LABELS, ROLE_ICONS, ROLE_COLORS } from "@/lib/constants";
-import { SectionHeader, StatusItem, Badge, Button, Card } from "@/components/ui";
+import { SectionHeader, StatusItem, Button, Card } from "@/components/ui";
 import { useGameStore } from "../_stores/gameStore";
 import * as apiClient from "@/lib/api-client";
 
@@ -27,7 +26,6 @@ export default function EndScreen(_props: Record<string, never> = {}) {
   const rematchGame = useGameStore((s) => s.rematchGame);
   const [rematchPending, setRematchPending] = useState(false);
   const [roundScores, setRoundScores] = useState<RoundScore[]>([]);
-  const [roundNumber, setRoundNumber] = useState(0);
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [totalRounds, setTotalRounds] = useState(0);
 
@@ -45,7 +43,6 @@ export default function EndScreen(_props: Record<string, never> = {}) {
 
         if (scoresData.scores) {
           setRoundScores(scoresData.scores);
-          setRoundNumber(scoresData.round);
         }
 
         if (rankingData.ranking) {
@@ -69,7 +66,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
 
   if (!state) return null;
 
-  const { game, players, currentPlayer, hostMissions } = state;
+  const { game, currentPlayer, hostMissions } = state;
   const isHost = currentPlayer.isHost;
 
   const handleRematch = async () => {
@@ -115,15 +112,6 @@ export default function EndScreen(_props: Record<string, never> = {}) {
         : i === 2
           ? "text-orange-400"
           : "text-slate-500";
-
-  const positionBg = (i: number) =>
-    i === 0
-      ? "bg-amber-500/20 border-amber-600/50"
-      : i === 1
-        ? "bg-slate-500/20 border-slate-600/50"
-        : i === 2
-          ? "bg-orange-500/20 border-orange-600/50"
-          : "bg-slate-800 border-slate-700";
 
   return (
     <div className="mx-5 mt-5">
