@@ -1,3 +1,49 @@
+# [1.5.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.4.0...v1.5.0) (2026-03-18)
+
+
+### Bug Fixes
+
+* complete remaining audit fixes ([1064b47](https://github.com/giraffe-horizon/mafia-game/commit/1064b47d1485e9b17c0b3c19daa435ac8ac51cdc))
+* critical - rematch tokens, transfer GM session, action race condition, dead mafia actions ([1f44900](https://github.com/giraffe-horizon/mafia-game/commit/1f449001bc45bac2d27a4788375caf1f4572c087))
+* critical logic bugs - role visibility, vote phase filter, dead target check ([5982376](https://github.com/giraffe-horizon/mafia-game/commit/59823760b44ed5c8dae4bc6f3c7db265530228bd))
+* hide detective result completely when role hidden (no hint leak) ([420da12](https://github.com/giraffe-horizon/mafia-game/commit/420da124531cd57e310e3811f461df2317ab3621))
+* partial audit fixes - types, error handling, ranking query layer ([d91a50e](https://github.com/giraffe-horizon/mafia-game/commit/d91a50e789c6f629f57c346639db96fe5f75b001))
+* rematch clears old game data (actions, messages, missions) ([ff35979](https://github.com/giraffe-horizon/mafia-game/commit/ff35979e76454a7e50a25424b648d6163f9881b9))
+* replace emoji dots with check/close icons on right side of player row ([801c7bc](https://github.com/giraffe-horizon/mafia-game/commit/801c7bc3c85e9e535fba68d14f509a0d8c2ffbcf))
+* resolve all critical and high issues from final audit v2 ([b25bcd7](https://github.com/giraffe-horizon/mafia-game/commit/b25bcd7fd23f09169eab048140e60946e4b991be))
+* resolve test failures from db modularization ([6792647](https://github.com/giraffe-horizon/mafia-game/commit/6792647861ddff5cec19882b30d1799587684273))
+* restore corrupted handler.ts (broken by code scanning auto-fix) ([328111c](https://github.com/giraffe-horizon/mafia-game/commit/328111cc2a55904a48327a906fbabed18a10f247))
+* show dead spectator view in all game phases ([6385f0f](https://github.com/giraffe-horizon/mafia-game/commit/6385f0f2311edb2cb05aa92bfc400d3cbcd281c1))
+* show detective investigation result in DayView ([944b020](https://github.com/giraffe-horizon/mafia-game/commit/944b020299808b893324ed0f22657bdc9c492516))
+* stop polling loop when tab hidden, instant refresh on return ([3c80155](https://github.com/giraffe-horizon/mafia-game/commit/3c801559b29d2887f3f43f3c9aea4827c9556805))
+* unify loading spinner with design system (primary red, typewriter font) ([67c27ff](https://github.com/giraffe-horizon/mafia-game/commit/67c27ffed8aa63d5de0847fa686b5bf4c991f6ad))
+* update coverage config for db/ module structure ([ca2af5c](https://github.com/giraffe-horizon/mafia-game/commit/ca2af5c3b94e127f0b0ce3ee218c445ad496f9b1))
+
+
+### Features
+
+* add error.tsx and loading.tsx for error boundaries ([ee4d22f](https://github.com/giraffe-horizon/mafia-game/commit/ee4d22f3cc3f2e377b4c6550698727561887acc2))
+* add GameService abstraction layer for transport independence ([4892b33](https://github.com/giraffe-horizon/mafia-game/commit/4892b33b7128deffb3cf58f711b1bcdb734bb1b5))
+* add RoleHidden wrapper, hide detective result when role not revealed ([b8220e1](https://github.com/giraffe-horizon/mafia-game/commit/b8220e13cdc7bafc4dbc9854536c4d464b956213))
+* add Zod validation to all API routes ([6c004e7](https://github.com/giraffe-horizon/mafia-game/commit/6c004e749b51b3c080d3ece8f8e329eb02f6fbde))
+* add Zustand game store with polling and actions ([5e64e10](https://github.com/giraffe-horizon/mafia-game/commit/5e64e102fad1f15da31d77477397cb08e782b875))
+* cumulative scoring across rounds with player_round_scores ([133cbcd](https://github.com/giraffe-horizon/mafia-game/commit/133cbcd72a04b231b642b2e884276c4ed0a381eb))
+* detective sees investigated players marked on player list ([877d0f1](https://github.com/giraffe-horizon/mafia-game/commit/877d0f1ddca72a8b1b08d550b248189df91413a5))
+* doctor cannot protect same player two rounds in a row ([ca434de](https://github.com/giraffe-horizon/mafia-game/commit/ca434ded1b975c59aa7d83528f46c561b2b01009))
+* expand UI component library (PageLayout, SectionHeader, StatusItem, ActionBar, InfoCard, TabBar, FormField) ([1b493ad](https://github.com/giraffe-horizon/mafia-game/commit/1b493addff285a127957c392fb8a4d2b9abd486e))
+* extract reusable UI components (Button, Card, Badge, Select, Input, ProgressBar, Modal, GameLayout) ([c0930d7](https://github.com/giraffe-horizon/mafia-game/commit/c0930d7a1a8b9583df0dc7ff5912a0bccf1ba6e7))
+* ranking as modal instead of separate page ([5cb5da0](https://github.com/giraffe-horizon/mafia-game/commit/5cb5da064379036d52ef3f0961573eb5be9f9630))
+* rematch resets game in-place, preserves tokens and lobby ([c743f02](https://github.com/giraffe-horizon/mafia-game/commit/c743f028fce5c42356a9aaa9396b5e0b01ea6c00))
+
+
+### Performance Improvements
+
+* add lazy loading to all images ([4708585](https://github.com/giraffe-horizon/mafia-game/commit/4708585f4d7fc02e6c874c65952c4ba3fb542163))
+* home page Server Component shell with Client island ([0756218](https://github.com/giraffe-horizon/mafia-game/commit/07562181eaec133b1cd37fb5ca70cf4badb379b4))
+* migrate fonts to next/font/google ([9846220](https://github.com/giraffe-horizon/mafia-game/commit/9846220e0323ad2a9bf98c637863402c2d02a9ea))
+* polling optimization with visibility API and error backoff ([0731eee](https://github.com/giraffe-horizon/mafia-game/commit/0731eee89b3d5ce54b6ea725118287b3fb96dab1))
+* replace router.push with next/link for navigation ([7f1706b](https://github.com/giraffe-horizon/mafia-game/commit/7f1706b474d8984d0bb68419f88db7719d4c9c0e))
+
 # [1.4.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.3.1...v1.4.0) (2026-03-18)
 
 
