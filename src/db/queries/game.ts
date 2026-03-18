@@ -326,6 +326,20 @@ export async function getGameState(
 
   const showPoints = gameRow.phase === "review" || gameRow.status === "finished";
 
+  // Parse lobby settings from config
+  let lobbySettings: { mode: "full" | "simple"; mafiaCount: number } | undefined;
+  try {
+    const config = JSON.parse(gameRow.config || "{}");
+    if (config.mode) {
+      lobbySettings = {
+        mode: config.mode === "simple" ? "simple" : "full",
+        mafiaCount: typeof config.mafiaCount === "number" ? config.mafiaCount : 0,
+      };
+    }
+  } catch {
+    // ignore malformed config
+  }
+
   return {
     game: {
       id: gameRow.id,
@@ -374,6 +388,7 @@ export async function getGameState(
     hostActions,
     hostMissions,
     phaseProgress,
+    lobbySettings,
     showPoints,
   };
 }

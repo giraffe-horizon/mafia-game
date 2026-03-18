@@ -46,7 +46,11 @@ export async function startGame(
       .prepare(
         "UPDATE games SET status = 'playing', phase = 'night', round = ?, config = ? WHERE id = ?"
       )
-      .bind(gameRow.round + 1, JSON.stringify({ mode }), playerRow.game_id),
+      .bind(
+        gameRow.round + 1,
+        JSON.stringify({ mode, mafiaCount: customMafiaCount || 0 }),
+        playerRow.game_id
+      ),
     db
       .prepare("UPDATE game_players SET role = 'gm' WHERE game_id = ? AND player_id = ?")
       .bind(playerRow.game_id, playerRow.player_id),

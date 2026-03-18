@@ -190,6 +190,11 @@ export interface GameStateResponse {
     hint: string;
     mafiaUnanimous: boolean;
   };
+  // Lobby settings persisted across rounds
+  lobbySettings?: {
+    mode: "full" | "simple";
+    mafiaCount: number; // 0 = auto
+  };
   // Whether to show points/missions to players (only during review/finished)
   showPoints: boolean;
 }

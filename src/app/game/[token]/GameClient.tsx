@@ -171,6 +171,15 @@ export default function GameClient() {
     await transferGameMaster(newHostPlayerId);
   };
 
+  // Sync lobby settings from server (persisted across rounds)
+  const lobbySettings = state?.lobbySettings;
+  useEffect(() => {
+    if (lobbySettings) {
+      setGameMode(lobbySettings.mode);
+      setMafiaCount(lobbySettings.mafiaCount);
+    }
+  }, [lobbySettings]);
+
   useEffect(() => {
     if (state?.currentPlayer?.character) {
       setSelectedCharacterId(state.currentPlayer.character.id);
