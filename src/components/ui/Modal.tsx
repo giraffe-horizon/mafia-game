@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useCallback } from "react";
 import { cn } from "@/lib/cn";
 
 interface ModalProps {
@@ -10,6 +10,19 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    },
+    [onClose]
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, handleKeyDown]);
+
   if (!isOpen) return null;
 
   return (
@@ -20,6 +33,7 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
             <h3 className="text-white font-bold text-lg font-typewriter">{title}</h3>
             <button
               onClick={onClose}
+              aria-label="Zamknij"
               className="text-slate-400 hover:text-slate-200 transition-colors"
             >
               <span className="material-symbols-outlined text-[24px]">close</span>

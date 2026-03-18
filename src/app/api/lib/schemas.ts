@@ -9,13 +9,13 @@ const nickname = z.string().min(1).max(20);
 // API endpoint schemas
 export const createGameSchema = z.object({
   nickname: nickname.optional(),
-  characterId: z.string().optional(),
+  characterId: nonEmptyString.optional(),
 });
 
 export const joinGameSchema = z.object({
   code: nonEmptyString,
   nickname: nickname.optional(),
-  characterId: z.string().optional(),
+  characterId: nonEmptyString.optional(),
 });
 
 export const actionSchema = z.object({

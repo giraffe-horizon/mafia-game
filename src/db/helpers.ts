@@ -2,6 +2,18 @@ import { nanoid } from "nanoid";
 import type { Role } from "@/db/types";
 
 // ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const MAFIA_THRESHOLDS = [
+  { maxPlayers: 5, mafiaCount: 1 },
+  { maxPlayers: 8, mafiaCount: 2 },
+  { maxPlayers: 11, mafiaCount: 3 },
+] as const;
+const DEFAULT_MAFIA_COUNT = 4;
+const MIN_SPECIAL_ROLES = 3; // detective + doctor + 1 civilian minimum
+
+// ---------------------------------------------------------------------------
 // Helper functions
 // ---------------------------------------------------------------------------
 
@@ -38,13 +50,15 @@ export function buildRoles(
   }
 
   // Full mode: mafia + detective + doctor + civilians
-  if (customMafiaCount !== undefined && customMafiaCount >= 1 && customMafiaCount <= n - 3) {
+  if (
+    customMafiaCount !== undefined &&
+    customMafiaCount >= 1 &&
+    customMafiaCount <= n - MIN_SPECIAL_ROLES
+  ) {
     mafiaCount = customMafiaCount;
   } else {
-    if (n <= 5) mafiaCount = 1;
-    else if (n <= 8) mafiaCount = 2;
-    else if (n <= 11) mafiaCount = 3;
-    else mafiaCount = 4;
+    const threshold = MAFIA_THRESHOLDS.find((t) => n <= t.maxPlayers);
+    mafiaCount = threshold ? threshold.mafiaCount : DEFAULT_MAFIA_COUNT;
   }
   return [
     ...Array<Role>(mafiaCount).fill("mafia"),

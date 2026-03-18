@@ -10,7 +10,6 @@ export default function EndScreen(_props: Record<string, never> = {}) {
   const state = useGameStore((s) => s.state);
   const rematchGame = useGameStore((s) => s.rematchGame);
   const [rematchPending, setRematchPending] = useState(false);
-  const [mafiaCountSetting] = useState(0); // This would be passed from parent or managed in store
 
   if (!state) return null;
 
@@ -20,7 +19,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
   const handleRematch = async () => {
     setRematchPending(true);
     try {
-      await rematchGame(mafiaCountSetting);
+      await rematchGame();
     } finally {
       setRematchPending(false);
     }
@@ -71,12 +70,6 @@ export default function EndScreen(_props: Record<string, never> = {}) {
         )}
         {isHost && (
           <div className="mt-4 flex flex-col gap-2">
-            {mafiaCountSetting !== undefined && mafiaCountSetting > 0 && (
-              <p className="text-slate-600 text-xs font-typewriter text-center">
-                Następna runda: {mafiaCountSetting}{" "}
-                {mafiaCountSetting === 1 ? "mafioz" : "mafiozy/ów"}
-              </p>
-            )}
             <Button
               onClick={handleRematch}
               disabled={rematchPending}

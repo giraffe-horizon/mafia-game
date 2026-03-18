@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { PHASE_LABELS } from "@/lib/constants";
 
@@ -25,6 +26,9 @@ export default function GameHeader({
   currentPlayer,
   onShowSettings,
 }: GameHeaderProps) {
+  const [imgError, setImgError] = useState(false);
+  const handleImgError = useCallback(() => setImgError(true), []);
+
   return (
     <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-800">
       <div className="flex items-center gap-1">
@@ -61,25 +65,15 @@ export default function GameHeader({
             onClick={onShowSettings}
             className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors overflow-hidden flex items-center justify-center"
           >
-            {currentPlayer.character.avatarUrl ? (
-              <>
-                <img
-                  src={currentPlayer.character.avatarUrl}
-                  alt={currentPlayer.character.namePl}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const t = e.target as HTMLImageElement;
-                    t.style.display = "none";
-                    const ph = t.parentElement?.querySelector(".header-placeholder");
-                    if (ph) (ph as HTMLElement).style.display = "flex";
-                  }}
-                />
-                <div className="header-placeholder hidden w-full h-full bg-primary/20 text-primary font-bold items-center justify-center text-xs">
-                  {currentPlayer.character.namePl.charAt(0).toUpperCase()}
-                </div>
-              </>
+            {currentPlayer.character.avatarUrl && !imgError ? (
+              <img
+                src={currentPlayer.character.avatarUrl}
+                alt={currentPlayer.character.namePl}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover"
+                onError={handleImgError}
+              />
             ) : (
               <div className="w-full h-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
                 {currentPlayer.character.namePl.charAt(0).toUpperCase()}

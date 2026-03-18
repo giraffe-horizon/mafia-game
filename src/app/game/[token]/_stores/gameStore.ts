@@ -65,7 +65,7 @@ interface GameState {
   startGame: (gameMode: "full" | "simple", mafiaCount: number) => Promise<ActionResult>;
   kickPlayer: (playerId: string) => Promise<ActionResult>;
   leaveGame: () => Promise<LeaveResult>;
-  rematchGame: (mafiaCountSetting: number) => Promise<ActionResult>;
+  rematchGame: (mafiaCountSetting?: number) => Promise<ActionResult>;
   transferGameMaster: (newHostPlayerId: string) => Promise<ActionResult>;
   submitGmAction: (
     forPlayerId: string,
@@ -149,10 +149,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       .fetchCharacters()
       .then((characters) => set({ characters }))
       .catch((error) => {
-        console.error(
-          "Failed to fetch characters:",
-          error instanceof Error ? error.message : error
-        );
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error("Failed to fetch characters:", msg);
+        set({ error: `Nie udało się pobrać postaci: ${msg}` });
       });
 
     // Start polling
@@ -353,13 +352,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
-  rematchGame: async (mafiaCountSetting: number): Promise<ActionResult> => {
+  rematchGame: async (mafiaCountSetting?: number): Promise<ActionResult> => {
     const { _gameService, _token } = get();
     if (!_gameService || !_token) return { success: false, error: "No service initialized" };
 
     try {
       const opts: StartGameOpts = {};
-      if (mafiaCountSetting > 0) opts.mafiaCount = mafiaCountSetting;
+      if (mafiaCountSetting && mafiaCountSetting > 0) opts.mafiaCount = mafiaCountSetting;
 
       const result = await _gameService.rematchGame(_token, opts);
       if (result.success) {

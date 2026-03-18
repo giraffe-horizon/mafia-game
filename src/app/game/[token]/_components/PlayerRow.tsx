@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { PublicPlayer } from "@/db";
 import { Badge } from "@/components/ui";
@@ -28,6 +28,8 @@ export default function PlayerRow({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editNickname, setEditNickname] = useState(player.nickname);
+  const [imgError, setImgError] = useState(false);
+  const handleImgError = useCallback(() => setImgError(true), []);
 
   const handleSaveRename = () => {
     const trimmedName = editNickname.trim();
@@ -67,26 +69,15 @@ export default function PlayerRow({
       >
         {player.character ? (
           <>
-            {player.character.avatarUrl ? (
-              <>
-                <img
-                  src={player.character.avatarUrl}
-                  alt={player.character.namePl}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-9 h-9 rounded-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                    const placeholder =
-                      target.parentElement?.querySelector(".character-placeholder");
-                    if (placeholder) (placeholder as HTMLElement).style.display = "flex";
-                  }}
-                />
-                <div className="character-placeholder hidden w-9 h-9 rounded-full bg-primary/20 text-primary font-bold items-center justify-center text-sm">
-                  {player.character.namePl.charAt(0).toUpperCase()}
-                </div>
-              </>
+            {player.character.avatarUrl && !imgError ? (
+              <img
+                src={player.character.avatarUrl}
+                alt={player.character.namePl}
+                loading="lazy"
+                decoding="async"
+                className="w-9 h-9 rounded-full object-cover"
+                onError={handleImgError}
+              />
             ) : (
               <div className="w-9 h-9 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-sm">
                 {player.character.namePl.charAt(0).toUpperCase()}

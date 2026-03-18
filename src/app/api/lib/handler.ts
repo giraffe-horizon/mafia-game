@@ -28,7 +28,10 @@ export function withApiHandlerNoToken(
       const db = await getDb();
       return await handler(req, { db });
     } catch (error) {
-      console.error(`API Error [${req.method} ${req.nextUrl.pathname}]:`, error);
+      console.error(
+        `API Error [${req.method} ${req.nextUrl.pathname}]:`,
+        error instanceof Error ? error.message : error
+      );
 
       if (error instanceof ZodError) {
         return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -55,7 +58,10 @@ export function withApiHandlerMission(
       const db = await getDb();
       return await handler(req, { db, token, missionId });
     } catch (error) {
-      console.error(`API Error [${req.method} ${req.nextUrl.pathname}]:`, error);
+      console.error(
+        `API Error [${req.method} ${req.nextUrl.pathname}]:`,
+        error instanceof Error ? error.message : error
+      );
 
       if (error instanceof ZodError) {
         return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
@@ -75,7 +81,10 @@ export function withApiHandler(
       const db = await getDb();
       return await handler(req, { db, token });
     } catch (error) {
-      console.error(`API Error [${req.method} ${req.nextUrl.pathname}]:`, error);
+      console.error(
+        `API Error [${req.method} ${req.nextUrl.pathname}]:`,
+        error instanceof Error ? error.message : error
+      );
 
       if (error instanceof ZodError) {
         return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });

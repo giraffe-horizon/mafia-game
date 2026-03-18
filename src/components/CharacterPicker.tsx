@@ -1,6 +1,6 @@
 "use client";
 
-// No React hooks needed
+import { useState, useCallback } from "react";
 
 interface Character {
   id: string;
@@ -27,11 +27,17 @@ export default function CharacterPicker({
   onSelect,
   disabledIds = [],
 }: CharacterPickerProps) {
+  const [errorIds, setErrorIds] = useState<Set<string>>(new Set());
+  const handleImgError = useCallback((id: string) => {
+    setErrorIds((prev) => new Set(prev).add(id));
+  }, []);
+
   return (
     <div className="grid grid-cols-4 gap-3">
       {characters.map((character) => {
         const isSelected = selectedId === character.id;
         const isDisabled = disabledIds.includes(character.id);
+        const hasImgError = errorIds.has(character.id);
         return (
           <button
             key={character.id}
@@ -45,33 +51,17 @@ export default function CharacterPicker({
             }`}
           >
             <div className="relative">
-              {character.avatar_url ? (
-                <>
-                  <img
-                    src={character.avatar_url}
-                    alt={character.name_pl}
-                    loading="lazy"
-                    decoding="async"
-                    className={`w-16 h-16 rounded-full border-2 transition-all ${
-                      isSelected ? "border-primary" : "border-slate-600"
-                    }`}
-                    onError={(e) => {
-                      // Hide image and show placeholder on error
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = "none";
-                      const placeholder =
-                        target.parentElement?.querySelector(".avatar-placeholder");
-                      if (placeholder) (placeholder as HTMLElement).style.display = "flex";
-                    }}
-                  />
-                  <div
-                    className={`avatar-placeholder hidden w-16 h-16 rounded-full bg-primary/20 text-primary font-bold items-center justify-center border-2 transition-all ${
-                      isSelected ? "border-primary" : "border-slate-600"
-                    }`}
-                  >
-                    {character.name_pl.charAt(0).toUpperCase()}
-                  </div>
-                </>
+              {character.avatar_url && !hasImgError ? (
+                <img
+                  src={character.avatar_url}
+                  alt={character.name_pl}
+                  loading="lazy"
+                  decoding="async"
+                  className={`w-16 h-16 rounded-full border-2 transition-all ${
+                    isSelected ? "border-primary" : "border-slate-600"
+                  }`}
+                  onError={() => handleImgError(character.id)}
+                />
               ) : (
                 <div
                   className={`w-16 h-16 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center border-2 transition-all ${

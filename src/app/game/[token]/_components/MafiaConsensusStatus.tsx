@@ -24,8 +24,8 @@ export default function MafiaConsensusStatus({
             Głosy mafii
           </p>
           <div className="flex flex-col gap-1">
-            {mafiaWithTargets.map((action, index) => (
-              <div key={index} className="flex items-center gap-2 text-xs">
+            {mafiaWithTargets.map((action) => (
+              <div key={action.nickname} className="flex items-center gap-2 text-xs">
                 <span className="text-red-400 font-medium">
                   {action.nickname}
                   {action.nickname === currentNickname ? " (Ty)" : ""}
