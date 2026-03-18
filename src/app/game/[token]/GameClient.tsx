@@ -21,6 +21,9 @@ import SettingsModal from "./_components/SettingsModal";
 import NightActionPanel from "./_components/NightActionPanel";
 import VotePanel from "./_components/VotePanel";
 import LobbyTransferGm from "./_components/LobbyTransferGm";
+import ReviewView from "./_components/ReviewView";
+import PlayersList from "./_components/PlayersList";
+import MissionsList from "./_components/MissionsList";
 import { useGamePolling } from "./_hooks/useGamePolling";
 import { useGameActions } from "./_hooks/useGameActions";
 import { useOnboarding } from "./_hooks/useOnboarding";
@@ -229,416 +232,105 @@ export default function GameClient() {
       {/* Scrollable content */}
       <div className="relative z-10 flex-1 flex flex-col overflow-y-auto pb-6">
         {/* ── LOBBY ── */}
-        {isLobby && isHost && (
-          <div className="mx-5 mt-5 p-4 rounded-xl bg-black/40 border border-primary/20">
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2">
-              Kod sesji — udostępnij graczom
-            </p>
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <span className="font-typewriter text-2xl font-bold text-white tracking-widest drop-shadow-[0_0_8px_rgba(218,11,11,0.3)]">
-                {game.code}
-              </span>
-              <button
-                onClick={copyCode}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary text-sm font-typewriter uppercase tracking-wider transition-all"
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  {copied ? "check" : "content_copy"}
-                </span>
-                {copied ? "Skopiowano" : "Kopiuj"}
-              </button>
-            </div>
-            <button
-              onClick={() =>
-                navigator.share
-                  ? navigator
-                      .share({
-                        title: "Dołącz do Mafii!",
-                        text: `Dołącz do gry Mafia! Kod: ${game.code}`,
-                        url: joinUrl,
-                      })
-                      .catch(() => {})
-                  : (navigator.clipboard.writeText(joinUrl),
-                    setCopied(true),
-                    setTimeout(() => setCopied(false), 2000))
-              }
-              className="w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white text-sm font-typewriter uppercase tracking-wider transition-all"
-            >
-              <span className="material-symbols-outlined text-[18px]">share</span>
-              Udostępnij link
-            </button>
-            <div className="flex flex-col items-center gap-2 pt-3 border-t border-slate-800 mt-3">
-              <p className="text-slate-600 text-xs font-typewriter uppercase tracking-widest mb-1">
-                Zeskanuj aby dołączyć
-              </p>
-              <div className="p-3 bg-white rounded-xl">
-                <QRCode value={joinUrl} size={160} bgColor="#ffffff" fgColor="#1a0c0c" />
-              </div>
-              <p className="text-slate-700 text-[10px] font-typewriter text-center mt-1 break-all px-2">
-                {joinUrl}
-              </p>
-            </div>
-          </div>
-        )}
-        {isLobby && !isHost && (
-          <div className="mx-5 mt-5 p-5 rounded-xl bg-black/30 border border-slate-800 text-center">
-            <span className="material-symbols-outlined text-[36px] text-primary/60 mb-2 block animate-pulse">
-              hourglass_empty
-            </span>
-            <p className="text-slate-400 font-typewriter uppercase tracking-widest text-sm">
-              Czekaj na start
-            </p>
-            <p className="text-slate-600 text-xs mt-1">Mistrz gry niedługo rozpocznie rozgrywkę</p>
-          </div>
+        {isLobby && (
+          <LobbyView
+            isHost={isHost}
+            gameCode={game.code}
+            joinUrl={joinUrl}
+            copied={copied}
+            copyCode={copyCode}
+            setCopied={setCopied}
+            nonHostPlayers={nonHostPlayers}
+            gameMode={gameMode}
+            setGameMode={setGameMode}
+            mafiaCount={mafiaCount}
+            setMafiaCount={setMafiaCount}
+            starting={starting}
+            onStart={handleStartWrapper}
+            onTransferGm={handleTransferGm}
+          />
         )}
 
-        {/* ── PLAYING: role card ── */}
-        {isPlaying && !isHost && (
-          <div className="mx-5 mt-5">
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2 pl-1">
-              Twoja rola
-            </p>
-            <button
-              onClick={() => setRoleVisible((v) => !v)}
-              className="w-full p-5 rounded-xl bg-black/60 border border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98]"
-            >
-              {roleVisible ? (
-                <div className="flex items-center gap-4">
-                  <span
-                    className={`material-symbols-outlined text-[48px] ${ROLE_COLORS[currentPlayer.role ?? "civilian"]}`}
-                  >
-                    {ROLE_ICONS[currentPlayer.role ?? "civilian"]}
-                  </span>
-                  <div className="text-left">
-                    <p
-                      className={`font-typewriter text-2xl font-bold uppercase tracking-wider ${ROLE_COLORS[currentPlayer.role ?? "civilian"]}`}
-                    >
-                      {ROLE_LABELS[currentPlayer.role ?? "civilian"]}
-                    </p>
-                    {currentPlayer.role === "mafia" && (
-                      <p className="text-red-400/70 text-xs font-typewriter mt-1">
-                        🔴 Twoi wspólnicy są oznaczeni na liście
-                      </p>
-                    )}
-                    <p className="text-slate-500 text-sm mt-1">Stuknij aby ukryć</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-3 py-2">
-                  <span className="material-symbols-outlined text-[32px] text-slate-600">
-                    visibility_off
-                  </span>
-                  <p className="font-typewriter text-slate-500 uppercase tracking-widest text-sm">
-                    Stuknij aby zobaczyć rolę
-                  </p>
-                </div>
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* ── PLAYING: phase indicator (host) ── */}
-        {isPlaying && isHost && (
-          <div className="mx-5 mt-5 p-4 rounded-xl bg-black/40 border border-slate-700 flex items-center gap-3">
-            <span className="material-symbols-outlined text-[28px] text-primary">
-              {PHASE_ICONS[phase]}
-            </span>
-            <div>
-              <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
-                Faza gry
-              </p>
-              <p className="font-typewriter text-xl font-bold text-white uppercase tracking-wider">
-                {PHASE_LABELS[phase]}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* ── NIGHT: action panel ── */}
-        {isPlaying && !isHost && phase === "night" && currentPlayer.isAlive && (
-          <NightActionPanel
-            role={roleVisible ? currentPlayer.role : null}
-            targets={actionTargets}
+        {/* ── NIGHT ── */}
+        {isPlaying && phase === "night" && (
+          <NightView
+            isHost={isHost}
+            currentPlayer={{
+              isAlive: currentPlayer.isAlive,
+              role: currentPlayer.role || undefined,
+            }}
+            roleVisible={roleVisible}
+            setRoleVisible={setRoleVisible}
+            actionTargets={actionTargets}
             myAction={myAction}
-            pending={actionPending}
-            error={actionError}
+            actionPending={actionPending}
+            actionError={actionError}
+            changingDecision={changingDecision}
+            setChangingDecision={setChangingDecision}
             onAction={(type, targetId) => {
               setChangingDecision(false);
               handleAction(type, targetId);
             }}
-            roleHidden={!roleVisible}
             mafiaTeamActions={state.mafiaTeamActions}
             currentNickname={currentPlayer.nickname}
-            onChangeDecision={() => setChangingDecision(true)}
+            players={players}
           />
         )}
 
-        {/* ── VOTING: vote panel ── */}
-        {isPlaying && !isHost && phase === "voting" && currentPlayer.isAlive && (
-          <VotePanel
-            targets={players.filter((p) => p.isAlive && !p.isYou && !p.isHost)}
+        {/* ── DAY ── */}
+        {isPlaying && phase === "day" && (
+          <DayView
+            isHost={isHost}
+            currentPlayer={{
+              isAlive: currentPlayer.isAlive,
+              role: currentPlayer.role || undefined,
+            }}
+            roleVisible={roleVisible}
+            setRoleVisible={setRoleVisible}
+            detectiveResult={detectiveResult || undefined}
+            phase={phase}
+          />
+        )}
+
+        {/* ── VOTING ── */}
+        {isPlaying && phase === "voting" && (
+          <VotingView
+            isHost={isHost}
+            currentPlayer={{
+              isAlive: currentPlayer.isAlive,
+              role: currentPlayer.role || undefined,
+            }}
+            roleVisible={roleVisible}
+            setRoleVisible={setRoleVisible}
+            phase={phase}
+            players={players}
             myAction={myAction}
-            pending={actionPending}
-            error={actionError}
+            actionPending={actionPending}
+            actionError={actionError}
+            changingDecision={changingDecision}
+            setChangingDecision={setChangingDecision}
             onVote={(targetId) => {
               setChangingDecision(false);
               handleAction("vote", targetId);
             }}
-            onChangeDecision={() => setChangingDecision(true)}
+            voteTally={state.voteTally}
           />
         )}
 
-        {/* ── DEAD PLAYER: spectator view ── */}
-        {isPlaying && !isHost && !currentPlayer.isAlive && (
-          <div className="mx-5 mt-5">
-            <div className="p-5 rounded-xl bg-black/50 border border-slate-700 text-center mb-4">
-              <span className="material-symbols-outlined text-[48px] text-slate-600 mb-2 block">
-                skull
-              </span>
-              <p className="font-typewriter text-slate-400 text-lg uppercase tracking-widest">
-                Nie żyjesz
-              </p>
-              <p className="text-slate-600 text-xs mt-2">
-                Obserwujesz grę jako widz. Nie zdradzaj informacji żywym graczom!
-              </p>
-              {currentPlayer.role && (
-                <p className="text-slate-500 text-xs mt-3 font-typewriter">
-                  Byłeś:{" "}
-                  <span
-                    className={`font-bold ${ROLE_COLORS[currentPlayer.role] ?? "text-slate-300"}`}
-                  >
-                    {ROLE_LABELS[currentPlayer.role] ?? currentPlayer.role}
-                  </span>
-                </p>
-              )}
-            </div>
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2 pl-1">
-              <span className="material-symbols-outlined text-[12px] align-middle mr-1">
-                visibility
-              </span>
-              Widok widza — role graczy
-            </p>
-            <div className="flex flex-col gap-2">
-              {players
-                .filter((p) => !p.isHost)
-                .map((p) => (
-                  <div
-                    key={p.playerId}
-                    className={`flex items-center gap-3 p-3 rounded-lg border border-slate-800 bg-black/20 ${!p.isAlive ? "opacity-50" : ""}`}
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center border ${p.isAlive ? "border-slate-700 bg-slate-800" : "border-slate-800 bg-slate-900"}`}
-                    >
-                      <span className="material-symbols-outlined text-[16px] text-slate-500">
-                        {p.isAlive ? "person" : "skull"}
-                      </span>
-                    </div>
-                    <span
-                      className={`text-sm font-medium flex-1 ${p.isAlive ? "text-white" : "text-slate-600 line-through"}`}
-                    >
-                      {p.nickname}
-                    </span>
-                    {p.role && (
-                      <span
-                        className={`text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border ${p.role === "mafia" ? "text-red-400 border-red-900/50 bg-red-950/30" : p.role === "detective" ? "text-blue-400 border-blue-900/50 bg-blue-950/30" : p.role === "doctor" ? "text-green-400 border-green-900/50 bg-green-950/30" : "text-slate-400 border-slate-700 bg-slate-900/30"}`}
-                      >
-                        {ROLE_LABELS[p.role] ?? p.role}
-                      </span>
-                    )}
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── VOTING: live tally ── */}
-        {isPlaying && phase === "voting" && state.voteTally && (
-          <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-slate-700">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest">
-                <span className="material-symbols-outlined text-[12px] align-middle mr-1">
-                  how_to_vote
-                </span>
-                Głosy na żywo
-              </p>
-              <span className="text-slate-500 text-xs font-typewriter">
-                {state.voteTally.votedCount}/{state.voteTally.totalVoters} oddanych
-              </span>
-            </div>
-            {state.voteTally.results.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                {state.voteTally.results.map((r, i) => (
-                  <div key={r.playerId} className="flex items-center gap-3">
-                    <span className="text-white text-sm font-medium flex-1">{r.nickname}</span>
-                    <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${i === 0 ? "bg-primary" : "bg-slate-600"}`}
-                        style={{ width: `${(r.votes / state.voteTally!.totalVoters) * 100}%` }}
-                      />
-                    </div>
-                    <span
-                      className={`text-sm font-bold font-typewriter min-w-[2rem] text-right ${i === 0 ? "text-primary" : "text-slate-500"}`}
-                    >
-                      {r.votes}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-slate-600 text-xs font-typewriter text-center">
-                Nikt jeszcze nie zagłosował
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* ── Detective result ── */}
-        {detectiveResult && isPlaying && !isHost && (
-          <div className="mx-5 mt-4 p-4 rounded-xl bg-blue-950/30 border border-blue-800/40">
-            <p className="text-blue-400 text-xs font-typewriter uppercase tracking-widest mb-2">
-              Wynik przesłuchania — Runda {detectiveResult.round}
-            </p>
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-[28px] text-blue-400">search</span>
-              <div>
-                <p className="text-white font-medium">{detectiveResult.targetNickname}</p>
-                <p
-                  className={`text-sm font-typewriter font-bold ${detectiveResult.isMafia ? "text-red-400" : "text-green-400"}`}
-                >
-                  {detectiveResult.isMafia ? "MAFIA" : "NIE MAFIA"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ── Missions (non-host) ── */}
-        {!isHost && missions.length > 0 && state.showPoints && (
-          <div className="mx-5 mt-4">
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2 pl-1">
-              Twoje misje
-            </p>
-            <div className="flex flex-col gap-2">
-              {missions.map((m) => (
-                <div
-                  key={m.id}
-                  className={`p-3 rounded-lg border ${m.isCompleted ? "bg-green-950/20 border-green-900/40 opacity-70" : "bg-black/40 border-yellow-900/40"}`}
-                >
-                  <div className="flex items-start gap-2">
-                    <span
-                      className={`material-symbols-outlined text-[18px] mt-0.5 shrink-0 ${m.isCompleted ? "text-green-400" : "text-yellow-500"}`}
-                    >
-                      {m.isCompleted ? "check_circle" : "task"}
-                    </span>
-                    <p
-                      className={`text-sm flex-1 ${m.isCompleted ? "text-slate-400 line-through" : "text-white"}`}
-                    >
-                      {m.description}
-                    </p>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      {m.points > 0 && (
-                        <span
-                          className={`text-xs font-typewriter font-bold ${m.isCompleted ? "text-green-400" : "text-yellow-400"}`}
-                        >
-                          +{m.points}pkt
-                        </span>
-                      )}
-                      <span
-                        className={`text-[10px] font-typewriter uppercase tracking-wider ${m.isCompleted ? "text-green-500" : "text-slate-600"}`}
-                      >
-                        {m.isCompleted ? "✓ wykonana" : "⏳ w trakcie"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Day message ── */}
-        {isPlaying && !isHost && phase === "day" && (
-          <div className="mx-5 mt-4 p-4 rounded-xl bg-black/30 border border-slate-800 text-center">
-            <span className="material-symbols-outlined text-[28px] text-yellow-500/60 mb-1 block">
-              wb_sunny
-            </span>
-            <p className="text-slate-500 font-typewriter uppercase tracking-widest text-xs">
-              Dzień — dyskutujcie i szukajcie mafii
-            </p>
-          </div>
-        )}
+        {!isHost && <MissionsList missions={missions} showPoints={state.showPoints} />}
 
         {/* ── REVIEW ── */}
-        {isPlaying && phase === "review" && isHost && state.showPoints && (
-          <div className="mx-5 mt-5 p-5 rounded-xl bg-amber-950/20 border border-amber-700/30">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-[28px] text-amber-400">
-                rate_review
-              </span>
-              <div>
-                <p className="font-typewriter text-amber-400 text-sm font-bold uppercase tracking-widest">
-                  Przegląd misji
-                </p>
-                <p className="text-slate-500 text-xs mt-0.5">Oceń misje przed zakończeniem rundy</p>
-              </div>
-            </div>
-            {state.hostMissions
-              ?.filter((m) => !m.isCompleted)
-              .map((m) => (
-                <div
-                  key={m.id}
-                  className="flex items-center gap-3 p-3 mb-2 rounded-lg bg-black/30 border border-slate-800"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium">{m.playerNickname}</p>
-                    <p className="text-slate-400 text-xs mt-0.5">{m.description}</p>
-                    <p className="text-slate-600 text-xs">{m.points} pkt</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleCompleteMission(m.id)}
-                      className="size-9 flex items-center justify-center rounded-lg bg-green-900/30 border border-green-700/40 text-green-400 hover:bg-green-900/50 transition-all"
-                      title="Wykonana"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">check</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteMission(m.id)}
-                      className="size-9 flex items-center justify-center rounded-lg bg-red-900/30 border border-red-700/40 text-red-400 hover:bg-red-900/50 transition-all"
-                      title="Niewykonana — usuń"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">close</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            {(!state.hostMissions ||
-              state.hostMissions.filter((m) => !m.isCompleted).length === 0) && (
-              <p className="text-green-400/60 text-xs font-typewriter text-center mb-3">
-                ✓ Wszystkie misje ocenione
-              </p>
-            )}
-            <button
-              onClick={async () => {
-                const result = await apiClient.finalizeGame(token);
-                if (result.success) await refetch();
-              }}
-              className="w-full mt-3 flex items-center justify-center gap-2 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)]"
-            >
-              <span className="material-symbols-outlined text-[20px]">emoji_events</span>
-              Zakończ rundę
-            </button>
-          </div>
-        )}
-        {isPlaying && phase === "review" && !isHost && (
-          <div className="mx-5 mt-5 p-5 rounded-xl bg-black/30 border border-slate-800 text-center">
-            <span className="material-symbols-outlined text-[36px] text-amber-400/60 mb-2 block">
-              hourglass_empty
-            </span>
-            <p className="text-slate-400 font-typewriter uppercase tracking-widest text-sm">
-              MG ocenia misje...
-            </p>
-          </div>
+        {isPlaying && phase === "review" && (
+          <ReviewView
+            isHost={isHost}
+            token={token}
+            showPoints={state.showPoints}
+            hostMissions={state.hostMissions}
+            onComplete={handleCompleteMission}
+            onDelete={handleDeleteMission}
+            onRefetch={refetch}
+          />
         )}
 
         {/* ── FINISHED ── */}
@@ -695,175 +387,35 @@ export default function GameClient() {
         )}
 
         {/* ── Players list ── */}
-        <div className="mx-5 mt-5">
-          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3 pl-1">
-            Gracze ({players.length})
-          </p>
-          <div className="flex flex-col gap-2">
-            {players.map((p) => (
-              <PlayerRow
-                key={p.playerId}
-                player={p}
-                isGamePlaying={isPlaying || isFinished}
-                isFinished={isFinished}
-                isLobby={isLobby}
-                isHost={isHost}
-                currentPlayerRole={currentPlayer.role}
-                roleVisible={roleVisible}
-                onKick={isLobby && isHost ? handleKick : undefined}
-                onRename={undefined}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* ── Lobby: start button ── */}
-        {isHost && isLobby && (
-          <div className="mx-5 mt-6 flex flex-col gap-3">
-            {nonHostPlayers.length < (gameMode === "simple" ? 3 : 5) && (
-              <p className="text-slate-500 text-sm font-typewriter text-center">
-                Potrzeba minimum {gameMode === "simple" ? 3 : 5} graczy ({nonHostPlayers.length}/
-                {gameMode === "simple" ? 3 : 5})
-              </p>
-            )}
-            <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
-              <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
-                Tryb gry
-              </p>
-              <div className="flex gap-2">
-                {(["full", "simple"] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setGameMode(mode)}
-                    className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-typewriter border transition-all text-center ${gameMode === mode ? "bg-primary/20 border-primary/50 text-primary" : "border-slate-700 text-slate-400 hover:border-slate-500"}`}
-                  >
-                    <span className="block font-bold">
-                      {mode === "full" ? "Pełny" : "Uproszczony"}
-                    </span>
-                    <span className="block text-xs opacity-60 mt-0.5">
-                      {mode === "full" ? "Mafia + Policjant + Lekarz" : "Mafia vs Cywile"}
-                    </span>
-                    <span className="block text-xs opacity-40">
-                      min. {mode === "full" ? 5 : 3} graczy
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            {nonHostPlayers.length >= (gameMode === "simple" ? 3 : 5) && (
-              <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
-                <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
-                  Liczba mafii
-                </p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    onClick={() => setMafiaCount(0)}
-                    className={`px-3 py-2 rounded-lg text-sm font-typewriter uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-primary/20 border-primary/50 text-primary" : "border-slate-700 text-slate-400 hover:border-slate-500"}`}
-                  >
-                    Auto (
-                    {nonHostPlayers.length <= 5
-                      ? 1
-                      : nonHostPlayers.length <= 8
-                        ? 2
-                        : nonHostPlayers.length <= 11
-                          ? 3
-                          : 4}
-                    )
-                  </button>
-                  {Array.from(
-                    { length: Math.max(1, nonHostPlayers.length - 3) },
-                    (_, i) => i + 1
-                  ).map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => setMafiaCount(n)}
-                      className={`w-10 h-10 rounded-lg text-sm font-bold font-typewriter border transition-all ${mafiaCount === n ? "bg-primary/20 border-primary/50 text-primary" : "border-slate-700 text-slate-400 hover:border-slate-500"}`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-slate-600 text-xs mt-2">
-                  {gameMode === "full" ? "+ 1 policjant, 1 lekarz, reszta cywile" : "reszta cywile"}
-                </p>
-              </div>
-            )}
-            <button
-              onClick={handleStartWrapper}
-              disabled={starting || nonHostPlayers.length < (gameMode === "simple" ? 3 : 5)}
-              className="flex w-full items-center justify-center rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-typewriter uppercase tracking-wider"
-            >
-              <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
-              {starting ? "Startuję..." : "Rozpocznij grę"}
-            </button>
-            <LobbyTransferGm players={nonHostPlayers} onTransfer={handleTransferGm} />
-          </div>
-        )}
+        <PlayersList
+          players={players}
+          isPlaying={isPlaying}
+          isFinished={isFinished}
+          isLobby={isLobby}
+          isHost={isHost}
+          currentPlayerRole={currentPlayer.role || undefined}
+          roleVisible={roleVisible}
+          onKick={handleKick}
+        />
       </div>
 
-      {/* Settings Modal */}
-      {showSettingsModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-white font-bold text-lg mb-4 font-typewriter">Ustawienia gracza</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-slate-400 text-sm mb-2 font-typewriter">Nazwa</label>
-                <input
-                  type="text"
-                  value={state?.currentPlayer?.nickname || ""}
-                  readOnly
-                  className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white"
-                />
-              </div>
-              {characters.length > 0 && !currentPlayer.isHost && (
-                <div>
-                  <label className="block text-slate-400 text-sm mb-3 font-typewriter">
-                    Postać
-                  </label>
-                  <CharacterPicker
-                    characters={characters}
-                    selectedId={selectedCharacterId}
-                    onSelect={setSelectedCharacterId}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded font-typewriter transition-colors"
-              >
-                Anuluj
-              </button>
-              {!currentPlayer.isHost && (
-                <button
-                  onClick={handleCharacterUpdateWrapper}
-                  disabled={
-                    !selectedCharacterId ||
-                    selectedCharacterId === state?.currentPlayer?.character?.id
-                  }
-                  className="flex-1 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded font-typewriter transition-colors"
-                >
-                  Zapisz
-                </button>
-              )}
-            </div>
-            {!currentPlayer.isHost && (
-              <button
-                onClick={() => {
-                  setShowSettingsModal(false);
-                  handleLeave();
-                }}
-                className="w-full mt-4 py-2 bg-red-900/50 hover:bg-red-800/50 border border-red-700/50 text-red-300 rounded font-typewriter transition-colors flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[16px]">logout</span>
-                Opuść grę
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+      <SettingsModal
+        isVisible={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        playerNickname={state?.currentPlayer?.nickname || ""}
+        currentPlayer={{
+          isHost: currentPlayer.isHost,
+          character: currentPlayer.character ? { id: currentPlayer.character.id } : undefined,
+        }}
+        characters={characters}
+        selectedCharacterId={selectedCharacterId}
+        onCharacterSelect={setSelectedCharacterId}
+        onSave={handleCharacterUpdateWrapper}
+        onLeaveGame={() => {
+          setShowSettingsModal(false);
+          handleLeave();
+        }}
+      />
     </div>
   );
 }
