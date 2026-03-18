@@ -14,7 +14,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    console.error("Phase change error:", err);
     return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
   }
 }
