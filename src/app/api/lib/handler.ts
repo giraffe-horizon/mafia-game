@@ -34,6 +34,8 @@ export function withApiHandlerNoToken(
         req.nextUrl.pathname,
         req.method,
         req.nextUrl.pathname,
+        req.method,
+        req.nextUrl.pathname,
         error instanceof Error ? error.message : error
       );
 
@@ -59,7 +61,9 @@ export function withApiHandlerMission(
   ) => {
     try {
       const { token, missionId } = await params;
-      const db = await getDb();
+        "API Error [%s %s]:",
+        req.method,
+        req.nextUrl.pathname,
       return await handler(req, { db, token, missionId });
         "API Error [%s %s]:",
         req.method,
@@ -82,7 +86,9 @@ export function withApiHandlerMission(
 
 export function withApiHandler(
   handler: (req: NextRequest, ctx: ApiContextWithToken) => Promise<NextResponse>
-) {
+        "API Error [%s %s]:",
+        req.method,
+        req.nextUrl.pathname,
   return async (req: NextRequest, { params }: { params: Promise<{ token: string }> }) => {
     try {
       const { token } = await params;
