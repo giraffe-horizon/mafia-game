@@ -501,7 +501,13 @@ export default function GameClient() {
   const isFinished = game.status === "finished";
   const phase = game.phase;
   const myAction = changingDecision ? null : state.myAction;
-  const actionTargets = players.filter((p) => p.isAlive && !p.isYou && !p.isHost);
+  const actionTargets = players.filter(
+    (p) =>
+      p.isAlive &&
+      !p.isYou &&
+      !p.isHost &&
+      !(roleVisible && currentPlayer.role === "mafia" && p.role === "mafia")
+  );
   const nonHostPlayers = players.filter((p) => !p.isHost);
   const joinUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/?code=${game.code}`;
 
