@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import type {
   D1Database,
   D1PreparedStatement,
@@ -14,6 +13,7 @@ import type {
   PublicPlayer,
   GameStateResponse,
 } from "@/db/types";
+import { generateSessionCode, now, buildRoles, nanoid } from "@/db/helpers";
 
 // Re-export types for backwards compatibility
 export type {
@@ -32,20 +32,8 @@ export type {
   GameStateResponse,
 } from "@/db/types";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-function generateSessionCode(): string {
-  // 6 chars, easy to read/type: no 0/O, no 1/I/L, no 5/S, no 8/B
-  const chars = "ACDEFGHJKMNPQRTUVWXY234679";
-  let s = "";
-  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return s;
-}
-
-function now(): string {
-  return new Date().toISOString();
-}
+// Re-export helpers for backwards compatibility
+export { generateSessionCode, now, buildRoles, nanoid } from "@/db/helpers";
 
 async function getMafiaKillActions(
   db: D1Database,
@@ -655,42 +643,6 @@ async function getMafiaTeamActions(
 // Always: 1 detective, 1 doctor, rest civilians
 // mode: "full" = mafia + detective + doctor + civilians (min 4 players)
 //       "simple" = mafia + civilians only (min 2 players, no special roles)
-function buildRoles(
-  n: number,
-  customMafiaCount?: number,
-  mode: "full" | "simple" = "full"
-): Role[] {
-  let mafiaCount: number;
-
-  if (mode === "simple") {
-    // Simple mode: just mafia vs civilians, no special roles
-    if (customMafiaCount !== undefined && customMafiaCount >= 1 && customMafiaCount <= n - 1) {
-      mafiaCount = customMafiaCount;
-    } else {
-      mafiaCount = Math.max(1, Math.floor(n / 3));
-    }
-    return [
-      ...Array<Role>(mafiaCount).fill("mafia"),
-      ...Array<Role>(n - mafiaCount).fill("civilian"),
-    ];
-  }
-
-  // Full mode: mafia + detective + doctor + civilians
-  if (customMafiaCount !== undefined && customMafiaCount >= 1 && customMafiaCount <= n - 3) {
-    mafiaCount = customMafiaCount;
-  } else {
-    if (n <= 5) mafiaCount = 1;
-    else if (n <= 8) mafiaCount = 2;
-    else if (n <= 11) mafiaCount = 3;
-    else mafiaCount = 4;
-  }
-  return [
-    ...Array<Role>(mafiaCount).fill("mafia"),
-    "detective",
-    "doctor",
-    ...Array<Role>(Math.max(0, n - mafiaCount - 2)).fill("civilian"),
-  ];
-}
 
 export async function startGame(
   db: D1Database,
