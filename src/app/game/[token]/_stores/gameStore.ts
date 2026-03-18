@@ -114,18 +114,16 @@ export const useGameStore = create<GameState>((set, get) => ({
       clearTimeout(state._intervalRef);
     }
 
-    const intervalId = setTimeout(() => {
-      // Don't poll when tab is not visible
-      if (document.visibilityState === "hidden") {
-        // Reschedule when tab becomes visible
-        get()._scheduleNext();
-        return;
-      }
+    // Don't schedule when tab is hidden — visibility handler will restart polling
+    if (document.visibilityState === "hidden") {
+      set({ _intervalRef: null });
+      return;
+    }
 
+    const intervalId = setTimeout(() => {
       get()
         .refetch()
         .then(() => {
-          // Schedule next poll with current backoff delay
           get()._scheduleNext();
         });
     }, state._backoffDelay);
