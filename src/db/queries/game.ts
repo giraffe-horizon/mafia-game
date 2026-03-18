@@ -394,7 +394,7 @@ export async function rematch(
   if (currentGameRow.status !== "finished")
     return { success: false, error: "Gra nie jest jeszcze zakończona" };
 
-  // Reset game to lobby in-place — tokens stay the same
+  // Reset game to lobby in-place — tokens stay the same, round preserved for multi-round tracking
   await db.batch([
     db
       .prepare(
@@ -404,6 +404,9 @@ export async function rematch(
     db
       .prepare("UPDATE game_players SET role = NULL, is_alive = 1 WHERE game_id = ?")
       .bind(currentGameRow.id),
+    db.prepare("DELETE FROM game_actions WHERE game_id = ?").bind(currentGameRow.id),
+    db.prepare("DELETE FROM messages WHERE game_id = ?").bind(currentGameRow.id),
+    db.prepare("DELETE FROM missions WHERE game_id = ?").bind(currentGameRow.id),
   ]);
 
   return { success: true };

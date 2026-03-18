@@ -44,9 +44,9 @@ export async function startGame(
   await db.batch([
     db
       .prepare(
-        "UPDATE games SET status = 'playing', phase = 'night', round = 1, config = ? WHERE id = ?"
+        "UPDATE games SET status = 'playing', phase = 'night', round = ?, config = ? WHERE id = ?"
       )
-      .bind(JSON.stringify({ mode }), playerRow.game_id),
+      .bind(gameRow.round + 1, JSON.stringify({ mode }), playerRow.game_id),
     db
       .prepare("UPDATE game_players SET role = 'gm' WHERE game_id = ? AND player_id = ?")
       .bind(playerRow.game_id, playerRow.player_id),
