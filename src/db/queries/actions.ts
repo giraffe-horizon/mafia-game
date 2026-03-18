@@ -305,6 +305,19 @@ export async function submitAction(
       return { success: false, error: "Tylko detektyw może sprawdzać" };
     if (actionType === "protect" && playerRow.role !== "doctor")
       return { success: false, error: "Tylko doktor może chronić" };
+
+    // Doctor cannot protect the same player two rounds in a row
+    if (actionType === "protect" && targetPlayerId && gameRow.round > 1) {
+      const lastProtect = await db
+        .prepare(
+          "SELECT target_player_id FROM game_actions WHERE game_id = ? AND player_id = ? AND action_type = 'protect' AND round = ? LIMIT 1"
+        )
+        .bind(gameRow.id, playerRow.player_id, gameRow.round - 1)
+        .first<{ target_player_id: string }>();
+      if (lastProtect && lastProtect.target_player_id === targetPlayerId) {
+        return { success: false, error: "Nie możesz chronić tego samego gracza dwa razy z rzędu" };
+      }
+    }
     if (!["kill", "investigate", "protect", "wait"].includes(actionType))
       return { success: false, error: "Nieprawidłowa akcja nocna" };
   } else if (gameRow.phase === "voting") {
