@@ -162,7 +162,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
       {/* Section 2: Round scores */}
       {roundScores.length > 0 && (
         <div className="mt-5">
-          <SectionHeader className="mb-3 pl-1">Punkty za rundę {roundNumber}</SectionHeader>
+          <SectionHeader className="mb-3 pl-1">Punkty za rundę {totalRounds || 1}</SectionHeader>
           <Card className="overflow-hidden">
             <table className="w-full text-sm font-typewriter">
               <thead>
@@ -285,41 +285,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
         </div>
       )}
 
-      {/* Player roles */}
-      <SectionHeader className="mt-5 mb-3 pl-1">Role graczy</SectionHeader>
-      <div className="flex flex-col gap-2">
-        {players
-          .filter((p) => !p.isHost)
-          .map((p) => (
-            <StatusItem
-              key={p.playerId}
-              className={
-                p.isAlive
-                  ? "border-slate-700 bg-black/20"
-                  : "border-slate-800 bg-black/10 opacity-50"
-              }
-              icon={
-                <span
-                  className={`material-symbols-outlined text-[22px] ${p.role ? ROLE_COLORS[p.role] : "text-slate-500"}`}
-                >
-                  {p.role ? ROLE_ICONS[p.role] : "person"}
-                </span>
-              }
-              label={p.nickname}
-              labelClassName="text-white"
-              trailing={
-                p.role ? (
-                  <Badge
-                    variant={p.role as "mafia" | "detective" | "doctor" | "civilian"}
-                    className="py-0.5"
-                  >
-                    {ROLE_LABELS[p.role]}
-                  </Badge>
-                ) : undefined
-              }
-            />
-          ))}
-      </div>
+      {/* Player roles — removed, already shown in PlayersList below */}
     </div>
   );
 }
