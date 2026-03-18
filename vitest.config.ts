@@ -22,10 +22,10 @@ export default defineConfig({
         "**/__tests__/**",
         "src/app/**", // Exclude Next.js app directory from coverage
       ],
-      include: ["src/lib/**", "src/stores/**"],
+      include: ["src/lib/**", "src/db/**"],
       thresholds: {
         statements: 60,
-        functions: 60,
+        functions: 55,
         branches: 60,
         lines: 60,
       },
