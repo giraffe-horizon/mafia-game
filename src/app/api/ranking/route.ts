@@ -1,30 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import type { D1Database } from "@/lib/db";
+import { withApiHandlerNoToken } from "@/app/api/lib/handler";
 
-export async function GET(req: NextRequest) {
-  try {
-    const { env } = await getCloudflareContext();
-    const db = (env as { DB: D1Database }).DB;
+export const GET = withApiHandlerNoToken(async (req: NextRequest, { db }) => {
+  const token = req.nextUrl.searchParams.get("token");
+  if (!token) {
+    return NextResponse.json({ error: "Podaj token" }, { status: 400 });
+  }
 
-    const token = req.nextUrl.searchParams.get("token");
-    if (!token) {
-      return NextResponse.json({ error: "Podaj token" }, { status: 400 });
-    }
+  // Find game by token
+  const player = await db
+    .prepare("SELECT game_id FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<{ game_id: string }>();
+  if (!player) {
+    return NextResponse.json({ error: "Nie znaleziono sesji" }, { status: 404 });
+  }
 
-    // Find game by token
-    const player = await db
-      .prepare("SELECT game_id FROM game_players WHERE token = ?")
-      .bind(token)
-      .first<{ game_id: string }>();
-    if (!player) {
-      return NextResponse.json({ error: "Nie znaleziono sesji" }, { status: 404 });
-    }
-
-    // Get all players in this game session with their stats
-    const { results } = await db
-      .prepare(
-        `SELECT
+  // Get all players in this game session with their stats
+  const { results } = await db
+    .prepare(
+      `SELECT
            gp.player_id,
            gp.nickname,
            gp.role,
@@ -56,58 +51,55 @@ export async function GET(req: NextRequest) {
          FROM game_players gp
          WHERE gp.game_id = ? AND gp.is_host = 0
          ORDER BY mission_points DESC, gp.nickname ASC`
-      )
-      .bind(player.game_id)
-      .all<{
-        player_id: string;
-        nickname: string;
-        role: string | null;
-        is_alive: number;
-        is_host: number;
-        mission_points: number;
-        missions_done: number;
-        missions_total: number;
-      }>();
+    )
+    .bind(player.game_id)
+    .all<{
+      player_id: string;
+      nickname: string;
+      role: string | null;
+      is_alive: number;
+      is_host: number;
+      mission_points: number;
+      missions_done: number;
+      missions_total: number;
+    }>();
 
-    // Get game info
-    const game = await db
-      .prepare("SELECT status, winner, round FROM games WHERE id = ?")
-      .bind(player.game_id)
-      .first<{ status: string; winner: string | null; round: number }>();
+  // Get game info
+  const game = await db
+    .prepare("SELECT status, winner, round FROM games WHERE id = ?")
+    .bind(player.game_id)
+    .first<{ status: string; winner: string | null; round: number }>();
 
-    const ranking = results.map((r) => ({
-      playerId: r.player_id,
-      nickname: r.nickname,
-      role: r.role,
-      isAlive: r.is_alive === 1,
-      missionPoints: r.mission_points,
-      missionsDone: r.missions_done,
-      missionsTotal: r.missions_total,
-      survived: r.is_alive === 1,
-      won: game?.winner
+  const ranking = results.map((r) => ({
+    playerId: r.player_id,
+    nickname: r.nickname,
+    role: r.role,
+    isAlive: r.is_alive === 1,
+    missionPoints: r.mission_points,
+    missionsDone: r.missions_done,
+    missionsTotal: r.missions_total,
+    survived: r.is_alive === 1,
+    won: game?.winner
+      ? (game.winner === "mafia" && r.role === "mafia") ||
+        (game.winner === "town" && r.role !== "mafia")
+      : false,
+    totalScore:
+      r.mission_points +
+      (r.is_alive === 1 ? 1 : 0) +
+      (game?.winner
         ? (game.winner === "mafia" && r.role === "mafia") ||
           (game.winner === "town" && r.role !== "mafia")
-        : false,
-      totalScore:
-        r.mission_points +
-        (r.is_alive === 1 ? 1 : 0) +
-        (game?.winner
-          ? (game.winner === "mafia" && r.role === "mafia") ||
-            (game.winner === "town" && r.role !== "mafia")
-            ? 3
-            : 0
-          : 0),
-    }));
+          ? 3
+          : 0
+        : 0),
+  }));
 
-    ranking.sort((a, b) => b.totalScore - a.totalScore);
+  ranking.sort((a, b) => b.totalScore - a.totalScore);
 
-    return NextResponse.json({
-      ranking,
-      gameStatus: game?.status ?? "lobby",
-      winner: game?.winner ?? null,
-      round: game?.round ?? 0,
-    });
-  } catch {
-    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
-  }
-}
+  return NextResponse.json({
+    ranking,
+    gameStatus: game?.status ?? "lobby",
+    winner: game?.winner ?? null,
+    round: game?.round ?? 0,
+  });
+});

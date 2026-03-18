@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { startGame, type D1Database } from "@/lib/db";
+import { withApiHandler } from "@/app/api/lib/handler";
+import { startGame } from "@/lib/db";
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  const { env } = await getCloudflareContext();
-  const db = (env as { DB: D1Database }).DB;
-
+export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   let mafiaCount: number | undefined;
   let mode: "full" | "simple" = "full";
   try {
@@ -26,4 +22,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
   return NextResponse.json({ success: true });
-}
+});
