@@ -1484,7 +1484,7 @@ describe("Database Integration Tests (SQLite)", () => {
     }
 
     it("should eliminate target when both mafia choose the same target", async () => {
-      const { hostToken, mafia1, mafia2, civilian, mafia1Token, mafia2Token } =
+      const { hostToken, _mafia1, _mafia2, civilian, mafia1Token, mafia2Token } =
         await setupMafiaGame();
 
       // Both mafia vote for the same target
@@ -1501,7 +1501,7 @@ describe("Database Integration Tests (SQLite)", () => {
     });
 
     it("should not eliminate anyone when mafia choose different targets", async () => {
-      const { hostToken, mafia1, mafia2, civilian, detective, mafia1Token, mafia2Token } =
+      const { hostToken, _mafia1, _mafia2, civilian, detective, mafia1Token, mafia2Token } =
         await setupMafiaGame();
 
       // Mafia vote for different targets
@@ -1521,7 +1521,7 @@ describe("Database Integration Tests (SQLite)", () => {
     });
 
     it("should eliminate target when solo mafia votes", async () => {
-      const { hostToken, mafia1, mafia2, civilian, mafia1Token } = await setupMafiaGame();
+      const { hostToken, _mafia1, mafia2, civilian, mafia1Token } = await setupMafiaGame();
 
       // Eliminate one mafia first to create solo scenario
       await mockDb
@@ -1542,7 +1542,7 @@ describe("Database Integration Tests (SQLite)", () => {
     });
 
     it("should not eliminate anyone when not all mafia vote", async () => {
-      const { hostToken, mafia1, civilian, mafia1Token } = await setupMafiaGame();
+      const { hostToken, _mafia1, civilian, mafia1Token } = await setupMafiaGame();
 
       // Only one of two mafia votes
       await db.submitAction(mockDb, mafia1Token, "kill", civilian!.playerId);
@@ -1558,8 +1558,16 @@ describe("Database Integration Tests (SQLite)", () => {
     });
 
     it("should respect doctor protection even with unanimous mafia vote", async () => {
-      const { hostToken, mafia1, mafia2, civilian, doctor, mafia1Token, mafia2Token, doctorToken } =
-        await setupMafiaGame();
+      const {
+        hostToken,
+        _mafia1,
+        _mafia2,
+        civilian,
+        _doctor,
+        mafia1Token,
+        mafia2Token,
+        doctorToken,
+      } = await setupMafiaGame();
 
       // Both mafia vote for the same target
       await db.submitAction(mockDb, mafia1Token, "kill", civilian!.playerId);

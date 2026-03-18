@@ -270,8 +270,8 @@ async function getPhaseProgress(
     // Check mafia consensus
     const { aliveMafia, killActions } = await getMafiaKillActions(db, gameRow.id, round);
 
-    let consensusWarning = "";
     let mafiaUnanimous: boolean;
+    let hasConsensusIssue = false;
 
     if (aliveMafia.length > 1) {
       const mafiaPlayerIds = new Set(aliveMafia.map((m) => m.player_id));
@@ -283,10 +283,9 @@ async function getPhaseProgress(
         const unanimous = targets.length === 1 && allMafiaVoted;
 
         mafiaUnanimous = unanimous;
+        hasConsensusIssue = targets.length > 1;
 
-        if (targets.length > 1) {
-          consensusWarning = " ⚠️ Mafia nie jest zgodna!";
-        } else if (!allMafiaVoted) {
+        if (!allMafiaVoted) {
           mafiaUnanimous = false;
         }
       } else {
@@ -306,7 +305,7 @@ async function getPhaseProgress(
       ? "Wszystkie akcje złożone! Przejdź do dnia."
       : `Czekaj na akcje nocne. Brakuje: ${missingRoles.join(", ")}.`;
 
-    const hint = baseHint + consensusWarning;
+    const hint = baseHint + (hasConsensusIssue ? " ⚠️ Mafia nie jest zgodna!" : "");
 
     return {
       phase,
