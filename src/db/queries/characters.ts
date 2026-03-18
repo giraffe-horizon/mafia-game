@@ -13,38 +13,26 @@ export async function updateCharacter(
   db: D1Database,
   token: string,
   characterId: string
-): Promise<{ success: boolean; error?: string }> {
-  const playerRow = await db
-    .prepare("SELECT * FROM game_players WHERE token = ?")
-    .bind(token)
-    .first<GamePlayerRow>();
-
-  if (!playerRow) return { success: false, error: "Nieprawidłowy token gracza" };
-
-  // Check if character exists and is active
+): Promise<boolean> {
+  // Validate that the character exists and is active
   const character = await db
-    .prepare("SELECT * FROM characters WHERE id = ? AND is_active = 1")
+    .prepare("SELECT id FROM characters WHERE id = ? AND is_active = 1")
     .bind(characterId)
-    .first<CharacterRow>();
+    .first<{ id: string }>();
+  if (!character) return false;
 
-  if (!character) return { success: false, error: "Postać nie istnieje lub jest nieaktywna" };
+  // Find the player by token
+  const player = await db
+    .prepare("SELECT game_id, player_id FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<{ game_id: string; player_id: string }>();
+  if (!player) return false;
 
-  // Check if character is already taken by another player in this game
-  const { results: existingAssignment } = await db
-    .prepare(
-      "SELECT COUNT(*) as count FROM game_players WHERE game_id = ? AND character_id = ? AND player_id != ?"
-    )
-    .bind(playerRow.game_id, characterId, playerRow.player_id)
-    .all<{ count: number }>();
-
-  if (existingAssignment[0]?.count > 0) {
-    return { success: false, error: "Ta postać jest już zajęta przez innego gracza" };
-  }
-
+  // Update the character
   await db
     .prepare("UPDATE game_players SET character_id = ? WHERE token = ?")
     .bind(characterId, token)
     .run();
 
-  return { success: true };
+  return true;
 }

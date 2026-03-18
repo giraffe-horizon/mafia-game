@@ -18,7 +18,7 @@ export async function getMafiaKillActions(
 
   const { results: killActions } = await db
     .prepare(
-      "SELECT player_id, target_player_id FROM game_actions WHERE game_id = ? AND round = ? AND action_type = 'kill'"
+      "SELECT player_id, target_player_id FROM game_actions WHERE game_id = ? AND round = ? AND phase = 'night' AND action_type = 'kill'"
     )
     .bind(gameId, round)
     .all<{ player_id: string; target_player_id: string }>();
@@ -39,104 +39,141 @@ export async function getPhaseProgress(
 }> {
   const { phase, round } = gameRow;
 
-  // Get all actions in current round/phase
+  // Only return progress for specific phases during gameplay
+  if (gameRow.status !== "playing")
+    return {
+      phase,
+      requiredActions: [],
+      allDone: true,
+      hint: "",
+      mafiaUnanimous: true,
+    };
+  if (phase === "review" || phase === "lobby" || phase === "ended")
+    return {
+      phase,
+      requiredActions: [],
+      allDone: true,
+      hint: "",
+      mafiaUnanimous: true,
+    };
+
+  const alivePlayers = allPlayers.filter((p) => p.is_alive === 1);
+  const aliveNonHost = alivePlayers.filter((p) => p.is_host === 0);
+
+  if (phase === "day") {
+    return {
+      phase,
+      requiredActions: [],
+      allDone: true,
+      hint: "Czas na dyskusję. Przejdź do głosowania gdy gracze są gotowi.",
+      mafiaUnanimous: true, // Not applicable during day
+    };
+  }
+
+  // Get actions for current phase/round
   const { results: actions } = await db
-    .prepare("SELECT * FROM game_actions WHERE game_id = ? AND round = ? AND phase = ?")
+    .prepare("SELECT player_id FROM game_actions WHERE game_id = ? AND round = ? AND phase = ?")
     .bind(gameRow.id, round, phase)
-    .all<{ player_id: string; action_type: string }>();
+    .all<{ player_id: string }>();
 
-  const actionsByPlayer = new Map<string, string[]>();
-  actions.forEach((a) => {
-    if (!actionsByPlayer.has(a.player_id)) actionsByPlayer.set(a.player_id, []);
-    actionsByPlayer.get(a.player_id)!.push(a.action_type);
-  });
-
-  const alivePlayers = allPlayers.filter((p) => p.is_alive && !p.is_host);
-  const requiredActions: { playerId: string; nickname: string; role: string; done: boolean }[] = [];
-
-  let mafiaUnanimous = false;
+  const actedPlayerIds = new Set(actions.map((a) => a.player_id));
 
   if (phase === "night") {
+    // Required: mafia (kill), detective (investigate), doctor (protect)
+    const requiredRoles = ["mafia", "detective", "doctor"];
+    const requiredActions = aliveNonHost
+      .filter((p) => requiredRoles.includes(p.role!))
+      .map((p) => ({
+        playerId: p.player_id,
+        nickname: p.nickname,
+        role: p.role!,
+        done: actedPlayerIds.has(p.player_id),
+      }));
+
+    const missingRoles = requiredActions.filter((a) => !a.done).map((a) => a.role);
+
     // Check mafia consensus
     const { aliveMafia, killActions } = await getMafiaKillActions(db, gameRow.id, round);
 
-    mafiaUnanimous = (() => {
-      if (aliveMafia.length === 0) {
-        return true; // No mafia left
-      } else if (aliveMafia.length === 1) {
-        return killActions.length === 1;
-      } else {
-        // Multi-mafia: need consensus (same target)
-        if (killActions.length < aliveMafia.length) {
-          return false;
-        } else {
-          const targets = new Set(killActions.map((k) => k.target_player_id || ""));
-          return targets.size === 1;
+    let mafiaUnanimous: boolean;
+    let hasConsensusIssue = false;
+
+    if (aliveMafia.length > 1) {
+      const mafiaPlayerIds = new Set(aliveMafia.map((m) => m.player_id));
+      const mafiaKillActions = killActions.filter((action) => mafiaPlayerIds.has(action.player_id));
+
+      if (mafiaKillActions.length > 0) {
+        const targets = [...new Set(mafiaKillActions.map((action) => action.target_player_id))];
+        const allMafiaVoted = mafiaKillActions.length === aliveMafia.length;
+        const unanimous = targets.length === 1 && allMafiaVoted;
+
+        mafiaUnanimous = unanimous;
+        hasConsensusIssue = targets.length > 1;
+
+        if (!allMafiaVoted) {
+          mafiaUnanimous = false;
         }
+      } else {
+        // No votes yet, not unanimous
+        mafiaUnanimous = false;
       }
-    })();
+    } else if (aliveMafia.length === 1) {
+      // Single mafia member, unanimous if they voted
+      mafiaUnanimous = killActions.length > 0;
+    } else {
+      // No mafia alive, considered unanimous
+      mafiaUnanimous = true;
+    }
 
-    // Track individual mafia actions
-    aliveMafia.forEach((m) => {
-      const playerData = allPlayers.find((p) => p.player_id === m.player_id);
-      requiredActions.push({
-        playerId: m.player_id,
-        nickname: playerData?.nickname || "Unknown",
-        role: "mafia",
-        done: actionsByPlayer.get(m.player_id)?.includes("kill") || false,
-      });
-    });
+    const allDone = missingRoles.length === 0 && mafiaUnanimous;
+    const baseHint = allDone
+      ? "Wszystkie akcje złożone! Przejdź do dnia."
+      : `Czekaj na akcje nocne. Brakuje: ${missingRoles.join(", ")}.`;
 
-    // Track special roles
-    alivePlayers
-      .filter((p) => p.role === "detective" || p.role === "doctor")
-      .forEach((p) => {
-        const expectedAction = p.role === "detective" ? "investigate" : "protect";
-        requiredActions.push({
-          playerId: p.player_id,
-          nickname: p.nickname,
-          role: p.role || "unknown",
-          done: actionsByPlayer.get(p.player_id)?.includes(expectedAction) || false,
-        });
-      });
-  } else if (phase === "voting") {
-    // All alive non-host players must vote
-    alivePlayers.forEach((p) => {
-      requiredActions.push({
-        playerId: p.player_id,
-        nickname: p.nickname,
-        role: p.role || "unknown",
-        done: actionsByPlayer.get(p.player_id)?.includes("vote") || false,
-      });
-    });
+    const hint = baseHint + (hasConsensusIssue ? " ⚠️ Mafia nie jest zgodna!" : "");
+
+    return {
+      phase,
+      requiredActions,
+      allDone,
+      hint,
+      mafiaUnanimous,
+    };
   }
 
-  const allDone = requiredActions.every((r) => r.done) && (phase !== "night" || mafiaUnanimous);
+  if (phase === "voting") {
+    // Required: ALL alive non-host players
+    const requiredActions = aliveNonHost.map((p) => ({
+      playerId: p.player_id,
+      nickname: p.nickname,
+      role: p.role!,
+      done: actedPlayerIds.has(p.player_id),
+    }));
 
-  let hint = "";
-  if (phase === "night") {
-    const pendingMafia = requiredActions.filter((r) => r.role === "mafia" && !r.done);
-    const pendingSpecial = requiredActions.filter(
-      (r) => (r.role === "detective" || r.role === "doctor") && !r.done
-    );
+    const votedCount = requiredActions.filter((a) => a.done).length;
+    const totalVoters = requiredActions.length;
+    const allDone = votedCount === totalVoters;
 
-    if (pendingMafia.length > 0) {
-      hint += `Mafia: ${pendingMafia.map((p) => p.nickname).join(", ")} - wybierz cel do zabicia. `;
-    }
-    if (pendingSpecial.length > 0) {
-      hint += `Oczekuje na: ${pendingSpecial.map((p) => `${p.nickname} (${p.role})`).join(", ")}`;
-    }
-    if (!mafiaUnanimous && pendingMafia.length === 0) {
-      hint += "Mafia musi osiągnąć jednomyślność w wyborze celu.";
-    }
-  } else if (phase === "voting") {
-    const pendingVoters = requiredActions.filter((r) => !r.done);
-    if (pendingVoters.length > 0) {
-      hint = `Oczekuje na głosy: ${pendingVoters.map((p) => p.nickname).join(", ")}`;
-    }
+    const hint = allDone
+      ? "Wszyscy zagłosowali! Ogłoś wynik."
+      : `Trwa głosowanie. ${votedCount}/${totalVoters} głosów.`;
+
+    return {
+      phase,
+      requiredActions,
+      allDone,
+      hint,
+      mafiaUnanimous: true, // Not applicable during voting
+    };
   }
 
-  return { phase, requiredActions, allDone, hint, mafiaUnanimous };
+  return {
+    phase,
+    requiredActions: [],
+    allDone: true,
+    hint: "",
+    mafiaUnanimous: true,
+  };
 }
 
 export async function getVoteTally(
@@ -152,22 +189,19 @@ export async function getVoteTally(
     return { totalVoters: 0, votedCount: 0, results: [] };
   }
 
-  const alivePlayers = allPlayers.filter((p) => p.is_alive && !p.is_host);
-  const totalVoters = alivePlayers.length;
+  const aliveNonHost = allPlayers.filter((p) => p.is_alive && !p.is_host);
+  const totalVoters = aliveNonHost.length;
 
   const { results: votes } = await db
     .prepare(
-      `SELECT target_player_id, COUNT(*) as count
-       FROM game_actions
-       WHERE game_id = ? AND round = ? AND action_type = 'vote'
-       GROUP BY target_player_id`
+      "SELECT target_player_id, COUNT(*) as vote_count FROM game_actions WHERE game_id = ? AND round = ? AND phase = 'voting' AND action_type = 'vote' AND target_player_id IS NOT NULL GROUP BY target_player_id ORDER BY vote_count DESC"
     )
     .bind(gameRow.id, gameRow.round)
-    .all<{ target_player_id: string; count: number }>();
+    .all<{ target_player_id: string; vote_count: number }>();
 
   const { results: allVotes } = await db
     .prepare(
-      "SELECT COUNT(*) as total FROM game_actions WHERE game_id = ? AND round = ? AND action_type = 'vote'"
+      "SELECT COUNT(*) as total FROM game_actions WHERE game_id = ? AND round = ? AND phase = 'voting' AND action_type = 'vote'"
     )
     .bind(gameRow.id, gameRow.round)
     .all<{ total: number }>();
@@ -179,7 +213,7 @@ export async function getVoteTally(
     return {
       nickname: targetPlayer?.nickname || "Unknown",
       playerId: v.target_player_id,
-      votes: v.count,
+      votes: v.vote_count,
     };
   });
 
@@ -233,53 +267,76 @@ export async function submitAction(
   token: string,
   actionType: string,
   targetPlayerId?: string,
-  _forPlayerId?: string
+  forPlayerId?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const playerRow = await db
+  const callerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
     .bind(token)
     .first<GamePlayerRow>();
-  if (!playerRow) return { success: false, error: "Nieprawidłowy token gracza" };
+  if (!callerRow) return { success: false, error: "Nie znaleziono gracza" };
 
   const gameRow = await db
     .prepare("SELECT * FROM games WHERE id = ?")
-    .bind(playerRow.game_id)
+    .bind(callerRow.game_id)
     .first<GameRow>();
-  if (!gameRow) return { success: false, error: "Gra nie istnieje" };
-  if (gameRow.status !== "playing") return { success: false, error: "Gra nie trwa" };
-  if (!playerRow.is_alive) return { success: false, error: "Nie żyjesz" };
+  if (!gameRow || gameRow.status !== "playing") return { success: false, error: "Gra nie trwa" };
 
-  // Validate action based on phase and role
-  if (gameRow.phase === "night") {
-    if (actionType === "kill" && playerRow.role !== "mafia") {
-      return { success: false, error: "Tylko mafia może zabijać w nocy" };
-    }
-    if (actionType === "investigate" && playerRow.role !== "detective") {
-      return { success: false, error: "Tylko detektyw może badać" };
-    }
-    if (actionType === "protect" && playerRow.role !== "doctor") {
-      return { success: false, error: "Tylko doktor może chronić" };
-    }
-  } else if (gameRow.phase === "voting") {
-    if (actionType !== "vote") {
-      return { success: false, error: "W fazie głosowania można tylko głosować" };
-    }
-  } else {
-    return { success: false, error: "Nie można wykonywać akcji w tej fazie gry" };
+  // GM can act on behalf of another player
+  let playerRow = callerRow;
+  if (forPlayerId && callerRow.is_host) {
+    const targetPlayer = await db
+      .prepare("SELECT * FROM game_players WHERE game_id = ? AND player_id = ?")
+      .bind(callerRow.game_id, forPlayerId)
+      .first<GamePlayerRow>();
+    if (!targetPlayer) return { success: false, error: "Gracz nie istnieje" };
+    playerRow = targetPlayer;
+  } else if (forPlayerId) {
+    return { success: false, error: "Tylko MG może działać za innych graczy" };
   }
 
-  // Remove previous action of the same type in this round/phase
-  await db
-    .prepare(
-      "DELETE FROM game_actions WHERE game_id = ? AND player_id = ? AND round = ? AND phase = ? AND action_type = ?"
-    )
-    .bind(playerRow.game_id, playerRow.player_id, gameRow.round, gameRow.phase, actionType)
-    .run();
+  if (!playerRow.is_alive)
+    return { success: false, error: "Wyeliminowani gracze nie mogą działać" };
 
-  // Insert new action
+  // Validate action for phase + role
+  if (gameRow.phase === "night") {
+    if (actionType === "kill" && playerRow.role !== "mafia")
+      return { success: false, error: "Tylko mafia może wybierać ofiary" };
+    if (actionType === "investigate" && playerRow.role !== "detective")
+      return { success: false, error: "Tylko detektyw może sprawdzać" };
+    if (actionType === "protect" && playerRow.role !== "doctor")
+      return { success: false, error: "Tylko doktor może chronić" };
+    if (!["kill", "investigate", "protect", "wait"].includes(actionType))
+      return { success: false, error: "Nieprawidłowa akcja nocna" };
+  } else if (gameRow.phase === "voting") {
+    if (actionType !== "vote") return { success: false, error: "Teraz można tylko głosować" };
+  } else {
+    return { success: false, error: "Akcje można składać tylko w nocy lub podczas głosowania" };
+  }
+
+  // Validate target
+  if (targetPlayerId) {
+    const target = await db
+      .prepare("SELECT is_alive FROM game_players WHERE game_id = ? AND player_id = ?")
+      .bind(playerRow.game_id, targetPlayerId)
+      .first<{ is_alive: number }>();
+    if (!target) return { success: false, error: "Cel nie istnieje" };
+    if (!target.is_alive) return { success: false, error: "Cel jest już wyeliminowany" };
+  }
+
+  // Allow changing decision — delete old action if exists, then insert new
+  const existing = await db
+    .prepare(
+      "SELECT id FROM game_actions WHERE game_id = ? AND player_id = ? AND round = ? AND phase = ?"
+    )
+    .bind(playerRow.game_id, playerRow.player_id, gameRow.round, gameRow.phase)
+    .first<{ id: string }>();
+  if (existing) {
+    await db.prepare("DELETE FROM game_actions WHERE id = ?").bind(existing.id).run();
+  }
+
   await db
     .prepare(
-      "INSERT INTO game_actions (id, game_id, round, phase, player_id, action_type, target_player_id, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO game_actions (id, game_id, round, phase, player_id, action_type, target_player_id, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)"
     )
     .bind(
       nanoid(),
@@ -288,8 +345,7 @@ export async function submitAction(
       gameRow.phase,
       playerRow.player_id,
       actionType,
-      targetPlayerId || null,
-      "{}",
+      targetPlayerId ?? null,
       now()
     )
     .run();

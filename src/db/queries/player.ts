@@ -5,7 +5,7 @@ import { checkWinConditions } from "./phase";
 export async function setupPlayer(
   db: D1Database,
   token: string,
-  _nickname: string,
+  nickname: string,
   characterId: string
 ): Promise<{ success: boolean; error?: string }> {
   const playerRow = await db
@@ -24,6 +24,25 @@ export async function setupPlayer(
   if (gameRow.status !== "lobby")
     return { success: false, error: "Nie można zmieniać postaci po rozpoczęciu gry" };
 
+  // Validate nickname length
+  if (nickname.length < 1 || nickname.length > 20) {
+    return { success: false, error: "Nazwa musi mieć 1-20 znaków" };
+  }
+
+  // Check if nickname is already taken by another player in the same game
+  if (nickname !== playerRow.nickname) {
+    const { results: existingNickname } = await db
+      .prepare(
+        "SELECT COUNT(*) as count FROM game_players WHERE game_id = ? AND nickname = ? AND player_id != ?"
+      )
+      .bind(playerRow.game_id, nickname, playerRow.player_id)
+      .all<{ count: number }>();
+
+    if (existingNickname[0]?.count > 0) {
+      return { success: false, error: "Ta nazwa jest już zajęta" };
+    }
+  }
+
   // Check if character exists and is active
   const character = await db
     .prepare("SELECT * FROM characters WHERE id = ? AND is_active = 1")
@@ -34,17 +53,19 @@ export async function setupPlayer(
 
   // Check if character is available
   const { results: existingCharacter } = await db
-    .prepare("SELECT COUNT(*) as count FROM game_players WHERE game_id = ? AND character_id = ?")
-    .bind(playerRow.game_id, characterId)
+    .prepare(
+      "SELECT COUNT(*) as count FROM game_players WHERE game_id = ? AND character_id = ? AND player_id != ?"
+    )
+    .bind(playerRow.game_id, characterId, playerRow.player_id)
     .all<{ count: number }>();
 
   if (existingCharacter[0]?.count > 0) {
-    return { success: false, error: "Ta postać jest już zajęta" };
+    return { success: false, error: "Ta postać jest już wybrana" };
   }
 
   await db
-    .prepare("UPDATE game_players SET character_id = ? WHERE token = ?")
-    .bind(characterId, token)
+    .prepare("UPDATE game_players SET nickname = ?, character_id = ? WHERE token = ?")
+    .bind(nickname, characterId, token)
     .run();
 
   return { success: true };
@@ -55,6 +76,10 @@ export async function renamePlayer(
   token: string,
   newNickname: string
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate nickname length
+  if (newNickname.length < 1 || newNickname.length > 20) {
+    return { success: false, error: "Nazwa gracza musi mieć 1-20 znaków" };
+  }
   if (!newNickname.trim()) return { success: false, error: "Nowy nick nie może być pusty" };
 
   const playerRow = await db
@@ -126,7 +151,7 @@ export async function leaveGame(
     .first<GamePlayerRow>();
 
   if (!playerRow) return { success: false, error: "Nieprawidłowy token gracza" };
-  if (playerRow.is_host) return { success: false, error: "MG nie może opuścić gry" };
+  if (playerRow.is_host) return { success: false, error: "Mistrz gry nie może opuścić gry" };
 
   const gameRow = await db
     .prepare("SELECT * FROM games WHERE id = ?")

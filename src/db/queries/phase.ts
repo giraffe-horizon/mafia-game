@@ -81,6 +81,21 @@ export async function changePhase(
   const currentPhase = gameRow.phase;
   if (currentPhase === newPhase) return { success: false, error: "Gra już jest w tej fazie" };
 
+  const validTransitions: Partial<Record<string, string[]>> = {
+    night: ["day"],
+    day: ["voting"],
+    voting: ["night"],
+  };
+
+  if (!validTransitions[currentPhase]?.includes(newPhase)) {
+    return {
+      success: false,
+      error: `Nieprawidłowe przejście: ${currentPhase} → ${newPhase}`,
+    };
+  }
+
+  let round = gameRow.round;
+
   // Resolve outgoing phase
   if (currentPhase === "night") {
     await resolveNight(db, gameRow, playerRow);
@@ -88,8 +103,10 @@ export async function changePhase(
     await resolveVoting(db, gameRow, playerRow);
   }
 
-  let nextRound = gameRow.round;
-  if (newPhase === "night") nextRound++;
+  // New round starts when transitioning to night (except first night which is round 1)
+  if (newPhase === "night" && currentPhase === "voting") {
+    round++;
+  }
 
   // Check win conditions after elimination
   const winner = await checkWinConditions(db, playerRow.game_id);
@@ -117,7 +134,7 @@ export async function changePhase(
   // Normal phase transition
   await db
     .prepare("UPDATE games SET phase = ?, round = ? WHERE id = ?")
-    .bind(newPhase, nextRound, playerRow.game_id)
+    .bind(newPhase, round, playerRow.game_id)
     .run();
 
   return { success: true };
