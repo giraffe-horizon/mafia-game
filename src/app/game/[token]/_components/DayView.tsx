@@ -1,6 +1,5 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
 import { SectionHeader, Card, InfoCard } from "@/components/ui";
-import RoleHidden from "@/components/ui/RoleHidden";
 import DeadSpectatorView from "./DeadSpectatorView";
 import { useGameStore } from "../_stores/gameStore";
 
@@ -82,13 +81,9 @@ export default function DayView({ roleVisible, setRoleVisible }: DayViewProps) {
         </div>
       )}
 
-      {/* Detective investigation result — hidden when role is hidden */}
-      {!isHost && currentPlayer.role === "detective" && state.detectiveResult && (
-        <RoleHidden
-          visible={roleVisible}
-          className="mx-5 mt-4"
-          hint="Odkryj rolę aby zobaczyć wynik śledztwa"
-        >
+      {/* Detective investigation result — only visible when role is revealed */}
+      {!isHost && roleVisible && currentPlayer.role === "detective" && state.detectiveResult && (
+        <div className="mx-5 mt-4">
           <SectionHeader icon="search">Wynik śledztwa</SectionHeader>
           <Card
             className={`p-4 ${
@@ -112,7 +107,7 @@ export default function DayView({ roleVisible, setRoleVisible }: DayViewProps) {
               </p>
             </div>
           </Card>
-        </RoleHidden>
+        </div>
       )}
 
       {/* Day message for alive non-host players */}
