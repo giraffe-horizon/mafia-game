@@ -886,7 +886,7 @@ export default function GameClient() {
                     </button>
                     <button
                       onClick={async () => {
-                        await fetch(`/api/game/${token}/mission/${m.id}`, { method: "DELETE" });
+                        await apiClient.deleteMission(token, m.id);
                         await fetchState();
                       }}
                       className="size-9 flex items-center justify-center rounded-lg bg-red-900/30 border border-red-700/40 text-red-400 hover:bg-red-900/50 transition-all"
@@ -905,8 +905,8 @@ export default function GameClient() {
             )}
             <button
               onClick={async () => {
-                const res = await fetch(`/api/game/${token}/finalize`, { method: "POST" });
-                if (res.ok) await fetchState();
+                const result = await apiClient.finalizeGame(token);
+                if (result.success) await fetchState();
               }}
               className="w-full mt-3 flex items-center justify-center gap-2 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)]"
             >

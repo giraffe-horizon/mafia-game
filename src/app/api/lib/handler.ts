@@ -36,6 +36,33 @@ export function withApiHandlerNoToken(
   };
 }
 
+export interface ApiContextWithTokenAndMissionId extends ApiContextWithToken {
+  missionId: string;
+}
+
+export function withApiHandlerMission(
+  handler: (req: NextRequest, ctx: ApiContextWithTokenAndMissionId) => Promise<NextResponse>
+) {
+  return async (
+    req: NextRequest,
+    { params }: { params: Promise<{ token: string; missionId: string }> }
+  ) => {
+    try {
+      const { token, missionId } = await params;
+      const db = await getDb();
+      return await handler(req, { db, token, missionId });
+    } catch (error) {
+      console.error(`API Error [${req.method} ${req.nextUrl.pathname}]:`, error);
+
+      if (error instanceof ZodError) {
+        return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
+      }
+
+      return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
+    }
+  };
+}
+
 export function withApiHandler(
   handler: (req: NextRequest, ctx: ApiContextWithToken) => Promise<NextResponse>
 ) {
