@@ -131,11 +131,15 @@ export async function changePhase(
     return { success: true };
   }
 
-  // Normal phase transition
-  await db
-    .prepare("UPDATE games SET phase = ?, round = ? WHERE id = ?")
-    .bind(newPhase, round, playerRow.game_id)
+  // Normal phase transition with optimistic concurrency guard
+  const updateResult = await db
+    .prepare("UPDATE games SET phase = ?, round = ? WHERE id = ? AND phase = ?")
+    .bind(newPhase, round, playerRow.game_id, currentPhase)
     .run();
+
+  if (!updateResult.meta.changes) {
+    return { success: false, error: "Faza została już zmieniona (concurrent request)" };
+  }
 
   return { success: true };
 }
@@ -167,6 +171,18 @@ export async function resolveNight(
     }
 
     if (killTarget) {
+      // Check if target is still alive (may have left mid-night)
+      const targetAlive = await db
+        .prepare("SELECT is_alive FROM game_players WHERE game_id = ? AND player_id = ?")
+        .bind(gameRow.id, killTarget)
+        .first<{ is_alive: number }>();
+
+      if (!targetAlive || targetAlive.is_alive === 0) {
+        killTarget = null;
+      }
+    }
+
+    if (killTarget) {
       // Check if target was protected by doctor
       const { results: protections } = await db
         .prepare(
@@ -191,7 +207,7 @@ export async function resolveNight(
 
         nightMsg = `Tej nocy zginął: ${victimRow?.nickname || "Unknown"}`;
       } else {
-        nightMsg = "Tej nocy nikt nie zginął. (cel był chroniony)";
+        nightMsg = "Tej nocy nikt nie zginął.";
       }
     }
   }
@@ -231,7 +247,7 @@ export async function resolveVoting(
     .prepare(
       `SELECT target_player_id, COUNT(*) as votes
        FROM game_actions
-       WHERE game_id = ? AND round = ? AND action_type = 'vote'
+       WHERE game_id = ? AND round = ? AND phase = 'voting' AND action_type = 'vote'
        GROUP BY target_player_id
        ORDER BY votes DESC`
     )

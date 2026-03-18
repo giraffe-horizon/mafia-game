@@ -8,7 +8,7 @@ interface GMSettingsTabProps {
   players: PublicPlayer[];
   mafiaCountSetting: number;
   onMafiaCountSettingChange: (n: number) => void;
-  onTransferGm: (playerId: string) => void;
+  onTransferGm: (playerId: string) => Promise<unknown> | void;
 }
 
 export default function GMSettingsTab({
@@ -26,7 +26,7 @@ export default function GMSettingsTab({
     setTransferGmPending(true);
     setTransferGmError("");
     try {
-      onTransferGm(transferGmTarget);
+      await onTransferGm(transferGmTarget);
       setTransferGmTarget("");
     } catch {
       setTransferGmError("Błąd przekazania MG");

@@ -162,7 +162,15 @@ export async function getGameState(
       nickname: p.nickname,
       isAlive: p.is_alive === 1,
       isHost: p.is_host === 1,
-      role: gameRow.status === "playing" ? (p.role as Role | null) : null,
+      role: (() => {
+        if (gameRow.status === "finished") return p.role as Role | null;
+        if (gameRow.status !== "playing") return null;
+        if (p.token === token) return p.role as Role | null; // own role
+        if (isHost) return p.role as Role | null; // GM sees all
+        if (p.is_alive === 0) return p.role as Role | null; // dead players revealed
+        if (playerRow.role === "mafia" && p.role === "mafia") return p.role as Role | null; // mafia sees teammates
+        return null;
+      })(),
       isYou: p.token === token, // Use token comparison like original
       character: p.character_id_data
         ? {

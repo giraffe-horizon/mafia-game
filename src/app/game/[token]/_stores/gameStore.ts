@@ -50,6 +50,7 @@ interface GameState {
   _backoffDelay: number;
   _shownMessageIds: Set<string>;
   _toastTimeouts: Map<string, NodeJS.Timeout>;
+  _isFetching: boolean;
   _scheduleNext: () => void;
   _visibilityCleanup?: () => void;
 
@@ -104,6 +105,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   _backoffDelay: POLL_INTERVAL,
   _shownMessageIds: new Set(),
   _toastTimeouts: new Map(),
+  _isFetching: false,
 
   _scheduleNext: () => {
     const state = get();
@@ -143,7 +145,15 @@ export const useGameStore = create<GameState>((set, get) => ({
       _token: token,
       _backoffDelay: POLL_INTERVAL,
       _shownMessageIds: new Set(),
+      state: null,
+      toasts: [],
+      characters: [],
       error: "",
+      actionPending: false,
+      actionError: "",
+      phasePending: false,
+      starting: false,
+      changingDecision: false,
     });
 
     // Fetch characters
@@ -181,6 +191,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Handle visibility changes
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
+        // Clear existing polling chain to prevent duplicates
+        const current = get();
+        if (current._intervalRef) {
+          clearTimeout(current._intervalRef);
+          set({ _intervalRef: null });
+        }
         // Tab became active - immediate fetch and restart polling
         get()
           .refetch()
@@ -223,8 +239,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   refetch: async () => {
-    const { _gameService, _token, _shownMessageIds } = get();
+    const { _gameService, _token, _shownMessageIds, _isFetching } = get();
     if (!_gameService || !_token) return;
+    if (_isFetching) return; // prevent concurrent fetches
+    set({ _isFetching: true });
 
     try {
       const data = await _gameService.fetchState(_token);
@@ -263,6 +281,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       set((state) => ({
         _backoffDelay: Math.min(state._backoffDelay * 2, MAX_BACKOFF),
       }));
+    } finally {
+      set({ _isFetching: false });
     }
   },
 

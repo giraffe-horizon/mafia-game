@@ -315,12 +315,20 @@ export async function submitAction(
 
   // Validate target
   if (targetPlayerId) {
+    // Self-target and GM-target restrictions apply to night actions only (not voting)
+    if (gameRow.phase === "night") {
+      if (targetPlayerId === playerRow.player_id) {
+        return { success: false, error: "Nie można wybrać siebie jako celu" };
+      }
+    }
+
     const target = await db
-      .prepare("SELECT is_alive FROM game_players WHERE game_id = ? AND player_id = ?")
+      .prepare("SELECT is_alive, is_host FROM game_players WHERE game_id = ? AND player_id = ?")
       .bind(playerRow.game_id, targetPlayerId)
-      .first<{ is_alive: number }>();
+      .first<{ is_alive: number; is_host: number }>();
     if (!target) return { success: false, error: "Cel nie istnieje" };
     if (!target.is_alive) return { success: false, error: "Cel jest już wyeliminowany" };
+    if (target.is_host) return { success: false, error: "Nie można wybrać Mistrza Gry jako celu" };
   }
 
   // Allow changing decision — delete old action if exists, then insert new

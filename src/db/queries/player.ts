@@ -133,10 +133,34 @@ export async function kickPlayer(
   if (!targetRow) return { success: false, error: "Gracz nie istnieje" };
   if (targetRow.is_host) return { success: false, error: "Nie można wyrzucić MG" };
 
-  await db
-    .prepare("DELETE FROM game_players WHERE game_id = ? AND player_id = ?")
-    .bind(playerRow.game_id, targetPlayerId)
-    .run();
+  const gameRow = await db
+    .prepare("SELECT * FROM games WHERE id = ?")
+    .bind(playerRow.game_id)
+    .first<GameRow>();
+
+  if (!gameRow) return { success: false, error: "Gra nie istnieje" };
+
+  if (gameRow.status === "playing") {
+    // During active game: mark as dead instead of deleting, then check win conditions
+    await db
+      .prepare("UPDATE game_players SET is_alive = 0 WHERE game_id = ? AND player_id = ?")
+      .bind(playerRow.game_id, targetPlayerId)
+      .run();
+
+    const winner = await checkWinConditions(db, playerRow.game_id);
+    if (winner) {
+      await db
+        .prepare("UPDATE games SET status = 'finished', phase = 'ended', winner = ? WHERE id = ?")
+        .bind(winner, playerRow.game_id)
+        .run();
+    }
+  } else {
+    // In lobby: remove player entirely
+    await db
+      .prepare("DELETE FROM game_players WHERE game_id = ? AND player_id = ?")
+      .bind(playerRow.game_id, targetPlayerId)
+      .run();
+  }
 
   return { success: true };
 }

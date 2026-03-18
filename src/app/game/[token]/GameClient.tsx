@@ -121,6 +121,9 @@ export default function GameClient() {
     if (token) {
       initialize(token, gameService);
     }
+    return () => {
+      useGameStore.getState().stopPolling();
+    };
   }, [token, initialize]);
 
   // Reset changingDecision when phase changes (must be before conditional returns!)
