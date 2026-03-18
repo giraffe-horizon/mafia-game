@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
+import { startGameSchema } from "@/app/api/lib/schemas";
 import { startGame } from "@/lib/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   let mafiaCount: number | undefined;
   let mode: "full" | "simple" = "full";
+
   try {
     const body = await req.json();
-    if (body.mafiaCount && typeof body.mafiaCount === "number") {
-      mafiaCount = body.mafiaCount;
-    }
-    if (body.mode === "simple") {
-      mode = "simple";
-    }
+    const validatedData = startGameSchema.parse(body);
+    mafiaCount = validatedData.mafiaCount;
+    mode = validatedData.mode ?? "full";
   } catch {
     // no body = use defaults
   }

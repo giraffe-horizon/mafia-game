@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
+import { updateCharacterSchema } from "@/app/api/lib/schemas";
 import { updateCharacter } from "@/lib/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
-  const { characterId } = await req.json();
-  if (!characterId || typeof characterId !== "string") {
-    return NextResponse.json({ error: "Nieprawidłowy ID postaci" }, { status: 400 });
-  }
+  const body = await req.json();
+  const { characterId } = updateCharacterSchema.parse(body);
 
   const success = await updateCharacter(db, token, characterId);
   if (!success) {

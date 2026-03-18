@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withApiHandler } from "@/app/api/lib/handler";
+import { rematchSchema } from "@/app/api/lib/schemas";
 import { rematch } from "@/lib/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   let mafiaCount: number | undefined;
   let mode: "full" | "simple" | undefined;
+
   try {
     const body = await req.json();
-    if (typeof body?.mafiaCount === "number" && body.mafiaCount > 0) {
-      mafiaCount = body.mafiaCount;
-    }
-    if (body?.mode === "simple") mode = "simple";
-    else if (body?.mode === "full") mode = "full";
+    const validatedData = rematchSchema.parse(body);
+    mafiaCount = validatedData.mafiaCount;
+    mode = validatedData.mode;
   } catch {
-    /* no body */
+    /* no body or validation failed - use defaults */
   }
 
   const result = await rematch(db, token, mafiaCount, mode);
