@@ -1,15 +1,8 @@
 "use client";
 
 import type { PublicPlayer, GameStateResponse } from "@/lib/db";
+import { ACTION_CONFIRMED } from "@/lib/constants";
 import MafiaConsensusStatus from "./MafiaConsensusStatus";
-
-const ACTION_CONFIRMED: Record<string, string> = {
-  kill: "Wytypowałeś ofiarę:",
-  investigate: "Przesłuchujesz:",
-  protect: "Chronisz tej nocy:",
-  vote: "Oskarżasz:",
-  wait: "Czekasz w ukryciu...",
-};
 
 export default function NightActionPanel({
   role,

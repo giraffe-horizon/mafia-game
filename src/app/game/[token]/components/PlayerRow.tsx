@@ -1,15 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ROLE_LABELS } from "@/lib/constants";
 import type { PublicPlayer } from "@/lib/db";
-
-const ROLE_LABELS: Record<string, string> = {
-  mafia: "Mafia",
-  detective: "Detektyw",
-  doctor: "Doktor",
-  civilian: "Cywil",
-  gm: "Mistrz Gry",
-};
 
 function roleBadgeClass(role: string) {
   if (role === "mafia") return "text-red-400 border-red-900/50 bg-red-950/30";

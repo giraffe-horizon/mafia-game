@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
+import { ROLE_LABELS, ROLE_COLORS, PHASE_LABELS, PHASE_ICONS, ROLE_ICONS } from "@/lib/constants";
 import CharacterPicker from "@/components/CharacterPicker";
 import OnboardingScreen from "./components/OnboardingScreen";
 import PlayerRow from "./components/PlayerRow";
@@ -11,46 +12,6 @@ import MGPanel from "./components/MGPanel";
 import NightActionPanel from "./components/NightActionPanel";
 import VotePanel from "./components/VotePanel";
 import EndScreen from "./components/EndScreen";
-
-// ---------------------------------------------------------------------------
-// Lookup tables
-// ---------------------------------------------------------------------------
-const ROLE_LABELS: Record<string, string> = {
-  mafia: "Mafia",
-  detective: "Detektyw",
-  doctor: "Doktor",
-  civilian: "Cywil",
-  gm: "Mistrz Gry",
-};
-const ROLE_COLORS: Record<string, string> = {
-  mafia: "text-red-500",
-  detective: "text-blue-400",
-  doctor: "text-green-400",
-  civilian: "text-slate-300",
-  gm: "text-amber-400",
-};
-const PHASE_LABELS: Record<string, string> = {
-  lobby: "Lobby",
-  night: "Noc",
-  day: "Dzień",
-  voting: "Głosowanie",
-  review: "Przegląd misji",
-  ended: "Koniec",
-};
-const PHASE_ICONS: Record<string, string> = {
-  night: "bedtime",
-  day: "wb_sunny",
-  voting: "how_to_vote",
-  lobby: "groups",
-  ended: "emoji_events",
-};
-const ROLE_ICONS: Record<string, string> = {
-  mafia: "masks",
-  detective: "search",
-  doctor: "medical_services",
-  civilian: "person",
-  gm: "manage_accounts",
-};
 
 // ---------------------------------------------------------------------------
 // Toast types

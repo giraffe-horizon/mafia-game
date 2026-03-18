@@ -2,15 +2,8 @@
 
 import { useState } from "react";
 import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
+import { ROLE_LABELS } from "@/lib/constants";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
-
-const ROLE_LABELS: Record<string, string> = {
-  mafia: "Mafia",
-  detective: "Detektyw",
-  doctor: "Doktor",
-  civilian: "Cywil",
-  gm: "Mistrz Gry",
-};
 
 const ACTION_ROLE_MAP: Record<string, string> = {
   mafia: "kill",
