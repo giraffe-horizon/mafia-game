@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import type { D1Database, D1PreparedStatement } from "@/lib/db";
+import type { D1Database, D1PreparedStatement } from "@/db";
 import { readFileSync, readdirSync } from "fs";
 import { resolve } from "path";
 

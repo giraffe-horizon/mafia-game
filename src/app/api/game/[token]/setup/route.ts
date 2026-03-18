@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { setupPlayer, type D1Database } from "@/lib/db";
+import { withApiHandler } from "@/app/api/lib/handler";
+import { setupPlayerSchema } from "@/app/api/lib/schemas";
+import { setupPlayer } from "@/db";
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  const { env } = await getCloudflareContext();
-  const db = (env as { DB: D1Database }).DB;
-
-  const { nickname, characterId } = await req.json();
-
-  if (!nickname || !characterId) {
-    return NextResponse.json({ error: "Brakuje nazwy lub postaci" }, { status: 400 });
-  }
+export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
+  const body = await req.json();
+  const { nickname, characterId } = setupPlayerSchema.parse(body);
 
   const result = await setupPlayer(db, token, nickname, characterId);
 
@@ -20,4 +14,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
   }
 
   return NextResponse.json({ success: true });
-}
+});

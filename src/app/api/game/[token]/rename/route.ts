@@ -1,28 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { renamePlayer, type D1Database } from "@/lib/db";
+import { withApiHandler } from "@/app/api/lib/handler";
+import { renamePlayerSchema } from "@/app/api/lib/schemas";
+import { renamePlayer } from "@/db";
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  try {
-    const { nickname } = await req.json();
-    if (!nickname || typeof nickname !== "string" || nickname.trim().length < 1) {
-      return NextResponse.json({ error: "Podaj nazwę gracza" }, { status: 400 });
-    }
-    if (nickname.trim().length > 20) {
-      return NextResponse.json(
-        { error: "Nazwa gracza może mieć maksymalnie 20 znaków" },
-        { status: 400 }
-      );
-    }
-    const { env } = await getCloudflareContext();
-    const db = (env as { DB: D1Database }).DB;
-    const result = await renamePlayer(db, token, nickname.trim());
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
-    }
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
+export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
+  const body = await req.json();
+  const { nickname } = renamePlayerSchema.parse(body);
+
+  const result = await renamePlayer(db, token, nickname.trim());
+  if (!result.success) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
   }
-}
+  return NextResponse.json({ success: true });
+});

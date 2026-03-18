@@ -81,7 +81,7 @@ export const MISSION_PRESETS: MissionPreset[] = [
     category: "hard",
   },
   {
-    description: "Przekonaj wszystkich, że jesteś detektywem — nie będąc nim",
+    description: "Przekonaj wszystkich, że jesteś policjantem — nie będąc nim",
     points: 3,
     category: "hard",
   },

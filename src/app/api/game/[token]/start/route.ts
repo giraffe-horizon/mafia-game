@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { startGame, type D1Database } from "@/lib/db";
+import { withApiHandler } from "@/app/api/lib/handler";
+import { startGameSchema } from "@/app/api/lib/schemas";
+import { startGame } from "@/db";
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
-  const { token } = await params;
-  const { env } = await getCloudflareContext();
-  const db = (env as { DB: D1Database }).DB;
-
+export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   let mafiaCount: number | undefined;
   let mode: "full" | "simple" = "full";
+
   try {
     const body = await req.json();
-    if (body.mafiaCount && typeof body.mafiaCount === "number") {
-      mafiaCount = body.mafiaCount;
-    }
-    if (body.mode === "simple") {
-      mode = "simple";
-    }
+    const validatedData = startGameSchema.parse(body);
+    mafiaCount = validatedData.mafiaCount;
+    mode = validatedData.mode ?? "full";
   } catch {
     // no body = use defaults
   }
@@ -26,4 +21,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
   return NextResponse.json({ success: true });
-}
+});
