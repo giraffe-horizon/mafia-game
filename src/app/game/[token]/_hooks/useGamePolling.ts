@@ -2,6 +2,11 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import type { GameStateResponse } from "@/lib/db";
 import * as apiClient from "@/lib/api-client";
 
+// Polling constants
+const POLL_INTERVAL = 2000;
+const TOAST_DURATION = 7000;
+const MAX_BACKOFF = 16000;
+
 interface Toast {
   id: string;
   content: string;
@@ -31,16 +36,24 @@ export function useGamePolling(token: string): UseGamePollingReturn {
     Array<{ id: string; slug: string; name: string; name_pl: string; avatar_url: string }>
   >([]);
   const shownMessageIds = useRef<Set<string>>(new Set());
+  const backoffDelay = useRef(POLL_INTERVAL);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchState = useCallback(async () => {
     try {
       const data = await apiClient.fetchGameState(token);
       setState(data);
+      // Reset backoff on success
+      backoffDelay.current = POLL_INTERVAL;
+
       for (const msg of data.messages) {
         if (!shownMessageIds.current.has(msg.id)) {
           shownMessageIds.current.add(msg.id);
           setToasts((prev) => [...prev, { id: msg.id, content: msg.content }]);
-          setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== msg.id)), 7000);
+          setTimeout(
+            () => setToasts((prev) => prev.filter((t) => t.id !== msg.id)),
+            TOAST_DURATION
+          );
         }
       }
     } catch (error) {
@@ -48,15 +61,62 @@ export function useGamePolling(token: string): UseGamePollingReturn {
         setError("Sesja nie istnieje");
         return;
       }
-      /* silent retry */
+      // Exponential backoff on errors
+      backoffDelay.current = Math.min(backoffDelay.current * 2, MAX_BACKOFF);
     }
   }, [token]);
 
-  useEffect(() => {
-    fetchState();
-    const interval = setInterval(fetchState, 2000);
-    return () => clearInterval(interval);
+  const scheduleNext = useCallback(() => {
+    if (intervalRef.current) {
+      clearTimeout(intervalRef.current);
+    }
+
+    intervalRef.current = setTimeout(() => {
+      // Don't poll when tab is not visible
+      if (document.visibilityState === "hidden") {
+        // Reschedule when tab becomes visible
+        scheduleNext();
+        return;
+      }
+
+      fetchState().then(() => {
+        // Schedule next poll with current backoff delay
+        scheduleNext();
+      });
+    }, backoffDelay.current);
   }, [fetchState]);
+
+  const stopPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearTimeout(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    // Initial fetch and start polling
+    fetchState().then(() => {
+      scheduleNext();
+    });
+
+    // Handle visibility changes
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // Tab became active - immediate fetch and restart polling
+        fetchState().then(() => {
+          scheduleNext();
+        });
+      }
+      // No need to stop polling on hidden - the scheduleNext handles it
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchState, scheduleNext, stopPolling]);
 
   useEffect(() => {
     apiClient
