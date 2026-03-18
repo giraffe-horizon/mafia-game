@@ -1,6 +1,7 @@
 "use client";
 
 import type { PublicPlayer } from "@/lib/db";
+import type { ActionType } from "@/db/types";
 
 export default function VotePanel({
   targets,
@@ -11,7 +12,7 @@ export default function VotePanel({
   onChangeDecision,
 }: {
   targets: PublicPlayer[];
-  myAction: { actionType: string; targetPlayerId: string | null } | null;
+  myAction: { actionType: ActionType; targetPlayerId: string | null } | null;
   pending: boolean;
   error: string;
   onVote: (targetId: string) => void;

@@ -1,4 +1,5 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } from "@/lib/constants";
+import type { Role } from "@/db/types";
 import NightActionPanel, { type ActionState, type MafiaState } from "./NightActionPanel"; // Updated to use _components
 import { Card, Badge } from "@/components/ui";
 
@@ -90,7 +91,7 @@ export default function NightView({
       {/* Night action panel for alive players */}
       {!isHost && currentPlayer.isAlive && (
         <NightActionPanel
-          role={roleVisible ? currentPlayer.role || null : null}
+          role={roleVisible ? (currentPlayer.role as Role) || null : null}
           targets={actionTargets}
           myAction={myAction}
           roleHidden={!roleVisible}

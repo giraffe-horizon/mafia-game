@@ -1,4 +1,6 @@
-export const ROLE_LABELS: Record<string, string> = {
+import type { Role, GamePhase, ActionType } from "@/db/types";
+
+export const ROLE_LABELS: Record<Role | "gm" | string, string> = {
   mafia: "Mafia",
   detective: "Detektyw",
   doctor: "Doktor",
@@ -6,7 +8,7 @@ export const ROLE_LABELS: Record<string, string> = {
   gm: "Mistrz Gry",
 };
 
-export const ROLE_COLORS: Record<string, string> = {
+export const ROLE_COLORS: Record<Role | "gm" | string, string> = {
   mafia: "text-red-500",
   detective: "text-blue-400",
   doctor: "text-green-400",
@@ -14,7 +16,7 @@ export const ROLE_COLORS: Record<string, string> = {
   gm: "text-amber-400",
 };
 
-export const ROLE_ICONS: Record<string, string> = {
+export const ROLE_ICONS: Record<Role | "gm" | string, string> = {
   mafia: "masks",
   detective: "search",
   doctor: "medical_services",
@@ -22,7 +24,7 @@ export const ROLE_ICONS: Record<string, string> = {
   gm: "manage_accounts",
 };
 
-export const PHASE_LABELS: Record<string, string> = {
+export const PHASE_LABELS: Record<GamePhase | string, string> = {
   lobby: "Lobby",
   night: "Noc",
   day: "Dzień",
@@ -31,7 +33,7 @@ export const PHASE_LABELS: Record<string, string> = {
   ended: "Koniec",
 };
 
-export const PHASE_ICONS: Record<string, string> = {
+export const PHASE_ICONS: Record<Exclude<GamePhase, "review"> | string, string> = {
   night: "bedtime",
   day: "wb_sunny",
   voting: "how_to_vote",
@@ -39,7 +41,7 @@ export const PHASE_ICONS: Record<string, string> = {
   ended: "emoji_events",
 };
 
-export const ACTION_CONFIRMED: Record<string, string> = {
+export const ACTION_CONFIRMED: Record<ActionType | string, string> = {
   kill: "Wytypowałeś ofiarę:",
   investigate: "Przesłuchujesz:",
   protect: "Chronisz tej nocy:",

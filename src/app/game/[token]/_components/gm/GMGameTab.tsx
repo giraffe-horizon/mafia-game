@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
+import type { Role, ActionType, GamePhase } from "@/db/types";
 
-const ACTION_ROLE_MAP: Record<string, string> = {
+const ACTION_ROLE_MAP: Record<Role, ActionType> = {
   mafia: "kill",
   detective: "investigate",
   doctor: "protect",
@@ -14,12 +15,12 @@ const ACTION_ROLE_MAP: Record<string, string> = {
 interface GMGameTabProps {
   hostActions?: GameStateResponse["hostActions"];
   players: PublicPlayer[];
-  phase: string;
+  phase: GamePhase;
   phaseProgress?: GameStateResponse["phaseProgress"];
-  onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
-  onPhase: (p: string) => void;
+  onGmAction: (forPlayerId: string, actionType: ActionType, targetPlayerId: string) => void;
+  onPhase: (p: GamePhase) => void;
   phasePending: boolean;
-  nextPhase?: { label: string; phase: string; icon: string };
+  nextPhase?: { label: string; phase: GamePhase; icon: string };
 }
 
 export default function GMGameTab({

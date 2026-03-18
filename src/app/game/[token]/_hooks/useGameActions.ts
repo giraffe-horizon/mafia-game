@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import * as apiClient from "@/lib/api-client";
+import type { ActionType, GamePhase } from "@/db/types";
 
 interface UseGameActionsParams {
   token: string;
@@ -15,15 +16,15 @@ interface UseGameActionsReturn {
   starting: boolean;
   changingDecision: boolean;
   setChangingDecision: (changing: boolean) => void;
-  handleAction: (actionType: string, targetPlayerId: string) => Promise<void>;
-  handlePhase: (newPhase: string) => Promise<void>;
+  handleAction: (actionType: ActionType, targetPlayerId: string) => Promise<void>;
+  handlePhase: (newPhase: GamePhase) => Promise<void>;
   handleStart: (gameMode: "full" | "simple", mafiaCount: number) => Promise<void>;
   handleKick: (playerId: string) => Promise<void>;
   handleLeave: () => Promise<void>;
   handleRematch: (mafiaCountSetting: number) => Promise<void>;
   handleGmAction: (
     forPlayerId: string,
-    actionType: string,
+    actionType: ActionType,
     targetPlayerId: string
   ) => Promise<void>;
   handleTransferGm: (newHostPlayerId: string) => Promise<void>;
@@ -54,7 +55,7 @@ export function useGameActions({
     }
   };
 
-  const handlePhase = async (newPhase: string) => {
+  const handlePhase = async (newPhase: GamePhase) => {
     setPhasePending(true);
     try {
       await apiClient.advancePhase(token, { phase: newPhase });
@@ -66,7 +67,7 @@ export function useGameActions({
     }
   };
 
-  const handleAction = async (actionType: string, targetPlayerId: string) => {
+  const handleAction = async (actionType: ActionType, targetPlayerId: string) => {
     setActionPending(true);
     setActionError("");
     try {
@@ -112,7 +113,7 @@ export function useGameActions({
 
   const handleGmAction = async (
     forPlayerId: string,
-    actionType: string,
+    actionType: ActionType,
     targetPlayerId: string
   ) => {
     try {

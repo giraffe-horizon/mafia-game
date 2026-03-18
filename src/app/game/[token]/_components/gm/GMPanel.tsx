@@ -1,6 +1,7 @@
 "use client";
 
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
+import type { GamePhase, ActionType } from "@/db/types";
 import type { MessageFormProps, MissionFormProps } from "../../types";
 import GMGameTab from "./GMGameTab";
 import GMMessageTab from "./GMMessageTab";
@@ -8,12 +9,12 @@ import GMMissionTab from "./GMMissionTab";
 import GMSettingsTab from "./GMSettingsTab";
 
 interface GMPanelProps {
-  phase: string;
+  phase: GamePhase;
   players: PublicPlayer[];
   tab: "game" | "message" | "mission" | "settings";
   onTabChange: (t: "game" | "message" | "mission" | "settings") => void;
   phasePending: boolean;
-  onPhase: (p: string) => void;
+  onPhase: (p: GamePhase) => void;
   messageForm: MessageFormProps;
   missionForm: MissionFormProps & {
     hostMissions?: any[];
@@ -22,7 +23,7 @@ interface GMPanelProps {
   };
   hostActions?: GameStateResponse["hostActions"];
   phaseProgress?: GameStateResponse["phaseProgress"];
-  onGmAction: (forPlayerId: string, actionType: string, targetPlayerId: string) => void;
+  onGmAction: (forPlayerId: string, actionType: ActionType, targetPlayerId: string) => void;
   onTransferGm: (playerId: string) => void;
   mafiaCountSetting: number;
   onMafiaCountSettingChange: (n: number) => void;
@@ -44,7 +45,9 @@ export default function GMPanel({
   mafiaCountSetting,
   onMafiaCountSettingChange,
 }: GMPanelProps) {
-  const nextPhaseMap: Record<string, { label: string; phase: string; icon: string }> = {
+  const nextPhaseMap: Partial<
+    Record<GamePhase, { label: string; phase: GamePhase; icon: string }>
+  > = {
     night: { label: "Przejdź do Dnia", phase: "day", icon: "wb_sunny" },
     day: { label: "Głosowanie", phase: "voting", icon: "how_to_vote" },
     voting: { label: "Następna Noc", phase: "night", icon: "bedtime" },

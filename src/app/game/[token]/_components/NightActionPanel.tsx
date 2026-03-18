@@ -1,6 +1,7 @@
 "use client";
 
 import type { PublicPlayer, GameStateResponse } from "@/lib/db";
+import type { Role, ActionType } from "@/db/types";
 import { ACTION_CONFIRMED } from "@/lib/constants";
 import MafiaConsensusStatus from "./MafiaConsensusStatus";
 import { Button } from "@/components/ui";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui";
 export interface ActionState {
   pending: boolean;
   error: string;
-  onAction: (type: string, targetId: string) => void;
+  onAction: (type: ActionType, targetId: string) => void;
   onChangeDecision: () => void;
 }
 
@@ -18,9 +19,9 @@ export interface MafiaState {
 }
 
 interface NightActionPanelProps {
-  role: string | null;
+  role: Role | null;
   targets: PublicPlayer[];
-  myAction: { actionType: string; targetPlayerId: string | null } | null;
+  myAction: { actionType: ActionType; targetPlayerId: string | null } | null;
   roleHidden?: boolean;
   actionState: ActionState;
   mafiaState: MafiaState;
@@ -37,27 +38,28 @@ export default function NightActionPanel({
   const { pending, error, onAction, onChangeDecision } = actionState;
   const { teamActions: mafiaTeamActions, currentNickname } = mafiaState;
 
-  const actionMap: Record<string, { type: string; label: string; icon: string; color: string }> = {
-    mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
-    detective: {
-      type: "investigate",
-      label: "Kogo przesłuchać?",
-      icon: "search",
-      color: "text-blue-400",
-    },
-    doctor: {
-      type: "protect",
-      label: "Kogo chronić tej nocy?",
-      icon: "medical_services",
-      color: "text-green-400",
-    },
-    civilian: {
-      type: "wait",
-      label: "Kogo obserwujesz?",
-      icon: "visibility",
-      color: "text-slate-400",
-    },
-  };
+  const actionMap: Record<Role, { type: ActionType; label: string; icon: string; color: string }> =
+    {
+      mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
+      detective: {
+        type: "investigate",
+        label: "Kogo przesłuchać?",
+        icon: "search",
+        color: "text-blue-400",
+      },
+      doctor: {
+        type: "protect",
+        label: "Kogo chronić tej nocy?",
+        icon: "medical_services",
+        color: "text-green-400",
+      },
+      civilian: {
+        type: "wait",
+        label: "Kogo obserwujesz?",
+        icon: "visibility",
+        color: "text-slate-400",
+      },
+    };
 
   if (myAction) {
     // Special handling for mafia: show voting consensus status instead of simple confirmation
