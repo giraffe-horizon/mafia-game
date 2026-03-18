@@ -328,6 +328,21 @@ export async function getGameState(
 
   const showPoints = gameRow.phase === "review" || gameRow.status === "finished";
 
+  // Check for rematch — if game is finished and has a rematch, return the player's new token
+  let rematchToken: string | undefined;
+  if (gameRow.status === "finished") {
+    const config = JSON.parse(gameRow.config || "{}");
+    if (config.rematch_game_id) {
+      const newPlayerRow = await db
+        .prepare("SELECT token FROM game_players WHERE game_id = ? AND player_id = ?")
+        .bind(config.rematch_game_id, playerRow.player_id)
+        .first<{ token: string }>();
+      if (newPlayerRow) {
+        rematchToken = newPlayerRow.token;
+      }
+    }
+  }
+
   return {
     game: {
       id: gameRow.id,
@@ -376,6 +391,7 @@ export async function getGameState(
     hostMissions,
     phaseProgress,
     showPoints,
+    rematchToken,
   };
 }
 
@@ -384,7 +400,7 @@ export async function rematch(
   token: string,
   _mafiaCount?: number,
   _mode?: "full" | "simple"
-): Promise<{ success: boolean; gameCode?: string; error?: string }> {
+): Promise<{ success: boolean; gameCode?: string; newToken?: string; error?: string }> {
   const playerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
     .bind(token)
@@ -419,18 +435,32 @@ export async function rematch(
       .bind(newGameId, newGameCode, playerRow.player_id, currentGameRow.config, now())
       .run();
 
-    // Copy players to new game
-    const playerInserts = currentPlayers.map((p) =>
-      db
+    // Copy players to new game with new tokens
+    let gmNewToken: string | undefined;
+    const playerInserts = currentPlayers.map((p) => {
+      const newToken = nanoid();
+      if (p.player_id === playerRow.player_id) {
+        gmNewToken = newToken;
+      }
+      return db
         .prepare(
           "INSERT INTO game_players (game_id, player_id, token, nickname, role, is_alive, is_host) VALUES (?, ?, ?, ?, NULL, 1, ?)"
         )
-        .bind(newGameId, p.player_id, nanoid(), p.nickname, p.is_host)
-    );
+        .bind(newGameId, p.player_id, newToken, p.nickname, p.is_host);
+    });
 
-    await db.batch(playerInserts);
+    // Store rematch link on old game so non-GM players can find the new game
+    const oldConfig = JSON.parse(currentGameRow.config || "{}");
+    oldConfig.rematch_game_id = newGameId;
 
-    return { success: true, gameCode: newGameCode };
+    await db.batch([
+      ...playerInserts,
+      db
+        .prepare("UPDATE games SET config = ? WHERE id = ?")
+        .bind(JSON.stringify(oldConfig), currentGameRow.id),
+    ]);
+
+    return { success: true, gameCode: newGameCode, newToken: gmNewToken };
   } catch (error) {
     if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
       return { success: false, error: "Kod gry już istnieje, spróbuj ponownie" };

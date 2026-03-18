@@ -237,8 +237,8 @@ export async function transferGm(
       .prepare("UPDATE game_players SET is_host = 0, role = ? WHERE token = ?")
       .bind(gameRow.status === "playing" ? "civilian" : null, token),
     db
-      .prepare("UPDATE game_players SET is_host = 1, role = ?, token = ? WHERE player_id = ?")
-      .bind(gameRow.status === "playing" ? "gm" : null, nanoid(), newGmPlayerId),
+      .prepare("UPDATE game_players SET is_host = 1, role = ? WHERE game_id = ? AND player_id = ?")
+      .bind(gameRow.status === "playing" ? "gm" : null, playerRow.game_id, newGmPlayerId),
     db
       .prepare("UPDATE games SET host_player_id = ? WHERE id = ?")
       .bind(newGmPlayerId, playerRow.game_id),

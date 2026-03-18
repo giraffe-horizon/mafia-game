@@ -146,7 +146,7 @@ export async function updateCharacter(
 export async function rematchGame(
   token: string,
   input?: RematchInput
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; newToken?: string; error?: string }> {
   return postRequest(`/api/game/${token}/rematch`, input);
 }
 

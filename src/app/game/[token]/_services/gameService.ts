@@ -10,6 +10,10 @@ export interface ActionResult {
   error?: string;
 }
 
+export interface RematchResult extends ActionResult {
+  newToken?: string;
+}
+
 export interface LeaveResult {
   success: boolean;
   gameEnded: boolean;
@@ -42,7 +46,7 @@ export interface GameService {
   leaveGame(token: string): Promise<LeaveResult>;
   kickPlayer(token: string, playerId: string): Promise<ActionResult>;
   transferGameMaster(token: string, newHostPlayerId: string): Promise<ActionResult>;
-  rematchGame(token: string, opts?: StartGameOpts): Promise<ActionResult>;
+  rematchGame(token: string, opts?: StartGameOpts): Promise<RematchResult>;
   finalizeGame(token: string): Promise<ActionResult>;
 
   // GM override
@@ -123,7 +127,7 @@ export function createHttpGameService(): GameService {
       return apiClient.transferGameMaster(token, { newHostPlayerId });
     },
 
-    rematchGame: async (token: string, opts?: StartGameOpts): Promise<ActionResult> => {
+    rematchGame: async (token: string, opts?: StartGameOpts): Promise<RematchResult> => {
       return apiClient.rematchGame(token, opts);
     },
 

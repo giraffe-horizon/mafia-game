@@ -331,32 +331,30 @@ export async function submitAction(
     if (target.is_host) return { success: false, error: "Nie można wybrać Mistrza Gry jako celu" };
   }
 
-  // Allow changing decision — delete old action if exists, then insert new
-  const existing = await db
-    .prepare(
-      "SELECT id FROM game_actions WHERE game_id = ? AND player_id = ? AND round = ? AND phase = ?"
-    )
-    .bind(playerRow.game_id, playerRow.player_id, gameRow.round, gameRow.phase)
-    .first<{ id: string }>();
-  if (existing) {
-    await db.prepare("DELETE FROM game_actions WHERE id = ?").bind(existing.id).run();
-  }
-
-  await db
-    .prepare(
-      "INSERT INTO game_actions (id, game_id, round, phase, player_id, action_type, target_player_id, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)"
-    )
-    .bind(
-      nanoid(),
-      playerRow.game_id,
-      gameRow.round,
-      gameRow.phase,
-      playerRow.player_id,
-      actionType,
-      targetPlayerId ?? null,
-      now()
-    )
-    .run();
+  // Allow changing decision — atomic DELETE + INSERT to prevent race conditions
+  const newActionId = nanoid();
+  const createdAt = now();
+  await db.batch([
+    db
+      .prepare(
+        "DELETE FROM game_actions WHERE game_id = ? AND player_id = ? AND round = ? AND phase = ?"
+      )
+      .bind(playerRow.game_id, playerRow.player_id, gameRow.round, gameRow.phase),
+    db
+      .prepare(
+        "INSERT INTO game_actions (id, game_id, round, phase, player_id, action_type, target_player_id, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)"
+      )
+      .bind(
+        newActionId,
+        playerRow.game_id,
+        gameRow.round,
+        gameRow.phase,
+        playerRow.player_id,
+        actionType,
+        targetPlayerId ?? null,
+        createdAt
+      ),
+  ]);
 
   return { success: true };
 }

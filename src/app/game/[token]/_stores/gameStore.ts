@@ -3,6 +3,7 @@ import type { GameStateResponse, ActionType, GamePhase } from "@/db";
 import type {
   GameService,
   ActionResult,
+  RematchResult,
   LeaveResult,
   StartGameOpts,
 } from "../_services/gameService";
@@ -67,7 +68,7 @@ interface GameState {
   startGame: (gameMode: "full" | "simple", mafiaCount: number) => Promise<ActionResult>;
   kickPlayer: (playerId: string) => Promise<ActionResult>;
   leaveGame: () => Promise<LeaveResult>;
-  rematchGame: (mafiaCountSetting?: number) => Promise<ActionResult>;
+  rematchGame: (mafiaCountSetting?: number) => Promise<RematchResult>;
   transferGameMaster: (newHostPlayerId: string) => Promise<ActionResult>;
   submitGmAction: (
     forPlayerId: string,
@@ -248,6 +249,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       const data = await _gameService.fetchState(_token);
       set({ state: data, _backoffDelay: POLL_INTERVAL });
 
+      // Auto-redirect to new game if rematch was created
+      if (data.rematchToken) {
+        window.location.href = `/game/${data.rematchToken}`;
+        return;
+      }
+
       // Handle new messages as toasts
       const currentToasts = get().toasts;
       const newToasts = [...currentToasts];
@@ -388,7 +395,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
-  rematchGame: async (mafiaCountSetting?: number): Promise<ActionResult> => {
+  rematchGame: async (mafiaCountSetting?: number): Promise<RematchResult> => {
     const { _gameService, _token } = get();
     if (!_gameService || !_token) return { success: false, error: "No service initialized" };
 
@@ -397,9 +404,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (mafiaCountSetting && mafiaCountSetting > 0) opts.mafiaCount = mafiaCountSetting;
 
       const result = await _gameService.rematchGame(_token, opts);
-      if (result.success) {
-        await get().refetch();
-      } else {
+      if (result.success && result.newToken) {
+        // Navigate GM to the new game
+        window.location.href = `/game/${result.newToken}`;
+      } else if (!result.success) {
         set({ error: result.error || "Błąd połączenia" });
       }
       return result;

@@ -179,4 +179,6 @@ export interface GameStateResponse {
   };
   // Whether to show points/missions to players (only during review/finished)
   showPoints: boolean;
+  // Present when a rematch was created — the player's token in the new game
+  rematchToken?: string;
 }

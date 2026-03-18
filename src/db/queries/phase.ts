@@ -153,19 +153,21 @@ export async function resolveNight(
 
   let nightMsg = "Tej nocy nikt nie zginął.";
 
-  // Process mafia kills
+  // Process mafia kills — only consider actions from ALIVE mafia members
   if (aliveMafia.length > 0) {
+    const aliveMafiaIds = new Set(aliveMafia.map((m) => m.player_id));
+    const aliveKillActions = killActions.filter((k) => aliveMafiaIds.has(k.player_id));
     let killTarget: string | null = null;
 
     if (aliveMafia.length === 1) {
       // Single mafia - just need one kill action
-      killTarget = killActions[0]?.target_player_id || null;
+      killTarget = aliveKillActions[0]?.target_player_id || null;
     } else {
       // Multiple mafia - need consensus
-      if (killActions.length >= aliveMafia.length) {
-        const targets = new Set(killActions.map((k) => k.target_player_id));
+      if (aliveKillActions.length >= aliveMafia.length) {
+        const targets = new Set(aliveKillActions.map((k) => k.target_player_id));
         if (targets.size === 1) {
-          killTarget = killActions[0].target_player_id;
+          killTarget = aliveKillActions[0].target_player_id;
         }
       }
     }
