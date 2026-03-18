@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import * as apiClient from "@/lib/api-client";
 
 interface RankingEntry {
   playerId: string;
@@ -37,18 +38,14 @@ export default function RankingClient() {
 
     async function fetchRanking() {
       try {
-        const res = await fetch(`/api/ranking?token=${token}`);
-        if (!res.ok) {
-          setError("Nie znaleziono sesji");
-          return;
-        }
-        const data = await res.json();
+        if (!token) throw new Error("Brak tokena sesji");
+        const data = await apiClient.fetchRanking(token);
         setRanking(data.ranking);
         setGameStatus(data.gameStatus);
         setWinner(data.winner);
         setRound(data.round);
-      } catch {
-        setError("Błąd połączenia");
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Błąd połączenia");
       } finally {
         setLoading(false);
       }

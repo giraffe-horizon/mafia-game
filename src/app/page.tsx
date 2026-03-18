@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import * as apiClient from "@/lib/api-client";
 
 function CodeInput({
   value,
@@ -136,19 +137,10 @@ export default function Home() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/game/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Błąd");
-        return;
-      }
+      const data = await apiClient.createGame();
       router.push(`/game/${data.token}`);
-    } catch {
-      setError("Błąd połączenia");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Błąd połączenia");
     } finally {
       setLoading(false);
     }
@@ -162,21 +154,10 @@ export default function Home() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/game/join", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: code.trim(),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Błąd");
-        return;
-      }
+      const data = await apiClient.joinGame({ code: code.trim() });
       router.push(`/game/${data.token}`);
-    } catch {
-      setError("Błąd połączenia");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Błąd połączenia");
     } finally {
       setLoading(false);
     }

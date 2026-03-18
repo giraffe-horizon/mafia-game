@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import type { GameStateResponse, PublicPlayer } from "@/lib/db";
 import { ROLE_LABELS, ROLE_COLORS, PHASE_LABELS, PHASE_ICONS, ROLE_ICONS } from "@/lib/constants";
+import * as apiClient from "@/lib/api-client";
 import CharacterPicker from "@/components/CharacterPicker";
 import OnboardingScreen from "./components/OnboardingScreen";
 import PlayerRow from "./components/PlayerRow";
@@ -95,13 +96,7 @@ export default function GameClient() {
   // ---------------------------------------------------------------------------
   const fetchState = useCallback(async () => {
     try {
-      const res = await fetch(`/api/game/${token}/state`);
-      if (res.status === 404) {
-        setError("Sesja nie istnieje");
-        return;
-      }
-      if (!res.ok) return;
-      const data: GameStateResponse = await res.json();
+      const data = await apiClient.fetchGameState(token);
       setState(data);
       for (const msg of data.messages) {
         if (!shownMessageIds.current.has(msg.id)) {
@@ -110,7 +105,11 @@ export default function GameClient() {
           setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== msg.id)), 7000);
         }
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("404")) {
+        setError("Sesja nie istnieje");
+        return;
+      }
       /* silent retry */
     }
   }, [token]);
@@ -122,10 +121,9 @@ export default function GameClient() {
   }, [fetchState]);
 
   useEffect(() => {
-    fetch("/api/characters")
-      .then((r) => {
-        if (r.ok) r.json().then(setCharacters);
-      })
+    apiClient
+      .fetchCharacters()
+      .then(setCharacters)
       .catch(() => {});
   }, []);
 
@@ -143,18 +141,11 @@ export default function GameClient() {
   async function handleStart() {
     setStarting(true);
     try {
-      const bodyObj: Record<string, unknown> = { mode: gameMode };
-      if (mafiaCount > 0) bodyObj.mafiaCount = mafiaCount;
-      const res = await fetch(`/api/game/${token}/start`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyObj),
-      });
-      const data = await res.json();
-      if (!res.ok) setError(data.error ?? "Błąd");
-      else await fetchState();
-    } catch {
-      setError("Błąd połączenia");
+      const input = { mode: gameMode, ...(mafiaCount > 0 && { mafiaCount }) };
+      await apiClient.startGame(token, input);
+      await fetchState();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Błąd połączenia");
     } finally {
       setStarting(false);
     }
@@ -172,22 +163,13 @@ export default function GameClient() {
     setOnboardingError("");
     setOnboardingLoading(true);
     try {
-      const res = await fetch(`/api/game/${token}/setup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nickname: onboardingNickname.trim(),
-          characterId: selectedCharacterId,
-        }),
+      await apiClient.setupPlayer(token, {
+        nickname: onboardingNickname.trim(),
+        characterId: selectedCharacterId,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setOnboardingError(data.error ?? "Błąd");
-        return;
-      }
       await fetchState();
-    } catch {
-      setOnboardingError("Błąd połączenia");
+    } catch (error) {
+      setOnboardingError(error instanceof Error ? error.message : "Błąd połączenia");
     } finally {
       setOnboardingLoading(false);
     }
@@ -196,16 +178,10 @@ export default function GameClient() {
   async function handlePhase(newPhase: string) {
     setPhasePending(true);
     try {
-      const res = await fetch(`/api/game/${token}/phase`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phase: newPhase }),
-      });
-      const data = await res.json();
-      if (!res.ok) setError(data.error ?? "Błąd zmiany fazy");
-      else await fetchState();
-    } catch {
-      setError("Błąd połączenia");
+      await apiClient.advancePhase(token, { phase: newPhase });
+      await fetchState();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Błąd zmiany fazy");
     } finally {
       setPhasePending(false);
     }
@@ -215,16 +191,13 @@ export default function GameClient() {
     setActionPending(true);
     setActionError("");
     try {
-      const res = await fetch(`/api/game/${token}/action`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: actionType, targetPlayerId: targetPlayerId || undefined }),
+      await apiClient.submitAction(token, {
+        type: actionType,
+        ...(targetPlayerId && { targetPlayerId }),
       });
-      const data = await res.json();
-      if (!res.ok) setActionError(data.error ?? "Błąd");
-      else await fetchState();
-    } catch {
-      setActionError("Błąd połączenia");
+      await fetchState();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Błąd połączenia");
     } finally {
       setActionPending(false);
     }
@@ -235,19 +208,14 @@ export default function GameClient() {
     setMsgPending(true);
     setMsgError("");
     try {
-      const res = await fetch(`/api/game/${token}/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: msgContent, toPlayerId: msgTarget || undefined }),
+      await apiClient.sendMessage(token, {
+        content: msgContent,
+        ...(msgTarget && { toPlayerId: msgTarget }),
       });
-      const data = await res.json();
-      if (!res.ok) setMsgError(data.error ?? "Błąd");
-      else {
-        setMsgContent("");
-        await fetchState();
-      }
-    } catch {
-      setMsgError("Błąd połączenia");
+      setMsgContent("");
+      await fetchState();
+    } catch (error) {
+      setMsgError(error instanceof Error ? error.message : "Błąd połączenia");
     } finally {
       setMsgPending(false);
     }
@@ -258,27 +226,19 @@ export default function GameClient() {
     setMsnPending(true);
     setMsnError("");
     try {
-      const res = await fetch(`/api/game/${token}/mission`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          targetPlayerId: msnTarget,
-          description: msnDesc,
-          isSecret: msnSecret,
-          points: msnPoints,
-        }),
+      await apiClient.createMission(token, {
+        targetPlayerId: msnTarget,
+        description: msnDesc,
+        isSecret: msnSecret,
+        points: msnPoints,
       });
-      const data = await res.json();
-      if (!res.ok) setMsnError(data.error ?? "Błąd");
-      else {
-        setMsnDesc("");
-        setMsnTarget("");
-        setMsnSecret(false);
-        setMsnPoints(1);
-        setMsnPreset("custom");
-      }
-    } catch {
-      setMsnError("Błąd połączenia");
+      setMsnDesc("");
+      setMsnTarget("");
+      setMsnSecret(false);
+      setMsnPoints(1);
+      setMsnPreset("custom");
+    } catch (error) {
+      setMsnError(error instanceof Error ? error.message : "Błąd połączenia");
     } finally {
       setMsnPending(false);
     }
@@ -286,7 +246,7 @@ export default function GameClient() {
 
   async function handleCompleteMission(missionId: string) {
     try {
-      await fetch(`/api/game/${token}/mission/${missionId}/complete`, { method: "POST" });
+      await apiClient.completeMission(token, missionId);
       await fetchState();
     } catch {
       /* ignore */
@@ -295,7 +255,7 @@ export default function GameClient() {
 
   async function handleDeleteMission(missionId: string) {
     try {
-      await fetch(`/api/game/${token}/mission/${missionId}`, { method: "DELETE" });
+      await apiClient.deleteMission(token, missionId);
       await fetchState();
     } catch {
       /* ignore */
@@ -305,26 +265,17 @@ export default function GameClient() {
   async function handleLeaveGame() {
     if (!confirm("Czy na pewno chcesz opuścić grę?")) return;
     try {
-      const res = await fetch(`/api/game/${token}/leave`, { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Błąd");
-        return;
-      }
+      await apiClient.leaveGame(token);
       router.push("/");
-    } catch {
-      setError("Błąd połączenia");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Błąd połączenia");
     }
   }
 
   async function handleTransferGm(newHostPlayerId: string) {
     try {
-      const res = await fetch(`/api/game/${token}/transfer-gm`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newHostPlayerId }),
-      });
-      if (res.ok) await fetchState();
+      await apiClient.transferGameMaster(token, { newHostPlayerId });
+      await fetchState();
     } catch {
       /* silent */
     }
@@ -332,12 +283,8 @@ export default function GameClient() {
 
   async function handleKick(playerId: string) {
     try {
-      const res = await fetch(`/api/game/${token}/kick`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId }),
-      });
-      if (res.ok) await fetchState();
+      await apiClient.kickPlayer(token, { playerId });
+      await fetchState();
     } catch {
       /* silent */
     }
@@ -345,37 +292,25 @@ export default function GameClient() {
 
   async function handleGmAction(forPlayerId: string, actionType: string, targetPlayerId: string) {
     try {
-      const res = await fetch(`/api/game/${token}/action`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: actionType,
-          targetPlayerId: targetPlayerId || undefined,
-          forPlayerId,
-        }),
+      await apiClient.submitAction(token, {
+        type: actionType,
+        forPlayerId,
+        ...(targetPlayerId && { targetPlayerId }),
       });
-      const data = await res.json();
-      if (!res.ok) setActionError(data.error ?? "Błąd");
-      else await fetchState();
-    } catch {
-      setActionError("Błąd połączenia");
+      await fetchState();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Błąd połączenia");
     }
   }
 
   async function handleRematch() {
     setRematchPending(true);
     try {
-      const body =
-        mafiaCountSetting > 0 ? JSON.stringify({ mafiaCount: mafiaCountSetting }) : undefined;
-      const res = await fetch(`/api/game/${token}/rematch`, {
-        method: "POST",
-        ...(body ? { headers: { "Content-Type": "application/json" }, body } : {}),
-      });
-      const data = await res.json();
-      if (!res.ok) setError(data.error ?? "Błąd");
-      else await fetchState();
-    } catch {
-      setError("Błąd połączenia");
+      const input = mafiaCountSetting > 0 ? { mafiaCount: mafiaCountSetting } : undefined;
+      await apiClient.rematchGame(token, input);
+      await fetchState();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Błąd połączenia");
     } finally {
       setRematchPending(false);
     }
@@ -384,15 +319,9 @@ export default function GameClient() {
   async function handleCharacterUpdate() {
     if (!selectedCharacterId) return;
     try {
-      const res = await fetch(`/api/game/${token}/character`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ characterId: selectedCharacterId }),
-      });
-      if (res.ok) {
-        setShowSettingsModal(false);
-        fetchState();
-      }
+      await apiClient.updateCharacter(token, { characterId: selectedCharacterId });
+      setShowSettingsModal(false);
+      fetchState();
     } catch {
       /* silent */
     }
