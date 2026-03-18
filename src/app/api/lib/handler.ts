@@ -20,6 +20,15 @@ export type ApiHandlerWithToken<T = unknown> = (
   ctx: ApiContextWithToken
 ) => Promise<NextResponse<T>>;
 
+function logError(req: NextRequest, error: unknown) {
+  console.error(
+    "API Error [%s %s]:",
+    req.method,
+    req.nextUrl.pathname,
+    error instanceof Error ? error.message : error
+  );
+}
+
 export function withApiHandlerNoToken(
   handler: (req: NextRequest, ctx: ApiContext) => Promise<NextResponse>
 ) {
@@ -28,21 +37,10 @@ export function withApiHandlerNoToken(
       const db = await getDb();
       return await handler(req, { db });
     } catch (error) {
-      console.error(
-        "API Error [%s %s]:",
-        req.method,
-        req.nextUrl.pathname,
-        req.method,
-        req.nextUrl.pathname,
-        req.method,
-        req.nextUrl.pathname,
-        error instanceof Error ? error.message : error
-      );
-
+      logError(req, error);
       if (error instanceof ZodError) {
         return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
       }
-
       return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
     }
   };
@@ -61,24 +59,13 @@ export function withApiHandlerMission(
   ) => {
     try {
       const { token, missionId } = await params;
-        "API Error [%s %s]:",
-        req.method,
-        req.nextUrl.pathname,
+      const db = await getDb();
       return await handler(req, { db, token, missionId });
-        "API Error [%s %s]:",
-        req.method,
-        req.nextUrl.pathname,
-      console.error(
-        "API Error [%s %s]:",
-        req.method,
-        req.nextUrl.pathname,
-        error instanceof Error ? error.message : error
-      );
-
+    } catch (error) {
+      logError(req, error);
       if (error instanceof ZodError) {
         return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
       }
-
       return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
     }
   };
@@ -86,28 +73,17 @@ export function withApiHandlerMission(
 
 export function withApiHandler(
   handler: (req: NextRequest, ctx: ApiContextWithToken) => Promise<NextResponse>
-        "API Error [%s %s]:",
-        req.method,
-        req.nextUrl.pathname,
+) {
   return async (req: NextRequest, { params }: { params: Promise<{ token: string }> }) => {
     try {
       const { token } = await params;
-        "API Error [%s %s]:",
-        req.method,
-        req.nextUrl.pathname,
+      const db = await getDb();
       return await handler(req, { db, token });
     } catch (error) {
-      console.error(
-        "API Error [%s %s]:",
-        req.method,
-        req.nextUrl.pathname,
-        error instanceof Error ? error.message : error
-      );
-
+      logError(req, error);
       if (error instanceof ZodError) {
         return NextResponse.json({ error: "Nieprawidłowe dane" }, { status: 400 });
       }
-
       return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
     }
   };
