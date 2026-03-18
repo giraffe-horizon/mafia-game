@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
-import type { GameStateResponse, PublicPlayer } from "@/lib/db";
+import type { PublicPlayer } from "@/lib/db";
 import { ROLE_LABELS, ROLE_COLORS, PHASE_LABELS, PHASE_ICONS, ROLE_ICONS } from "@/lib/constants";
 import * as apiClient from "@/lib/api-client";
 import CharacterPicker from "@/components/CharacterPicker";
@@ -13,14 +13,11 @@ import MGPanel from "./components/MGPanel";
 import NightActionPanel from "./components/NightActionPanel";
 import VotePanel from "./components/VotePanel";
 import EndScreen from "./components/EndScreen";
-
-// ---------------------------------------------------------------------------
-// Toast types
-// ---------------------------------------------------------------------------
-interface Toast {
-  id: string;
-  content: string;
-}
+import { useGamePolling } from "./_hooks/useGamePolling";
+import { useGameActions } from "./_hooks/useGameActions";
+import { useOnboarding } from "./_hooks/useOnboarding";
+import { useMessageForm } from "./_hooks/useMessageForm";
+import { useMissionForm } from "./_hooks/useMissionForm";
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -29,50 +26,70 @@ export default function GameClient() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
 
-  // Core state
-  const [state, setState] = useState<GameStateResponse | null>(null);
-  const [error, setError] = useState("");
+  // Custom hooks
+  const { state, error, setError, toasts, dismissToast, refetch, characters } =
+    useGamePolling(token);
+  const {
+    actionPending,
+    actionError,
+    phasePending,
+    starting,
+    changingDecision,
+    setChangingDecision,
+    handleAction,
+    handlePhase,
+    handleStart,
+    handleKick,
+    handleLeave,
+    handleRematch,
+    handleGmAction,
+    handleTransferGm,
+  } = useGameActions({ token, refetch, setError });
+  const {
+    onboardingNickname,
+    selectedCharacterId,
+    onboardingLoading,
+    onboardingError,
+    setOnboardingNickname,
+    setSelectedCharacterId,
+    setOnboardingError,
+    handleSetup,
+    handleCharacterUpdate,
+  } = useOnboarding({ token, refetch });
+  const {
+    msgTarget,
+    msgContent,
+    msgPending,
+    msgError,
+    setMsgTarget,
+    setMsgContent,
+    setMsgError,
+    handleSendMessage,
+  } = useMessageForm({ token, refetch });
+  const {
+    msnTarget,
+    msnDesc,
+    msnSecret,
+    msnPoints,
+    msnPreset,
+    msnPending,
+    msnError,
+    setMsnTarget,
+    setMsnDesc,
+    setMsnSecret,
+    setMsnPoints,
+    setMsnPreset,
+    setMsnError,
+    handleCreateMission,
+    handleCompleteMission,
+    handleDeleteMission,
+  } = useMissionForm({ token, refetch });
 
-  // UI state
+  // UI state (remains in component)
   const [roleVisible, setRoleVisible] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const shownMessageIds = useRef<Set<string>>(new Set());
-
-  // Action state
-  const [actionPending, setActionPending] = useState(false);
-  const [actionError, setActionError] = useState("");
-  const [phasePending, setPhasePending] = useState(false);
-  const [starting, setStarting] = useState(false);
   const [mafiaCount, setMafiaCount] = useState(0);
   const [gameMode, setGameMode] = useState<"full" | "simple">("full");
-  const [changingDecision, setChangingDecision] = useState(false);
-
-  // Onboarding state
-  const [characters, setCharacters] = useState<
-    Array<{ id: string; slug: string; name: string; name_pl: string; avatar_url: string }>
-  >([]);
-  const [onboardingNickname, setOnboardingNickname] = useState("");
-  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
-  const [onboardingLoading, setOnboardingLoading] = useState(false);
-  const [onboardingError, setOnboardingError] = useState("");
-
-  // MG: message form
-  const [msgTarget, setMsgTarget] = useState("");
-  const [msgContent, setMsgContent] = useState("");
-  const [msgPending, setMsgPending] = useState(false);
-  const [msgError, setMsgError] = useState("");
-
-  // MG: mission form
-  const [msnTarget, setMsnTarget] = useState("");
-  const [msnDesc, setMsnDesc] = useState("");
-  const [msnSecret, setMsnSecret] = useState(false);
-  const [msnPoints, setMsnPoints] = useState<1 | 2 | 3>(1);
-  const [msnPreset, setMsnPreset] = useState<string>("custom");
-  const [msnPending, setMsnPending] = useState(false);
-  const [msnError, setMsnError] = useState("");
-
-  // MG: rematch + settings
   const [rematchPending, setRematchPending] = useState(false);
   const [mafiaCountSetting, setMafiaCountSetting] = useState(0);
   const [mgTab, setMgTab] = useState<"game" | "message" | "mission" | "settings">("game");
@@ -89,43 +106,7 @@ export default function GameClient() {
     if (state?.currentPlayer?.character) {
       setSelectedCharacterId(state.currentPlayer.character.id);
     }
-  }, [state?.currentPlayer?.character]);
-
-  // ---------------------------------------------------------------------------
-  // Polling
-  // ---------------------------------------------------------------------------
-  const fetchState = useCallback(async () => {
-    try {
-      const data = await apiClient.fetchGameState(token);
-      setState(data);
-      for (const msg of data.messages) {
-        if (!shownMessageIds.current.has(msg.id)) {
-          shownMessageIds.current.add(msg.id);
-          setToasts((prev) => [...prev, { id: msg.id, content: msg.content }]);
-          setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== msg.id)), 7000);
-        }
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("404")) {
-        setError("Sesja nie istnieje");
-        return;
-      }
-      /* silent retry */
-    }
-  }, [token]);
-
-  useEffect(() => {
-    fetchState();
-    const interval = setInterval(fetchState, 2000);
-    return () => clearInterval(interval);
-  }, [fetchState]);
-
-  useEffect(() => {
-    apiClient
-      .fetchCharacters()
-      .then(setCharacters)
-      .catch(() => {});
-  }, []);
+  }, [state?.currentPlayer?.character, setSelectedCharacterId]);
 
   useEffect(() => {
     if (!showSettingsModal) return;
@@ -135,197 +116,14 @@ export default function GameClient() {
     };
   }, [showSettingsModal]);
 
-  // ---------------------------------------------------------------------------
-  // Handlers
-  // ---------------------------------------------------------------------------
-  async function handleStart() {
-    setStarting(true);
-    try {
-      const input = { mode: gameMode, ...(mafiaCount > 0 && { mafiaCount }) };
-      await apiClient.startGame(token, input);
-      await fetchState();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Błąd połączenia");
-    } finally {
-      setStarting(false);
-    }
-  }
-
-  async function handleOnboardingSetup() {
-    if (!onboardingNickname.trim()) {
-      setOnboardingError("Podaj swoje imię");
-      return;
-    }
-    if (!selectedCharacterId) {
-      setOnboardingError("Wybierz postać");
-      return;
-    }
-    setOnboardingError("");
-    setOnboardingLoading(true);
-    try {
-      await apiClient.setupPlayer(token, {
-        nickname: onboardingNickname.trim(),
-        characterId: selectedCharacterId,
-      });
-      await fetchState();
-    } catch (error) {
-      setOnboardingError(error instanceof Error ? error.message : "Błąd połączenia");
-    } finally {
-      setOnboardingLoading(false);
-    }
-  }
-
-  async function handlePhase(newPhase: string) {
-    setPhasePending(true);
-    try {
-      await apiClient.advancePhase(token, { phase: newPhase });
-      await fetchState();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Błąd zmiany fazy");
-    } finally {
-      setPhasePending(false);
-    }
-  }
-
-  async function handleAction(actionType: string, targetPlayerId: string) {
-    setActionPending(true);
-    setActionError("");
-    try {
-      await apiClient.submitAction(token, {
-        type: actionType,
-        ...(targetPlayerId && { targetPlayerId }),
-      });
-      await fetchState();
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Błąd połączenia");
-    } finally {
-      setActionPending(false);
-    }
-  }
-
-  async function handleSendMessage() {
-    if (!msgContent.trim()) return;
-    setMsgPending(true);
-    setMsgError("");
-    try {
-      await apiClient.sendMessage(token, {
-        content: msgContent,
-        ...(msgTarget && { toPlayerId: msgTarget }),
-      });
-      setMsgContent("");
-      await fetchState();
-    } catch (error) {
-      setMsgError(error instanceof Error ? error.message : "Błąd połączenia");
-    } finally {
-      setMsgPending(false);
-    }
-  }
-
-  async function handleCreateMission() {
-    if (!msnTarget || !msnDesc.trim()) return;
-    setMsnPending(true);
-    setMsnError("");
-    try {
-      await apiClient.createMission(token, {
-        targetPlayerId: msnTarget,
-        description: msnDesc,
-        isSecret: msnSecret,
-        points: msnPoints,
-      });
-      setMsnDesc("");
-      setMsnTarget("");
-      setMsnSecret(false);
-      setMsnPoints(1);
-      setMsnPreset("custom");
-    } catch (error) {
-      setMsnError(error instanceof Error ? error.message : "Błąd połączenia");
-    } finally {
-      setMsnPending(false);
-    }
-  }
-
-  async function handleCompleteMission(missionId: string) {
-    try {
-      await apiClient.completeMission(token, missionId);
-      await fetchState();
-    } catch {
-      /* ignore */
-    }
-  }
-
-  async function handleDeleteMission(missionId: string) {
-    try {
-      await apiClient.deleteMission(token, missionId);
-      await fetchState();
-    } catch {
-      /* ignore */
-    }
-  }
-
-  async function handleLeaveGame() {
-    if (!confirm("Czy na pewno chcesz opuścić grę?")) return;
-    try {
-      await apiClient.leaveGame(token);
-      router.push("/");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Błąd połączenia");
-    }
-  }
-
-  async function handleTransferGm(newHostPlayerId: string) {
-    try {
-      await apiClient.transferGameMaster(token, { newHostPlayerId });
-      await fetchState();
-    } catch {
-      /* silent */
-    }
-  }
-
-  async function handleKick(playerId: string) {
-    try {
-      await apiClient.kickPlayer(token, { playerId });
-      await fetchState();
-    } catch {
-      /* silent */
-    }
-  }
-
-  async function handleGmAction(forPlayerId: string, actionType: string, targetPlayerId: string) {
-    try {
-      await apiClient.submitAction(token, {
-        type: actionType,
-        forPlayerId,
-        ...(targetPlayerId && { targetPlayerId }),
-      });
-      await fetchState();
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Błąd połączenia");
-    }
-  }
-
-  async function handleRematch() {
+  // UI helper functions
+  const handleOnboardingSetup = () => handleSetup();
+  const handleCharacterUpdateWrapper = () => handleCharacterUpdate(setShowSettingsModal);
+  const handleRematchWrapper = () => {
     setRematchPending(true);
-    try {
-      const input = mafiaCountSetting > 0 ? { mafiaCount: mafiaCountSetting } : undefined;
-      await apiClient.rematchGame(token, input);
-      await fetchState();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Błąd połączenia");
-    } finally {
-      setRematchPending(false);
-    }
-  }
-
-  async function handleCharacterUpdate() {
-    if (!selectedCharacterId) return;
-    try {
-      await apiClient.updateCharacter(token, { characterId: selectedCharacterId });
-      setShowSettingsModal(false);
-      fetchState();
-    } catch {
-      /* silent */
-    }
-  }
+    handleRematch(mafiaCountSetting).finally(() => setRematchPending(false));
+  };
+  const handleStartWrapper = () => handleStart(gameMode, mafiaCount);
 
   function copyCode() {
     if (!state) return;
@@ -423,7 +221,7 @@ export default function GameClient() {
                 </span>
                 <p className="text-white text-sm font-typewriter">{t.content}</p>
                 <button
-                  onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
+                  onClick={() => dismissToast(t.id)}
                   className="ml-auto shrink-0 text-slate-500 hover:text-slate-300"
                 >
                   <span className="material-symbols-outlined text-[16px]">close</span>
@@ -885,10 +683,7 @@ export default function GameClient() {
                       <span className="material-symbols-outlined text-[18px]">check</span>
                     </button>
                     <button
-                      onClick={async () => {
-                        await apiClient.deleteMission(token, m.id);
-                        await fetchState();
-                      }}
+                      onClick={() => handleDeleteMission(m.id)}
                       className="size-9 flex items-center justify-center rounded-lg bg-red-900/30 border border-red-700/40 text-red-400 hover:bg-red-900/50 transition-all"
                       title="Niewykonana — usuń"
                     >
@@ -906,7 +701,7 @@ export default function GameClient() {
             <button
               onClick={async () => {
                 const result = await apiClient.finalizeGame(token);
-                if (result.success) await fetchState();
+                if (result.success) await refetch();
               }}
               className="w-full mt-3 flex items-center justify-center gap-2 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)]"
             >
@@ -934,7 +729,7 @@ export default function GameClient() {
             currentPlayer={currentPlayer}
             isHost={isHost}
             rematchPending={rematchPending}
-            onRematch={handleRematch}
+            onRematch={handleRematchWrapper}
             hostMissions={state.hostMissions}
             mafiaCountSetting={mafiaCountSetting}
           />
@@ -1074,7 +869,7 @@ export default function GameClient() {
               </div>
             )}
             <button
-              onClick={handleStart}
+              onClick={handleStartWrapper}
               disabled={starting || nonHostPlayers.length < (gameMode === "simple" ? 3 : 5)}
               className="flex w-full items-center justify-center rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-typewriter uppercase tracking-wider"
             >
@@ -1123,7 +918,7 @@ export default function GameClient() {
               </button>
               {!currentPlayer.isHost && (
                 <button
-                  onClick={handleCharacterUpdate}
+                  onClick={handleCharacterUpdateWrapper}
                   disabled={
                     !selectedCharacterId ||
                     selectedCharacterId === state?.currentPlayer?.character?.id
@@ -1138,7 +933,7 @@ export default function GameClient() {
               <button
                 onClick={() => {
                   setShowSettingsModal(false);
-                  handleLeaveGame();
+                  handleLeave();
                 }}
                 className="w-full mt-4 py-2 bg-red-900/50 hover:bg-red-800/50 border border-red-700/50 text-red-300 rounded font-typewriter transition-colors flex items-center justify-center gap-2"
               >
