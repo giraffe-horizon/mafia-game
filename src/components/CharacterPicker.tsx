@@ -50,6 +50,8 @@ export default function CharacterPicker({
                   <img
                     src={character.avatar_url}
                     alt={character.name_pl}
+                    loading="lazy"
+                    decoding="async"
                     className={`w-16 h-16 rounded-full border-2 transition-all ${
                       isSelected ? "border-primary" : "border-slate-600"
                     }`}

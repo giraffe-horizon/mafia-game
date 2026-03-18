@@ -72,6 +72,8 @@ export default function PlayerRow({
                 <img
                   src={player.character.avatarUrl}
                   alt={player.character.namePl}
+                  loading="lazy"
+                  decoding="async"
                   className="w-9 h-9 rounded-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;

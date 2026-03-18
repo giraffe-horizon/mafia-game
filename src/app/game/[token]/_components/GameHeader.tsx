@@ -66,6 +66,8 @@ export default function GameHeader({
                 <img
                   src={currentPlayer.character.avatarUrl}
                   alt={currentPlayer.character.namePl}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const t = e.target as HTMLImageElement;
