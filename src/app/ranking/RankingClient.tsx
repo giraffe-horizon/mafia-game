@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import * as apiClient from "@/lib/api-client";
 
 interface RankingEntry {
@@ -74,12 +75,12 @@ export default function RankingClient() {
       <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-[#1a0c0c] md:mx-auto md:my-8 md:rounded-[2.5rem]">
         <span className="material-symbols-outlined text-[48px] text-[#da0b0b] mb-4">error</span>
         <p className="text-slate-300 font-['Special_Elite'] text-lg text-center px-8">{error}</p>
-        <button
-          onClick={() => router.push("/")}
+        <Link
+          href="/"
           className="mt-6 text-[#da0b0b] font-['Special_Elite'] uppercase tracking-widest text-sm"
         >
           ← Powrót
-        </button>
+        </Link>
       </div>
     );
   }
@@ -88,12 +89,12 @@ export default function RankingClient() {
     <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-[#1a0c0c] overflow-hidden shadow-2xl md:mx-auto md:my-8 md:rounded-[2.5rem]">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-800">
-        <button
-          onClick={() => (token ? router.push(`/game/${token}`) : router.push("/"))}
+        <Link
+          href={token ? `/game/${token}` : "/"}
           className="size-10 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
         >
           <span className="material-symbols-outlined text-[22px]">arrow_back</span>
-        </button>
+        </Link>
         <div className="text-center">
           <h2 className="font-['Special_Elite'] text-[#da0b0b] text-base font-bold tracking-widest drop-shadow-[0_0_6px_rgba(218,11,11,0.5)]">
             RANKING

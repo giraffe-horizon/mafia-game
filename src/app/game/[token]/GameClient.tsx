@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import QRCode from "react-qr-code";
 import type { PublicPlayer } from "@/lib/db";
 import { ROLE_LABELS, ROLE_COLORS, PHASE_LABELS, PHASE_ICONS, ROLE_ICONS } from "@/lib/constants";
@@ -206,12 +207,12 @@ export default function GameClient() {
       <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark">
         <span className="material-symbols-outlined text-[48px] text-primary mb-4">error</span>
         <p className="text-slate-300 font-typewriter text-lg text-center px-8">{error}</p>
-        <button
-          onClick={() => router.push("/")}
+        <Link
+          href="/"
           className="mt-6 text-primary font-typewriter uppercase tracking-widest text-sm hover:text-primary/80 transition-colors"
         >
           ← Powrót
-        </button>
+        </Link>
       </div>
     );
   }
