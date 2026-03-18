@@ -25,4 +25,5 @@ export default function GameLayout({ children, className, ...props }: GameLayout
   );
 }
 
+export { default as PageLayout } from "./GameLayout";
 export type { GameLayoutProps };
