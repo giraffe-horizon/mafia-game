@@ -146,7 +146,7 @@ export async function updateCharacter(
 export async function rematchGame(
   token: string,
   input?: RematchInput
-): Promise<{ success: boolean; newToken?: string; error?: string }> {
+): Promise<{ success: boolean; error?: string }> {
   return postRequest(`/api/game/${token}/rematch`, input);
 }
 
@@ -189,6 +189,7 @@ export async function fetchRanking(token: string): Promise<{
     survived: boolean;
     won: boolean;
     totalScore: number;
+    roundsPlayed: number;
   }>;
   gameStatus: string;
   winner: string | null;

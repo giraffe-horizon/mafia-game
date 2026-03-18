@@ -1,5 +1,5 @@
 import type { D1Database, GameRow, GamePlayerRow } from "@/db/types";
-import { now, buildRoles } from "@/db/helpers";
+import { now, nanoid, buildRoles } from "@/db/helpers";
 import { getMafiaKillActions } from "./actions";
 
 export async function startGame(
@@ -111,6 +111,14 @@ export async function changePhase(
   // Check win conditions after elimination
   const winner = await checkWinConditions(db, playerRow.game_id);
   if (winner) {
+    // Record round result for multi-round tracking
+    await db
+      .prepare(
+        "INSERT INTO round_results (id, game_id, round, winner, created_at) VALUES (?, ?, ?, ?, ?)"
+      )
+      .bind(nanoid(), playerRow.game_id, round, winner, now())
+      .run();
+
     // Check for unrated missions before ending
     const { results: unratedMissions } = await db
       .prepare("SELECT COUNT(*) as count FROM missions WHERE game_id = ? AND points IS NULL")

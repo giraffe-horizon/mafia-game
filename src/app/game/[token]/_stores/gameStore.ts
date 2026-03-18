@@ -249,12 +249,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       const data = await _gameService.fetchState(_token);
       set({ state: data, _backoffDelay: POLL_INTERVAL });
 
-      // Auto-redirect to new game if rematch was created
-      if (data.rematchToken) {
-        window.location.href = `/game/${data.rematchToken}`;
-        return;
-      }
-
       // Handle new messages as toasts
       const currentToasts = get().toasts;
       const newToasts = [...currentToasts];
@@ -404,10 +398,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (mafiaCountSetting && mafiaCountSetting > 0) opts.mafiaCount = mafiaCountSetting;
 
       const result = await _gameService.rematchGame(_token, opts);
-      if (result.success && result.newToken) {
-        // Navigate GM to the new game
-        window.location.href = `/game/${result.newToken}`;
-      } else if (!result.success) {
+      if (result.success) {
+        // Game reset to lobby in-place — just refetch state
+        await get().refetch();
+      } else {
         set({ error: result.error || "Błąd połączenia" });
       }
       return result;

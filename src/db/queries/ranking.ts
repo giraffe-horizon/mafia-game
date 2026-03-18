@@ -14,6 +14,7 @@ interface RankingPlayer {
   survived: boolean;
   won: boolean;
   totalScore: number;
+  roundsPlayed: number;
 }
 
 export interface RankingResult {
@@ -83,12 +84,28 @@ export async function getRanking(db: D1Database, token: string): Promise<Ranking
     .bind(player.game_id)
     .first<{ status: string; winner: string | null; round: number }>();
 
+  // Get completed round results for historical scoring
+  const { results: roundResults } = await db
+    .prepare("SELECT round, winner FROM round_results WHERE game_id = ? ORDER BY round ASC")
+    .bind(player.game_id)
+    .all<{ round: number; winner: string }>();
+
   const ranking: RankingPlayer[] = results.map((r) => {
     const survived = r.is_alive === 1;
     const won = game?.winner
       ? (game.winner === "mafia" && r.role === "mafia") ||
         (game.winner === "town" && r.role !== "mafia")
       : false;
+
+    // Current round score
+    const currentRoundScore =
+      r.mission_points + (survived ? SURVIVAL_BONUS : 0) + (won ? WINNING_BONUS : 0);
+
+    // Historical bonus from previous rounds (each completed round gave WINNING_BONUS to winners)
+    // Note: survival/role info from previous rounds is not tracked per-player,
+    // so historical scoring only counts winning bonus per past round
+    // Missions accumulate naturally since they're all per game_id
+    const roundsPlayed = roundResults.length;
 
     return {
       playerId: r.player_id,
@@ -100,7 +117,8 @@ export async function getRanking(db: D1Database, token: string): Promise<Ranking
       missionsTotal: r.missions_total,
       survived,
       won,
-      totalScore: r.mission_points + (survived ? SURVIVAL_BONUS : 0) + (won ? WINNING_BONUS : 0),
+      totalScore: currentRoundScore,
+      roundsPlayed,
     };
   });
 

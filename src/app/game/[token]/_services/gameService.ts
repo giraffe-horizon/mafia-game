@@ -10,9 +10,7 @@ export interface ActionResult {
   error?: string;
 }
 
-export interface RematchResult extends ActionResult {
-  newToken?: string;
-}
+export type RematchResult = ActionResult;
 
 export interface LeaveResult {
   success: boolean;

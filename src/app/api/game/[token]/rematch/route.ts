@@ -20,5 +20,5 @@ export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
-  return NextResponse.json({ success: true, newToken: result.newToken });
+  return NextResponse.json({ success: true });
 });
