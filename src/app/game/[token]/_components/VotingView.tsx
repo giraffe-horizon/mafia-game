@@ -1,6 +1,7 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
 import type { PublicPlayer } from "@/db/types";
 import { SectionHeader, Card } from "@/components/ui";
+import DeadSpectatorView from "./DeadSpectatorView";
 import VotePanel from "./VotePanel";
 
 interface VoteTally {
@@ -128,6 +129,11 @@ export default function VotingView({
           }}
           onChangeDecision={() => setChangingDecision(true)}
         />
+      )}
+
+      {/* Dead spectator view */}
+      {!isHost && !currentPlayer.isAlive && (
+        <DeadSpectatorView currentPlayer={currentPlayer} players={players} />
       )}
 
       {/* Vote tally */}

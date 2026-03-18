@@ -1,5 +1,6 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
 import { SectionHeader, Card, InfoCard } from "@/components/ui";
+import DeadSpectatorView from "./DeadSpectatorView";
 import { useGameStore } from "../_stores/gameStore";
 
 interface DayViewProps {
@@ -80,13 +81,21 @@ export default function DayView({ roleVisible, setRoleVisible }: DayViewProps) {
         </div>
       )}
 
-      {/* Day message for non-host players */}
-      {!isHost && (
+      {/* Day message for alive non-host players */}
+      {!isHost && currentPlayer.isAlive && (
         <InfoCard
           icon="wb_sunny"
           iconClassName="text-yellow-500/60"
           title="Dzień — dyskutujcie i szukajcie mafii"
           className="mx-5 mt-4"
+        />
+      )}
+
+      {/* Dead spectator view */}
+      {!isHost && !currentPlayer.isAlive && (
+        <DeadSpectatorView
+          currentPlayer={{ role: currentPlayer.role || undefined }}
+          players={state.players}
         />
       )}
     </>
