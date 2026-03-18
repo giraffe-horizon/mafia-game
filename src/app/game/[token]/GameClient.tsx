@@ -9,7 +9,7 @@ import * as apiClient from "@/lib/api-client";
 import CharacterPicker from "@/components/CharacterPicker";
 import OnboardingScreen from "./_components/OnboardingScreen";
 import PlayerRow from "./_components/PlayerRow";
-import MGPanel from "./_components/MGPanel";
+import GMPanel from "./_components/gm/GMPanel";
 import EndScreen from "./_components/EndScreen";
 import ToastOverlay from "./_components/ToastOverlay";
 import GameHeader from "./_components/GameHeader";
@@ -349,7 +349,7 @@ export default function GameClient() {
 
         {/* ── MG panel ── */}
         {isPlaying && isHost && (
-          <MGPanel
+          <GMPanel
             phase={phase}
             players={nonHostPlayers}
             tab={mgTab}
