@@ -1009,7 +1009,7 @@ export async function changePhase(
 async function resolveNight(
   db: D1Database,
   gameRow: GameRow,
-  _hostPlayer: GamePlayerRow
+  hostPlayer: GamePlayerRow
 ): Promise<void> {
   const { aliveMafia, killActions } = await getMafiaKillActions(db, gameRow.id, gameRow.round);
 
@@ -1053,9 +1053,9 @@ async function resolveNight(
             .bind(gameRow.id, targetPlayerId),
           db
             .prepare(
-              "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, NULL, NULL, ?, 0, ?)"
+              "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, NULL, ?, 0, ?)"
             )
-            .bind(nanoid(), gameRow.id, nightMsg, now()),
+            .bind(nanoid(), gameRow.id, hostPlayer.player_id, nightMsg, now()),
         ]);
         msgInserted = true;
       } else {
@@ -1097,9 +1097,9 @@ async function resolveNight(
   if (!msgInserted) {
     await db
       .prepare(
-        "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, NULL, NULL, ?, 0, ?)"
+        "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, NULL, ?, 0, ?)"
       )
-      .bind(nanoid(), gameRow.id, nightMsg, now())
+      .bind(nanoid(), gameRow.id, hostPlayer.player_id, nightMsg, now())
       .run();
   }
 }
