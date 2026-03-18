@@ -156,18 +156,11 @@ export default function PlayerRow({
             </>
           )}
           {isMafiaTeammate && (
-            <span className="text-xs" title="Członek mafii">
-              🔴
-            </span>
-          )}
-          {investigated === true && (
-            <span className="text-xs" title="Mafia">
-              🔴
-            </span>
-          )}
-          {investigated === false && (
-            <span className="text-xs" title="Niewinny">
-              🟢
+            <span
+              className="material-symbols-outlined text-[14px] text-red-400"
+              title="Członek mafii"
+            >
+              group
             </span>
           )}
         </div>
@@ -175,6 +168,16 @@ export default function PlayerRow({
           <span className="text-xs text-slate-600 font-typewriter uppercase">Wyeliminowany</span>
         )}
       </div>
+      {investigated === true && (
+        <span className="material-symbols-outlined text-[18px] text-red-400" title="Mafia">
+          close
+        </span>
+      )}
+      {investigated === false && (
+        <span className="material-symbols-outlined text-[18px] text-green-400" title="Niewinny">
+          check
+        </span>
+      )}
       {showRoleBadge && player.role && (
         <Badge variant={player.role as "mafia" | "detective" | "doctor" | "civilian"}>
           {ROLE_LABELS[player.role]}
