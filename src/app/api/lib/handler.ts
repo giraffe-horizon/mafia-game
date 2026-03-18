@@ -29,7 +29,9 @@ export function withApiHandlerNoToken(
       return await handler(req, { db });
     } catch (error) {
       console.error(
-        `API Error [${req.method} ${req.nextUrl.pathname}]:`,
+        "API Error [%s %s]:",
+        req.method,
+        req.nextUrl.pathname,
         error instanceof Error ? error.message : error
       );
 
@@ -59,7 +61,9 @@ export function withApiHandlerMission(
       return await handler(req, { db, token, missionId });
     } catch (error) {
       console.error(
-        `API Error [${req.method} ${req.nextUrl.pathname}]:`,
+        "API Error [%s %s]:",
+        req.method,
+        req.nextUrl.pathname,
         error instanceof Error ? error.message : error
       );
 
@@ -82,7 +86,9 @@ export function withApiHandler(
       return await handler(req, { db, token });
     } catch (error) {
       console.error(
-        `API Error [${req.method} ${req.nextUrl.pathname}]:`,
+        "API Error [%s %s]:",
+        req.method,
+        req.nextUrl.pathname,
         error instanceof Error ? error.message : error
       );
 
