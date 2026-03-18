@@ -783,9 +783,9 @@ async function getMafiaTeamActions(
 
   const { results } = await db
     .prepare(
-      "SELECT ga.player_id, gp.nickname, ga.target_player_id FROM game_actions ga JOIN game_players gp ON gp.game_id = ga.game_id AND gp.player_id = ga.player_id WHERE ga.game_id = ? AND ga.round = ? AND ga.phase = ? AND gp.role = 'mafia' AND ga.player_id != ? ORDER BY ga.created_at ASC"
+      "SELECT gp.player_id, gp.nickname, ga.target_player_id FROM game_players gp LEFT JOIN game_actions ga ON ga.game_id = gp.game_id AND ga.player_id = gp.player_id AND ga.round = ? AND ga.phase = ? AND ga.action_type = 'kill' WHERE gp.game_id = ? AND gp.role = 'mafia' AND gp.is_alive = 1 AND gp.player_id != ? ORDER BY gp.nickname ASC"
     )
-    .bind(gameRow.id, gameRow.round, gameRow.phase, playerRow.player_id)
+    .bind(gameRow.round, gameRow.phase, gameRow.id, playerRow.player_id)
     .all<{ player_id: string; nickname: string; target_player_id: string | null }>();
 
   return results.map((r) => ({

@@ -8,7 +8,6 @@ import CharacterPicker from "@/components/CharacterPicker";
 import OnboardingScreen from "./components/OnboardingScreen";
 import PlayerRow from "./components/PlayerRow";
 import MGPanel from "./components/MGPanel";
-import MafiaConsensusStatus from "./components/MafiaConsensusStatus";
 import NightActionPanel from "./components/NightActionPanel";
 import VotePanel from "./components/VotePanel";
 import EndScreen from "./components/EndScreen";
@@ -881,28 +880,6 @@ export default function GameClient() {
                 Nikt jeszcze nie zagłosował
               </p>
             )}
-          </div>
-        )}
-
-        {/* ── Mafia team actions ── */}
-        {state.mafiaTeamActions && state.mafiaTeamActions.length > 0 && (
-          <div className="mx-5 mt-4 p-4 rounded-xl bg-red-950/20 border border-red-900/30">
-            <p className="text-red-400/70 text-xs font-typewriter uppercase tracking-widest mb-2">
-              <span className="material-symbols-outlined text-[12px] align-middle mr-1">group</span>
-              Twoja rodzina
-            </p>
-            <div className="flex flex-col gap-1.5 mb-3">
-              {state.mafiaTeamActions.map((a, i) => (
-                <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-red-300/80">{a.nickname}</span>
-                  <span className="text-slate-500">
-                    →{" "}
-                    {a.targetNickname ?? <span className="italic text-slate-600">wybiera...</span>}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <MafiaConsensusStatus mafiaTeamActions={state.mafiaTeamActions} />
           </div>
         )}
 

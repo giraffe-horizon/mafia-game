@@ -124,7 +124,20 @@ function GmGameTab({
                   >
                     {action.done ? "check_circle" : "schedule"}
                   </span>
-                  <span className="text-white text-xs font-medium flex-1">{action.nickname}</span>
+                  <span className="text-white text-xs font-medium flex-1">
+                    {action.nickname}
+                    {/* Show mafia voting target if available */}
+                    {action.role === "mafia" &&
+                      hostActions &&
+                      (() => {
+                        const mafiaAction = hostActions.find(
+                          (ha) => ha.playerId === action.playerId && ha.actionType === "kill"
+                        );
+                        return mafiaAction?.targetNickname ? (
+                          <span className="text-red-300 ml-2">→ {mafiaAction.targetNickname}</span>
+                        ) : null;
+                      })()}
+                  </span>
                   <span className="text-slate-400 text-xs font-typewriter">{action.role}</span>
                   <span
                     className={`text-xs font-typewriter ${
@@ -136,6 +149,43 @@ function GmGameTab({
                 </div>
               ))}
           </div>
+        </div>
+      )}
+
+      {/* Głosy mafii - detailed mafia voting info for night phase */}
+      {phase === "night" && hostActions && hostActions.some((ha) => ha.actionType === "kill") && (
+        <div className="mb-4">
+          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2">
+            Głosy mafii
+          </p>
+          <div className="flex flex-col gap-1">
+            {hostActions
+              .filter((ha) => ha.actionType === "kill")
+              .map((action) => (
+                <div
+                  key={action.playerId}
+                  className="flex items-center gap-3 p-2 rounded-lg bg-red-950/20 border border-red-900/30"
+                >
+                  <span className="material-symbols-outlined text-[16px] text-red-400">person</span>
+                  <span className="text-red-300 text-xs font-medium flex-1">{action.nickname}</span>
+                  <span className="text-slate-400 text-xs font-typewriter">
+                    → {action.targetNickname || "nie wybrano"}
+                  </span>
+                </div>
+              ))}
+          </div>
+          {/* Show consensus status */}
+          {phaseProgress && (
+            <div className="mt-2 p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
+              <span
+                className={`text-xs font-typewriter ${
+                  phaseProgress.mafiaUnanimous ? "text-green-400" : "text-yellow-400"
+                }`}
+              >
+                {phaseProgress.mafiaUnanimous ? "✅ Mafia jest zgodna" : "⚠️ Mafia nie jest zgodna"}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
