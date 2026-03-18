@@ -760,6 +760,7 @@ export default function GameClient() {
             }}
             roleHidden={!roleVisible}
             mafiaTeamActions={state.mafiaTeamActions}
+            currentNickname={currentPlayer.nickname}
             onChangeDecision={() => setChangingDecision(true)}
           />
         )}

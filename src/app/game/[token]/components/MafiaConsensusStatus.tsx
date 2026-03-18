@@ -4,8 +4,10 @@ import type { GameStateResponse } from "@/lib/db";
 
 export default function MafiaConsensusStatus({
   mafiaTeamActions,
+  currentNickname,
 }: {
   mafiaTeamActions: NonNullable<GameStateResponse["mafiaTeamActions"]>;
+  currentNickname?: string;
 }) {
   const mafiaWithTargets = mafiaTeamActions.filter((a) => a.targetPlayerId);
   const targets = [...new Set(mafiaWithTargets.map((a) => a.targetPlayerId))];
@@ -24,7 +26,10 @@ export default function MafiaConsensusStatus({
           <div className="flex flex-col gap-1">
             {mafiaWithTargets.map((action, index) => (
               <div key={index} className="flex items-center gap-2 text-xs">
-                <span className="text-red-400 font-medium">{action.nickname}</span>
+                <span className="text-red-400 font-medium">
+                  {action.nickname}
+                  {action.nickname === currentNickname ? " (Ty)" : ""}
+                </span>
                 <span className="material-symbols-outlined text-[12px] text-slate-500">
                   arrow_forward
                 </span>

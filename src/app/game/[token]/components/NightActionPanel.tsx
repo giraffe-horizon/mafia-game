@@ -21,6 +21,7 @@ export default function NightActionPanel({
   roleHidden = false,
   onChangeDecision,
   mafiaTeamActions,
+  currentNickname,
 }: {
   role: string | null;
   targets: PublicPlayer[];
@@ -31,6 +32,7 @@ export default function NightActionPanel({
   roleHidden?: boolean;
   onChangeDecision: () => void;
   mafiaTeamActions?: GameStateResponse["mafiaTeamActions"];
+  currentNickname?: string;
 }) {
   const actionMap: Record<string, { type: string; label: string; icon: string; color: string }> = {
     mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
@@ -63,7 +65,10 @@ export default function NightActionPanel({
             <span className="material-symbols-outlined text-[14px] align-middle mr-1">skull</span>
             Status głosowania mafii
           </p>
-          <MafiaConsensusStatus mafiaTeamActions={mafiaTeamActions} />
+          <MafiaConsensusStatus
+            mafiaTeamActions={mafiaTeamActions}
+            currentNickname={currentNickname}
+          />
           <button
             onClick={() => onChangeDecision()}
             className="mt-3 w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-slate-200 font-typewriter uppercase tracking-wider text-xs transition-all"
