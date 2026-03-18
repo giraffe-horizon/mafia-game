@@ -1,3 +1,24 @@
+# [1.4.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.3.1...v1.4.0) (2026-03-18)
+
+
+### Bug Fixes
+
+* address code review — atomicity, refactor, test coverage ([20be270](https://github.com/giraffe-horizon/mafia-game/commit/20be2704a348df85703d240f8c5690e029f87c4d))
+* expose error details in phase endpoint for debugging ([fb0c24c](https://github.com/giraffe-horizon/mafia-game/commit/fb0c24c9683f49ff1437271a11a4b6de3a0ce0d2))
+* hide mafia members from mafia kill targets ([77c77c5](https://github.com/giraffe-horizon/mafia-game/commit/77c77c5e9c68e21946bc927bb2bd3ee2a58a4c3f))
+* include self in mafia team actions for correct consensus ([f970df5](https://github.com/giraffe-horizon/mafia-game/commit/f970df53d9a8876c58cd93896b87153d55068b43))
+* mafia voting - show all members, remove duplicates, GM vote visibility ([68dee81](https://github.com/giraffe-horizon/mafia-game/commit/68dee8195cc84a3c49f073155d5e78167dd04cb5))
+* mafia voting consensus + remove duplicate emoji from buttons ([f335f35](https://github.com/giraffe-horizon/mafia-game/commit/f335f3571f5a7d6783eaa9e02d0682559fbc5212))
+* remove duplicate mafia votes section from GM panel ([f542234](https://github.com/giraffe-horizon/mafia-game/commit/f54223456d8d385ed97af8a47d395e6b37466e92))
+* use host player_id for system messages (NOT NULL constraint) ([24912db](https://github.com/giraffe-horizon/mafia-game/commit/24912dbfb40e76c53c60aa5e6a878f9adf253023))
+
+
+### Features
+
+* add placeholder for players choosing character ([c3c7f03](https://github.com/giraffe-horizon/mafia-game/commit/c3c7f03699122e43ad62a2d502f77d03bbba7db4))
+* GM progress dashboard with phase blocking (closes [#5](https://github.com/giraffe-horizon/mafia-game/issues/5)) ([ac5c984](https://github.com/giraffe-horizon/mafia-game/commit/ac5c98495ad3b96213209e9bf1f279778ad8e549))
+* merge phase/actions tabs, mafia unanimous vote, transfer GM in settings (closes [#5](https://github.com/giraffe-horizon/mafia-game/issues/5)) ([e1f2403](https://github.com/giraffe-horizon/mafia-game/commit/e1f2403c9826a6d4b4741a8775145dc5d924eb95))
+
 ## [1.3.1](https://github.com/giraffe-horizon/mafia-game/compare/v1.3.0...v1.3.1) (2026-03-17)
 
 
