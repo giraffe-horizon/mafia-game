@@ -7,18 +7,37 @@ import type { PublicPlayer } from "@/lib/db";
 import { ROLE_LABELS, ROLE_COLORS, PHASE_LABELS, PHASE_ICONS, ROLE_ICONS } from "@/lib/constants";
 import * as apiClient from "@/lib/api-client";
 import CharacterPicker from "@/components/CharacterPicker";
-import OnboardingScreen from "./_components/OnboardingScreen";
+import OnboardingScreen, {
+  type FormData,
+  type CharacterSelection,
+  type LoadingState,
+} from "./_components/OnboardingScreen";
 import PlayerRow from "./_components/PlayerRow";
 import GMPanel from "./_components/gm/GMPanel";
 import EndScreen from "./_components/EndScreen";
 import ToastOverlay from "./_components/ToastOverlay";
 import GameHeader from "./_components/GameHeader";
 import LobbyView from "./_components/LobbyView";
-import NightView from "./_components/NightView";
+import NightView, {
+  type PlayerState as NightPlayerState,
+  type NightViewState,
+  type NightActionData,
+} from "./_components/NightView";
 import DayView from "./_components/DayView";
-import VotingView from "./_components/VotingView";
-import SettingsModal from "./_components/SettingsModal";
-import NightActionPanel from "./_components/NightActionPanel";
+import VotingView, {
+  type PlayerState as VotingPlayerState,
+  type VotingViewState,
+  type VoteState,
+} from "./_components/VotingView";
+import SettingsModal, {
+  type PlayerInfo,
+  type CharacterData,
+  type ModalActions,
+} from "./_components/SettingsModal";
+import NightActionPanel, {
+  type ActionState,
+  type MafiaState,
+} from "./_components/NightActionPanel";
 import VotePanel from "./_components/VotePanel";
 import LobbyTransferGm from "./_components/LobbyTransferGm";
 import ReviewView from "./_components/ReviewView";
@@ -211,17 +230,29 @@ export default function GameClient() {
 
   // Onboarding screen
   if (!state.currentPlayer.isSetupComplete && !state.currentPlayer.isHost) {
+    const formData: FormData = {
+      onboardingNickname,
+      onNicknameChange: setOnboardingNickname,
+    };
+
+    const characterSelection: CharacterSelection = {
+      characters,
+      selectedCharacterId,
+      onCharacterSelect: setSelectedCharacterId,
+      takenCharacterIds: state.takenCharacterIds,
+    };
+
+    const loadingState: LoadingState = {
+      onboardingLoading,
+      onboardingError,
+    };
+
     return (
       <OnboardingScreen
         gameCode={state.game.code}
-        characters={characters}
-        onboardingNickname={onboardingNickname}
-        selectedCharacterId={selectedCharacterId}
-        onboardingLoading={onboardingLoading}
-        onboardingError={onboardingError}
-        takenCharacterIds={state.takenCharacterIds}
-        onNicknameChange={setOnboardingNickname}
-        onCharacterSelect={setSelectedCharacterId}
+        formData={formData}
+        characterSelection={characterSelection}
+        loadingState={loadingState}
         onSubmit={handleOnboardingSetup}
       />
     );
@@ -287,30 +318,51 @@ export default function GameClient() {
         )}
 
         {/* ── NIGHT ── */}
-        {isPlaying && phase === "night" && (
-          <NightView
-            isHost={isHost}
-            currentPlayer={{
+        {isPlaying &&
+          phase === "night" &&
+          (() => {
+            const playerState: NightPlayerState = {
               isAlive: currentPlayer.isAlive,
               role: currentPlayer.role || undefined,
-            }}
-            roleVisible={roleVisible}
-            setRoleVisible={setRoleVisible}
-            actionTargets={actionTargets}
-            myAction={myAction}
-            actionPending={actionPending}
-            actionError={actionError}
-            changingDecision={changingDecision}
-            setChangingDecision={setChangingDecision}
-            onAction={(type, targetId) => {
-              setChangingDecision(false);
-              handleAction(type, targetId);
-            }}
-            mafiaTeamActions={state.mafiaTeamActions}
-            currentNickname={currentPlayer.nickname}
-            players={players}
-          />
-        )}
+            };
+
+            const viewState: NightViewState = {
+              roleVisible,
+              setRoleVisible,
+            };
+
+            const actionState: ActionState = {
+              pending: actionPending,
+              error: actionError,
+              onAction: (type, targetId) => {
+                setChangingDecision(false);
+                handleAction(type, targetId);
+              },
+              onChangeDecision: () => setChangingDecision(true),
+            };
+
+            const mafiaState: MafiaState = {
+              teamActions: state.mafiaTeamActions,
+              currentNickname: currentPlayer.nickname,
+            };
+
+            const actionData: NightActionData = {
+              actionTargets,
+              myAction,
+              actionState,
+              mafiaState,
+            };
+
+            return (
+              <NightView
+                isHost={isHost}
+                currentPlayer={playerState}
+                viewState={viewState}
+                actionData={actionData}
+                players={players}
+              />
+            );
+          })()}
 
         {/* ── DAY ── */}
         {isPlaying && phase === "day" && (
@@ -328,29 +380,43 @@ export default function GameClient() {
         )}
 
         {/* ── VOTING ── */}
-        {isPlaying && phase === "voting" && (
-          <VotingView
-            isHost={isHost}
-            currentPlayer={{
+        {isPlaying &&
+          phase === "voting" &&
+          (() => {
+            const currentPlayerState: VotingPlayerState = {
               isAlive: currentPlayer.isAlive,
               role: currentPlayer.role || undefined,
-            }}
-            roleVisible={roleVisible}
-            setRoleVisible={setRoleVisible}
-            phase={phase}
-            players={players}
-            myAction={myAction}
-            actionPending={actionPending}
-            actionError={actionError}
-            changingDecision={changingDecision}
-            setChangingDecision={setChangingDecision}
-            onVote={(targetId) => {
-              setChangingDecision(false);
-              handleAction("vote", targetId);
-            }}
-            voteTally={state.voteTally}
-          />
-        )}
+            };
+
+            const viewState: VotingViewState = {
+              roleVisible,
+              setRoleVisible,
+              phase,
+            };
+
+            const voteState: VoteState = {
+              players,
+              myAction,
+              actionPending,
+              actionError,
+              changingDecision,
+              setChangingDecision,
+              onVote: (targetId) => {
+                setChangingDecision(false);
+                handleAction("vote", targetId);
+              },
+              voteTally: state.voteTally,
+            };
+
+            return (
+              <VotingView
+                isHost={isHost}
+                currentPlayer={currentPlayerState}
+                viewState={viewState}
+                voteState={voteState}
+              />
+            );
+          })()}
 
         {/* ── Missions (non-host) ── */}
         {!isHost && <MissionsList missions={missions} showPoints={state.showPoints} />}
@@ -418,18 +484,24 @@ export default function GameClient() {
       <SettingsModal
         isVisible={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
-        playerNickname={state?.currentPlayer?.nickname || ""}
-        currentPlayer={{
-          isHost: currentPlayer.isHost,
-          character: currentPlayer.character ? { id: currentPlayer.character.id } : undefined,
+        playerInfo={{
+          playerNickname: state?.currentPlayer?.nickname || "",
+          currentPlayer: {
+            isHost: currentPlayer.isHost,
+            character: currentPlayer.character ? { id: currentPlayer.character.id } : undefined,
+          },
         }}
-        characters={characters}
-        selectedCharacterId={selectedCharacterId}
-        onCharacterSelect={setSelectedCharacterId}
-        onSave={handleCharacterUpdateWrapper}
-        onLeaveGame={() => {
-          setShowSettingsModal(false);
-          handleLeave();
+        characterData={{
+          characters,
+          selectedCharacterId,
+          onCharacterSelect: setSelectedCharacterId,
+        }}
+        modalActions={{
+          onSave: handleCharacterUpdateWrapper,
+          onLeaveGame: () => {
+            setShowSettingsModal(false);
+            handleLeave();
+          },
         }}
       />
     </div>

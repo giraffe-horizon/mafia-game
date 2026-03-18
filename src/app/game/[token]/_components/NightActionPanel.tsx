@@ -4,29 +4,38 @@ import type { PublicPlayer, GameStateResponse } from "@/lib/db";
 import { ACTION_CONFIRMED } from "@/lib/constants";
 import MafiaConsensusStatus from "./MafiaConsensusStatus";
 
+export interface ActionState {
+  pending: boolean;
+  error: string;
+  onAction: (type: string, targetId: string) => void;
+  onChangeDecision: () => void;
+}
+
+export interface MafiaState {
+  teamActions?: GameStateResponse["mafiaTeamActions"];
+  currentNickname?: string;
+}
+
+interface NightActionPanelProps {
+  role: string | null;
+  targets: PublicPlayer[];
+  myAction: { actionType: string; targetPlayerId: string | null } | null;
+  roleHidden?: boolean;
+  actionState: ActionState;
+  mafiaState: MafiaState;
+}
+
 export default function NightActionPanel({
   role,
   targets,
   myAction,
-  pending,
-  error,
-  onAction,
   roleHidden = false,
-  onChangeDecision,
-  mafiaTeamActions,
-  currentNickname,
-}: {
-  role: string | null;
-  targets: PublicPlayer[];
-  myAction: { actionType: string; targetPlayerId: string | null } | null;
-  pending: boolean;
-  error: string;
-  onAction: (type: string, targetId: string) => void;
-  roleHidden?: boolean;
-  onChangeDecision: () => void;
-  mafiaTeamActions?: GameStateResponse["mafiaTeamActions"];
-  currentNickname?: string;
-}) {
+  actionState,
+  mafiaState,
+}: NightActionPanelProps) {
+  const { pending, error, onAction, onChangeDecision } = actionState;
+  const { teamActions: mafiaTeamActions, currentNickname } = mafiaState;
+
   const actionMap: Record<string, { type: string; label: string; icon: string; color: string }> = {
     mafia: { type: "kill", label: "Wytypuj ofiarę", icon: "skull", color: "text-red-400" },
     detective: {

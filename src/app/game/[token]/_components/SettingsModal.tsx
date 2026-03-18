@@ -1,8 +1,6 @@
 import CharacterPicker from "@/components/CharacterPicker";
 
-interface SettingsModalProps {
-  isVisible: boolean;
-  onClose: () => void;
+export interface PlayerInfo {
   playerNickname: string;
   currentPlayer: {
     isHost: boolean;
@@ -10,6 +8,9 @@ interface SettingsModalProps {
       id: string;
     };
   };
+}
+
+export interface CharacterData {
   characters: Array<{
     id: string;
     slug: string;
@@ -19,21 +20,31 @@ interface SettingsModalProps {
   }>;
   selectedCharacterId: string | null;
   onCharacterSelect: (id: string | null) => void;
+}
+
+export interface ModalActions {
   onSave: () => void;
   onLeaveGame: () => void;
+}
+
+interface SettingsModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+  playerInfo: PlayerInfo;
+  characterData: CharacterData;
+  modalActions: ModalActions;
 }
 
 export default function SettingsModal({
   isVisible,
   onClose,
-  playerNickname,
-  currentPlayer,
-  characters,
-  selectedCharacterId,
-  onCharacterSelect,
-  onSave,
-  onLeaveGame,
+  playerInfo,
+  characterData,
+  modalActions,
 }: SettingsModalProps) {
+  const { playerNickname, currentPlayer } = playerInfo;
+  const { characters, selectedCharacterId, onCharacterSelect } = characterData;
+  const { onSave, onLeaveGame } = modalActions;
   if (!isVisible) return null;
 
   return (

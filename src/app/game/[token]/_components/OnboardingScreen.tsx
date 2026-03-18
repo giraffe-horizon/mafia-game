@@ -1,19 +1,13 @@
 "use client";
 
 import CharacterPicker from "@/components/CharacterPicker";
-export default function OnboardingScreen({
-  gameCode,
-  characters,
-  onboardingNickname,
-  selectedCharacterId,
-  onboardingLoading,
-  onboardingError,
-  takenCharacterIds,
-  onNicknameChange,
-  onCharacterSelect,
-  onSubmit,
-}: {
-  gameCode: string;
+
+export interface FormData {
+  onboardingNickname: string;
+  onNicknameChange: (v: string) => void;
+}
+
+export interface CharacterSelection {
   characters: Array<{
     id: string;
     slug: string;
@@ -21,15 +15,35 @@ export default function OnboardingScreen({
     name_pl: string;
     avatar_url: string;
   }>;
-  onboardingNickname: string;
   selectedCharacterId: string | null;
+  onCharacterSelect: (id: string | null) => void;
+  takenCharacterIds: string[];
+}
+
+export interface LoadingState {
   onboardingLoading: boolean;
   onboardingError: string;
-  takenCharacterIds: string[];
-  onNicknameChange: (v: string) => void;
-  onCharacterSelect: (id: string | null) => void;
+}
+
+interface OnboardingScreenProps {
+  gameCode: string;
+  formData: FormData;
+  characterSelection: CharacterSelection;
+  loadingState: LoadingState;
   onSubmit: () => void;
-}) {
+}
+
+export default function OnboardingScreen({
+  gameCode,
+  formData,
+  characterSelection,
+  loadingState,
+  onSubmit,
+}: OnboardingScreenProps) {
+  const { onboardingNickname, onNicknameChange } = formData;
+  const { characters, selectedCharacterId, onCharacterSelect, takenCharacterIds } =
+    characterSelection;
+  const { onboardingLoading, onboardingError } = loadingState;
   return (
     <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-dark overflow-hidden">
       <div className="absolute inset-0 z-0 pointer-events-none">

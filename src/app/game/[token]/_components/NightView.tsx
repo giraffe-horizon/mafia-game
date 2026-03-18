@@ -1,24 +1,28 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } from "@/lib/constants";
-import NightActionPanel from "./NightActionPanel"; // Updated to use _components
+import NightActionPanel, { type ActionState, type MafiaState } from "./NightActionPanel"; // Updated to use _components
+
+export interface PlayerState {
+  isAlive: boolean;
+  role?: string;
+}
+
+export interface NightViewState {
+  roleVisible: boolean;
+  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
+}
+
+export interface NightActionData {
+  actionTargets: Array<any>;
+  myAction: any;
+  actionState: ActionState;
+  mafiaState: MafiaState;
+}
 
 interface NightViewProps {
   isHost: boolean;
-  currentPlayer: {
-    isAlive: boolean;
-    role?: string;
-  };
-  roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
-  // Night action panel props
-  actionTargets: Array<any>;
-  myAction: any;
-  actionPending: boolean;
-  actionError: string;
-  changingDecision: boolean;
-  setChangingDecision: (changing: boolean) => void;
-  onAction: (type: string, targetId: string) => void;
-  mafiaTeamActions: any;
-  currentNickname: string;
+  currentPlayer: PlayerState;
+  viewState: NightViewState;
+  actionData: NightActionData;
   // Dead spectator props
   players: Array<any>;
 }
@@ -26,19 +30,12 @@ interface NightViewProps {
 export default function NightView({
   isHost,
   currentPlayer,
-  roleVisible,
-  setRoleVisible,
-  actionTargets,
-  myAction,
-  actionPending,
-  actionError,
-  changingDecision,
-  setChangingDecision,
-  onAction,
-  mafiaTeamActions,
-  currentNickname,
+  viewState,
+  actionData,
   players,
 }: NightViewProps) {
+  const { roleVisible, setRoleVisible } = viewState;
+  const { actionTargets, myAction, actionState, mafiaState } = actionData;
   return (
     <>
       {/* Role card for non-host players */}
@@ -92,16 +89,9 @@ export default function NightView({
           role={roleVisible ? currentPlayer.role || null : null}
           targets={actionTargets}
           myAction={myAction}
-          pending={actionPending}
-          error={actionError}
-          onAction={(type, targetId) => {
-            setChangingDecision(false);
-            onAction(type, targetId);
-          }}
           roleHidden={!roleVisible}
-          mafiaTeamActions={mafiaTeamActions}
-          currentNickname={currentNickname}
-          onChangeDecision={() => setChangingDecision(true)}
+          actionState={actionState}
+          mafiaState={mafiaState}
         />
       )}
 

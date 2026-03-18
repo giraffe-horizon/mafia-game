@@ -11,16 +11,18 @@ interface VoteTally {
   }>;
 }
 
-interface VotingViewProps {
-  isHost: boolean;
-  currentPlayer: {
-    isAlive: boolean;
-    role?: string;
-  };
+export interface PlayerState {
+  isAlive: boolean;
+  role?: string;
+}
+
+export interface VotingViewState {
   roleVisible: boolean;
   setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
   phase: string;
-  // Vote panel props
+}
+
+export interface VoteState {
   players: Array<any>;
   myAction: any;
   actionPending: boolean;
@@ -28,25 +30,33 @@ interface VotingViewProps {
   changingDecision: boolean;
   setChangingDecision: (changing: boolean) => void;
   onVote: (targetId: string) => void;
-  // Vote tally
   voteTally?: VoteTally;
+}
+
+interface VotingViewProps {
+  isHost: boolean;
+  currentPlayer: PlayerState;
+  viewState: VotingViewState;
+  voteState: VoteState;
 }
 
 export default function VotingView({
   isHost,
   currentPlayer,
-  roleVisible,
-  setRoleVisible,
-  phase,
-  players,
-  myAction,
-  actionPending,
-  actionError,
-  changingDecision,
-  setChangingDecision,
-  onVote,
-  voteTally,
+  viewState,
+  voteState,
 }: VotingViewProps) {
+  const { roleVisible, setRoleVisible, phase } = viewState;
+  const {
+    players,
+    myAction,
+    actionPending,
+    actionError,
+    changingDecision,
+    setChangingDecision,
+    onVote,
+    voteTally,
+  } = voteState;
   return (
     <>
       {/* Role card for non-host players */}
