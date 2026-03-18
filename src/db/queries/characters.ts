@@ -1,4 +1,4 @@
-import type { D1Database, CharacterRow, GamePlayerRow } from "@/db/types";
+import type { D1Database, CharacterRow } from "@/db/types";
 
 export async function getCharacters(db: D1Database): Promise<CharacterRow[]> {
   const { results } = await db

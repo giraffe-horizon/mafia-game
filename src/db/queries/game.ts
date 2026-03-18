@@ -7,7 +7,6 @@ import type {
   GamePhase,
   Role,
   PublicPlayer,
-  CharacterRow,
 } from "@/db/types";
 import { generateSessionCode, now, nanoid } from "@/db/helpers";
 import { getPhaseProgress, getVoteTally, getMafiaTeamActions } from "./actions";
@@ -146,12 +145,6 @@ export async function getGameState(
         character_avatar_url: string | null;
       }
     >();
-
-  // Get all characters for taken IDs
-  const { results: allCharacters } = await db
-    .prepare("SELECT * FROM characters WHERE is_active = 1 ORDER BY sort_order ASC")
-    .bind()
-    .all<CharacterRow>();
 
   const isHost = playerRow.is_host === 1;
 

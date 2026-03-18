@@ -1,4 +1,4 @@
-import type { D1Database, GameRow, GamePlayerRow, Role } from "@/db/types";
+import type { D1Database, GameRow, GamePlayerRow } from "@/db/types";
 import { now, buildRoles } from "@/db/helpers";
 import { getMafiaKillActions } from "./actions";
 

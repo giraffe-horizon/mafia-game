@@ -1,5 +1,4 @@
 import type { D1Database, GameRow, GamePlayerRow } from "@/db/types";
-import { nanoid } from "@/db/helpers";
 import { checkWinConditions } from "./phase";
 
 export async function setupPlayer(
