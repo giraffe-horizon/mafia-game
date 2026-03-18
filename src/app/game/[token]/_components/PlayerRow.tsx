@@ -15,6 +15,7 @@ export default function PlayerRow({
   roleVisible,
   onKick,
   onRename,
+  investigated,
 }: {
   player: PublicPlayer;
   isGamePlaying: boolean;
@@ -25,6 +26,7 @@ export default function PlayerRow({
   roleVisible?: boolean;
   onKick?: (playerId: string) => void;
   onRename?: (newNickname: string) => void;
+  investigated?: boolean | null;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editNickname, setEditNickname] = useState(player.nickname);
@@ -156,6 +158,16 @@ export default function PlayerRow({
           {isMafiaTeammate && (
             <span className="text-xs" title="Członek mafii">
               🔴
+            </span>
+          )}
+          {investigated === true && (
+            <span className="text-xs" title="Mafia">
+              🔴
+            </span>
+          )}
+          {investigated === false && (
+            <span className="text-xs" title="Niewinny">
+              🟢
             </span>
           )}
         </div>

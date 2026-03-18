@@ -196,8 +196,9 @@ export async function getGameState(
       points: number;
     }>();
 
-  // Get detective result (if player is detective)
+  // Get detective result and all investigated players (if player is detective)
   let detectiveResult = null;
+  let investigatedPlayers: { playerId: string; isMafia: boolean }[] | undefined = undefined;
   if (playerRow.role === "detective" && gameRow.status === "playing") {
     const { results: investigations } = await db
       .prepare(
@@ -205,19 +206,23 @@ export async function getGameState(
          FROM game_actions ga
          JOIN game_players gp ON ga.target_player_id = gp.player_id
          WHERE ga.game_id = ? AND ga.player_id = ? AND ga.action_type = 'investigate'
-         ORDER BY ga.created_at DESC
-         LIMIT 1`
+         ORDER BY ga.created_at DESC`
       )
       .bind(gameRow.id, playerRow.player_id)
       .all<{ target_player_id: string; nickname: string; role: string }>();
 
     if (investigations.length > 0) {
-      const investigation = investigations[0];
+      const latest = investigations[0];
       detectiveResult = {
-        targetNickname: investigation.nickname,
-        isMafia: investigation.role === "mafia",
+        targetNickname: latest.nickname,
+        isMafia: latest.role === "mafia",
         round: gameRow.round,
       };
+
+      investigatedPlayers = investigations.map((inv) => ({
+        playerId: inv.target_player_id,
+        isMafia: inv.role === "mafia",
+      }));
     }
   }
 
@@ -361,6 +366,7 @@ export async function getGameState(
       isCompleted: m.is_completed === 1,
       points: m.points,
     })),
+    investigatedPlayers,
     detectiveResult,
     myAction,
     mafiaTeamActions,

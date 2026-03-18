@@ -485,6 +485,7 @@ export default function GameClient() {
           currentPlayerRole={currentPlayer.role || undefined}
           roleVisible={roleVisible}
           onKick={handleKick}
+          investigatedPlayers={state.investigatedPlayers}
         />
       </div>
 

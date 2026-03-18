@@ -133,6 +133,7 @@ export interface GameStateResponse {
     isCompleted: boolean;
     points: number;
   }[];
+  investigatedPlayers?: { playerId: string; isMafia: boolean }[];
   detectiveResult: {
     targetNickname: string;
     isMafia: boolean;

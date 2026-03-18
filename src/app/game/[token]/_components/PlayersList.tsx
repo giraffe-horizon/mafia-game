@@ -11,6 +11,7 @@ interface PlayersListProps {
   currentPlayerRole?: string;
   roleVisible: boolean;
   onKick?: (playerId: string) => void;
+  investigatedPlayers?: { playerId: string; isMafia: boolean }[];
 }
 
 export default function PlayersList({
@@ -22,7 +23,12 @@ export default function PlayersList({
   currentPlayerRole,
   roleVisible,
   onKick,
+  investigatedPlayers,
 }: PlayersListProps) {
+  const investigatedMap = investigatedPlayers
+    ? new Map(investigatedPlayers.map((ip) => [ip.playerId, ip.isMafia]))
+    : null;
+
   return (
     <div className="mx-5 mt-5">
       <SectionHeader className="mb-3 pl-1">Gracze ({players.length})</SectionHeader>
@@ -39,6 +45,11 @@ export default function PlayersList({
             roleVisible={roleVisible}
             onKick={isLobby && isHost ? onKick : undefined}
             onRename={undefined}
+            investigated={
+              roleVisible && investigatedMap?.has(p.playerId)
+                ? investigatedMap.get(p.playerId)!
+                : undefined
+            }
           />
         ))}
       </div>
