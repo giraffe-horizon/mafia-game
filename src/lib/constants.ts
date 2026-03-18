@@ -2,8 +2,8 @@ import type { Role, GamePhase, ActionType } from "@/db/types";
 
 export const ROLE_LABELS: Record<Role | "gm" | string, string> = {
   mafia: "Mafia",
-  detective: "Detektyw",
-  doctor: "Doktor",
+  detective: "Policjant",
+  doctor: "Lekarz",
   civilian: "Cywil",
   gm: "Mistrz Gry",
 };

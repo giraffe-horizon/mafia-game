@@ -79,7 +79,7 @@ export default function OnboardingScreen({
               </span>
               <input
                 className="flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/30 bg-black/40 backdrop-blur-sm h-14 placeholder:text-slate-600 pl-12 pr-4 text-lg font-medium leading-normal transition-all"
-                placeholder="Detektyw..."
+                placeholder="Policjant..."
                 type="text"
                 value={onboardingNickname}
                 onChange={(e) => onNicknameChange(e.target.value)}

@@ -302,9 +302,9 @@ export async function submitAction(
     if (actionType === "kill" && playerRow.role !== "mafia")
       return { success: false, error: "Tylko mafia może wybierać ofiary" };
     if (actionType === "investigate" && playerRow.role !== "detective")
-      return { success: false, error: "Tylko detektyw może sprawdzać" };
+      return { success: false, error: "Tylko policjant może sprawdzać" };
     if (actionType === "protect" && playerRow.role !== "doctor")
-      return { success: false, error: "Tylko doktor może chronić" };
+      return { success: false, error: "Tylko lekarz może chronić" };
 
     // Doctor cannot protect the same player two rounds in a row
     if (actionType === "protect" && targetPlayerId && gameRow.round > 1) {
