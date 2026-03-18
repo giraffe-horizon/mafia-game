@@ -1,3 +1,18 @@
+# [1.7.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.6.0...v1.7.0) (2026-03-18)
+
+
+### Bug Fixes
+
+* enable dev seed by adding initOpenNextCloudflareForDev + local D1 migrations ([a63a479](https://github.com/giraffe-horizon/mafia-game/commit/a63a479c6cf8156889d07d3fccdc5009705c2772))
+* remove duplicate role list from EndScreen, fix round number display ([b142250](https://github.com/giraffe-horizon/mafia-game/commit/b14225013bb6fe32efd11cec9cf3f04300571b49))
+
+
+### Features
+
+* add dev tools - seed script, dev API, dev page for testing ([17849db](https://github.com/giraffe-horizon/mafia-game/commit/17849db8dcff3a683d62f1b96650d9ad8a1aee2a))
+* merge round scores and ranking into single table sorted by cumulative total ([ec13e14](https://github.com/giraffe-horizon/mafia-game/commit/ec13e14f40258e72ec03159d716727d653a340f6))
+* round summary screen with scoring table and session ranking (closes [#6](https://github.com/giraffe-horizon/mafia-game/issues/6)) ([4dbceee](https://github.com/giraffe-horizon/mafia-game/commit/4dbceee246b642926837d241a26194679d82c027))
+
 # [1.6.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.5.0...v1.6.0) (2026-03-18)
 
 
