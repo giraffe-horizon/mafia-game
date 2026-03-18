@@ -49,6 +49,7 @@ interface GameState {
   _intervalRef: NodeJS.Timeout | null;
   _backoffDelay: number;
   _shownMessageIds: Set<string>;
+  _toastTimeouts: Map<string, NodeJS.Timeout>;
   _scheduleNext: () => void;
   _visibilityCleanup?: () => void;
 
@@ -102,6 +103,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   _intervalRef: null,
   _backoffDelay: POLL_INTERVAL,
   _shownMessageIds: new Set(),
+  _toastTimeouts: new Map(),
 
   _scheduleNext: () => {
     const state = get();
@@ -162,6 +164,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     const state = get();
     if (!state._gameService || !state._token || state.isPolling) return;
 
+    // Clean up any existing visibility listener before adding a new one
+    if (state._visibilityCleanup) {
+      state._visibilityCleanup();
+    }
+
     set({ isPolling: true });
 
     // Initial fetch
@@ -203,7 +210,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Clean up visibility listener
     if (state._visibilityCleanup) {
       state._visibilityCleanup();
+      set({ _visibilityCleanup: undefined });
     }
+
+    // Clean up toast timeouts
+    for (const timeoutId of state._toastTimeouts.values()) {
+      clearTimeout(timeoutId);
+    }
+    state._toastTimeouts.clear();
 
     set({ isPolling: false });
   },
@@ -226,12 +240,14 @@ export const useGameStore = create<GameState>((set, get) => ({
           const newToast = { id: msg.id, content: msg.content };
           newToasts.push(newToast);
 
-          // Auto-dismiss after duration
-          setTimeout(() => {
+          // Auto-dismiss after duration (tracked for cleanup)
+          const timeoutId = setTimeout(() => {
+            get()._toastTimeouts.delete(msg.id);
             set((state) => ({
               toasts: state.toasts.filter((t) => t.id !== msg.id),
             }));
           }, TOAST_DURATION);
+          get()._toastTimeouts.set(msg.id, timeoutId);
         }
       }
 

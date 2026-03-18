@@ -1,4 +1,6 @@
-import React, { useEffect, useCallback } from "react";
+"use client";
+
+import React, { useEffect, useCallback, useId } from "react";
 import { cn } from "@/lib/cn";
 
 interface ModalProps {
@@ -10,6 +12,8 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+  const titleId = useId();
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -26,11 +30,23 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className={cn("bg-slate-900 rounded-lg max-w-md w-full mx-4", className)}>
+    <div
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        className={cn("bg-slate-900 rounded-lg max-w-md w-full mx-4", className)}
+      >
         {title && (
           <div className="flex items-center justify-between p-6 pb-4">
-            <h3 className="text-white font-bold text-lg font-typewriter">{title}</h3>
+            <h3 id={titleId} className="text-white font-bold text-lg font-typewriter">
+              {title}
+            </h3>
             <button
               onClick={onClose}
               aria-label="Zamknij"

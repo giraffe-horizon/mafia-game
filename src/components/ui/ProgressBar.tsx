@@ -30,7 +30,14 @@ export default function ProgressBar({
           )}
         </div>
       )}
-      <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+      <div
+        className="w-full h-2 bg-slate-800 rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={clampedValue}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label}
+      >
         <div
           className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
           style={{ width: `${clampedValue}%` }}

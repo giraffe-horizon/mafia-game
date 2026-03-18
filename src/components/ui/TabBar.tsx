@@ -15,10 +15,16 @@ interface TabBarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export default function TabBar({ tabs, activeTab, onTabChange, className, ...props }: TabBarProps) {
   return (
-    <div className={cn("flex border-b border-slate-800 overflow-x-auto", className)} {...props}>
+    <div
+      role="tablist"
+      className={cn("flex border-b border-slate-800 overflow-x-auto", className)}
+      {...props}
+    >
       {tabs.map((t) => (
         <button
           key={t.id}
+          role="tab"
+          aria-selected={activeTab === t.id}
           onClick={() => onTabChange(t.id)}
           className={cn(
             "flex-1 min-w-0 flex flex-col items-center py-2 gap-0.5 transition-colors text-[10px] font-typewriter uppercase tracking-wider whitespace-nowrap",

@@ -40,6 +40,7 @@ export default function CharacterPicker({
         const hasImgError = errorIds.has(character.id);
         return (
           <button
+            type="button"
             key={character.id}
             onClick={() => !isDisabled && onSelect(character.id)}
             className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all relative ${

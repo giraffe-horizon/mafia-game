@@ -294,8 +294,8 @@ export async function checkWinConditions(db: D1Database, gameId: string): Promis
   const aliveMafia = alive.filter((p) => p.role === "mafia").length;
   const aliveGood = alive.filter((p) => p.role !== "mafia").length;
 
-  if (aliveMafia === 0) return "Dobrzy"; // All mafia eliminated
-  if (aliveMafia >= aliveGood) return "Mafia"; // Mafia equal or outnumber good
+  if (aliveMafia === 0) return "town"; // All mafia eliminated
+  if (aliveMafia >= aliveGood) return "mafia"; // Mafia equal or outnumber good
 
   return null; // Game continues
 }

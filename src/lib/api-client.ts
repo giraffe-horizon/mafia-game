@@ -41,7 +41,7 @@ async function postRequest<TInput, TOutput>(url: string, body?: TInput): Promise
 
 // Helper for DELETE requests
 async function deleteRequest<T>(url: string): Promise<T> {
-  const response = await fetch(url, { method: "DELETE" });
+  const response = await fetch(url, { method: "DELETE", ...defaultOptions });
   return handleResponse<T>(response);
 }
 

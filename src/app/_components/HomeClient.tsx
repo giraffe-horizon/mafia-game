@@ -91,7 +91,7 @@ function CodeInput({
     <div className="flex gap-2 justify-center">
       {Array.from({ length }, (_, i) => (
         <input
-          key={i}
+          key={`char-${i}`}
           ref={(el) => {
             inputRefs.current[i] = el;
           }}

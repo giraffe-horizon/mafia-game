@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import * as apiClient from "@/lib/api-client";
 
@@ -20,7 +20,6 @@ interface RankingEntry {
 
 export default function RankingClient() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get("token");
 
   const [ranking, setRanking] = useState<RankingEntry[]>([]);

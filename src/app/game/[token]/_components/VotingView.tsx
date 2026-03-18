@@ -63,6 +63,7 @@ export default function VotingView({
             className="w-full p-5 cursor-pointer transition-all active:scale-[0.98]"
             role="button"
             tabIndex={0}
+            aria-label={roleVisible ? "Ukryj rolę" : "Pokaż rolę"}
           >
             {roleVisible ? (
               <div className="flex items-center gap-4">
