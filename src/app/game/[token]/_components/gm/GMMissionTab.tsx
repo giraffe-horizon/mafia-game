@@ -1,6 +1,7 @@
 import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
 import type { PublicPlayer } from "@/db";
 import type { MissionFormProps } from "../../types";
+import { SectionHeader } from "@/components/ui";
 
 interface HostMission {
   id: string;
@@ -50,9 +51,7 @@ export default function GMMissionTab({
     <div className="flex flex-col gap-3">
       {hostMissions && hostMissions.length > 0 && (
         <div className="flex flex-col gap-2 mb-1">
-          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
-            Aktywne misje
-          </p>
+          <SectionHeader className="mb-0">Aktywne misje</SectionHeader>
           {hostMissions.map((m) => (
             <div
               key={m.id}
@@ -112,9 +111,7 @@ export default function GMMissionTab({
       )}
 
       <div className="border-t border-slate-800 pt-3">
-        <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
-          Nowa misja
-        </p>
+        <SectionHeader className="mb-3">Nowa misja</SectionHeader>
       </div>
 
       <select

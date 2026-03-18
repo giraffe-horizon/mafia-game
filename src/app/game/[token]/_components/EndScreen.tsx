@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import { ROLE_LABELS, ROLE_ICONS, ROLE_COLORS } from "@/lib/constants";
+import { SectionHeader, StatusItem, Badge } from "@/components/ui";
 import { useGameStore } from "../_stores/gameStore";
 
 export default function EndScreen(_props: Record<string, never> = {}) {
@@ -91,68 +92,68 @@ export default function EndScreen(_props: Record<string, never> = {}) {
 
       {isHost && missionSummary.length > 0 && (
         <div className="mt-5">
-          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3 pl-1">
-            Podsumowanie misji
-          </p>
+          <SectionHeader className="mb-3 pl-1">Podsumowanie misji</SectionHeader>
           <div className="flex flex-col gap-2">
             {missionSummary.map((s) => (
-              <div
+              <StatusItem
                 key={s.nickname}
-                className="flex items-center gap-3 p-3 rounded-lg border border-slate-800 bg-black/20"
-              >
-                <span className="material-symbols-outlined text-[18px] text-slate-500">person</span>
-                <span className="text-white text-sm flex-1">{s.nickname}</span>
-                <span className="text-slate-400 text-xs font-typewriter">
-                  {s.completed}/{s.total} misji
-                </span>
-                {s.points > 0 && (
-                  <span className="text-yellow-400 text-xs font-typewriter font-bold">
-                    +{s.points}pkt
+                icon={
+                  <span className="material-symbols-outlined text-[18px] text-slate-500">
+                    person
                   </span>
-                )}
-              </div>
+                }
+                label={s.nickname}
+                labelClassName="text-white"
+                trailing={
+                  <>
+                    <span className="text-slate-400 text-xs font-typewriter">
+                      {s.completed}/{s.total} misji
+                    </span>
+                    {s.points > 0 && (
+                      <span className="text-yellow-400 text-xs font-typewriter font-bold">
+                        +{s.points}pkt
+                      </span>
+                    )}
+                  </>
+                }
+              />
             ))}
           </div>
         </div>
       )}
 
-      <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mt-5 mb-3 pl-1">
-        Role graczy
-      </p>
+      <SectionHeader className="mt-5 mb-3 pl-1">Role graczy</SectionHeader>
       <div className="flex flex-col gap-2">
         {players
           .filter((p) => !p.isHost)
           .map((p) => (
-            <div
+            <StatusItem
               key={p.playerId}
-              className={`flex items-center gap-3 p-3 rounded-lg border ${
+              className={
                 p.isAlive
                   ? "border-slate-700 bg-black/20"
                   : "border-slate-800 bg-black/10 opacity-50"
-              }`}
-            >
-              <span
-                className={`material-symbols-outlined text-[22px] ${p.role ? ROLE_COLORS[p.role] : "text-slate-500"}`}
-              >
-                {p.role ? ROLE_ICONS[p.role] : "person"}
-              </span>
-              <span className="text-white text-sm flex-1">{p.nickname}</span>
-              {p.role && (
+              }
+              icon={
                 <span
-                  className={`text-xs font-typewriter font-bold uppercase px-2 py-0.5 rounded border ${
-                    p.role === "mafia"
-                      ? "text-red-400 border-red-900/50 bg-red-950/30"
-                      : p.role === "detective"
-                        ? "text-blue-400 border-blue-900/50 bg-blue-950/30"
-                        : p.role === "doctor"
-                          ? "text-green-400 border-green-900/50 bg-green-950/30"
-                          : "text-slate-400 border-slate-700 bg-slate-900/30"
-                  }`}
+                  className={`material-symbols-outlined text-[22px] ${p.role ? ROLE_COLORS[p.role] : "text-slate-500"}`}
                 >
-                  {ROLE_LABELS[p.role]}
+                  {p.role ? ROLE_ICONS[p.role] : "person"}
                 </span>
-              )}
-            </div>
+              }
+              label={p.nickname}
+              labelClassName="text-white"
+              trailing={
+                p.role ? (
+                  <Badge
+                    variant={p.role as "mafia" | "detective" | "doctor" | "civilian"}
+                    className="py-0.5"
+                  >
+                    {ROLE_LABELS[p.role]}
+                  </Badge>
+                ) : undefined
+              }
+            />
           ))}
       </div>
     </div>

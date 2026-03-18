@@ -1,4 +1,5 @@
 import PlayerRow from "./PlayerRow";
+import { SectionHeader } from "@/components/ui";
 
 interface PlayersListProps {
   players: Array<any>;
@@ -23,9 +24,7 @@ export default function PlayersList({
 }: PlayersListProps) {
   return (
     <div className="mx-5 mt-5">
-      <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3 pl-1">
-        Gracze ({players.length})
-      </p>
+      <SectionHeader className="mb-3 pl-1">Gracze ({players.length})</SectionHeader>
       <div className="flex flex-col gap-2">
         {players.map((p) => (
           <PlayerRow

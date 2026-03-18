@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { Role, ActionType, GamePhase } from "@/db/types";
+import { SectionHeader, Button } from "@/components/ui";
 
 const ACTION_ROLE_MAP: Record<Role, ActionType> = {
   mafia: "kill",
@@ -70,9 +71,7 @@ export default function GMGameTab({
       {phaseProgress && (
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
-              Postęp akcji
-            </p>
+            <SectionHeader className="mb-0">Postęp akcji</SectionHeader>
             <span className="text-xs text-slate-400">
               {phaseProgress.requiredActions.filter((a) => a.done).length}/
               {phaseProgress.requiredActions.length}
@@ -98,9 +97,7 @@ export default function GMGameTab({
       {/* Lista graczy ze statusem */}
       {phaseProgress && phaseProgress.requiredActions.length > 0 && (
         <div className="mb-4">
-          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2">
-            Status graczy
-          </p>
+          <SectionHeader>Status graczy</SectionHeader>
           <div className="flex flex-col gap-1">
             {[...phaseProgress.requiredActions]
               .sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
@@ -156,9 +153,9 @@ export default function GMGameTab({
       {/* GM override sekcja */}
       {alivePlayers.length > 0 && (phase === "night" || phase === "voting") && (
         <div className="mt-3 p-4 rounded-xl bg-primary/5 border border-primary/20 mb-4">
-          <p className="text-primary/70 text-xs font-typewriter uppercase tracking-widest mb-3">
+          <SectionHeader className="text-primary/70 mb-3">
             Zmień akcję gracza (override GM)
-          </p>
+          </SectionHeader>
           <select
             value={selectedPlayer}
             onChange={(e) => {

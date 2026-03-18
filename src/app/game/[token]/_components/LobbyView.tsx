@@ -1,5 +1,6 @@
 import QRCode from "react-qr-code";
 import LobbyTransferGm from "./LobbyTransferGm"; // Updated to use _components
+import { SectionHeader, InfoCard } from "@/components/ui";
 
 interface LobbyViewProps {
   isHost: boolean;
@@ -41,9 +42,7 @@ export default function LobbyView({
         <>
           {/* QR Code and sharing section */}
           <div className="mx-5 mt-5 p-4 rounded-xl bg-black/40 border border-primary/20">
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2">
-              Kod sesji — udostępnij graczom
-            </p>
+            <SectionHeader>Kod sesji — udostępnij graczom</SectionHeader>
             <div className="flex items-center justify-between gap-3 mb-4">
               <span className="font-typewriter text-2xl font-bold text-white tracking-widest drop-shadow-[0_0_8px_rgba(218,11,11,0.3)]">
                 {gameCode}
@@ -99,9 +98,7 @@ export default function LobbyView({
               </p>
             )}
             <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
-              <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
-                Tryb gry
-              </p>
+              <SectionHeader className="text-slate-400">Tryb gry</SectionHeader>
               <div className="flex gap-2">
                 {(["full", "simple"] as const).map((mode) => (
                   <button
@@ -124,9 +121,7 @@ export default function LobbyView({
             </div>
             {nonHostPlayers.length >= (gameMode === "simple" ? 3 : 5) && (
               <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
-                <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
-                  Liczba mafii
-                </p>
+                <SectionHeader className="text-slate-400">Liczba mafii</SectionHeader>
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setMafiaCount(0)}
@@ -175,15 +170,14 @@ export default function LobbyView({
 
       {/* Guest lobby view */}
       {!isHost && (
-        <div className="mx-5 mt-5 p-5 rounded-xl bg-black/30 border border-slate-800 text-center">
-          <span className="material-symbols-outlined text-[36px] text-primary/60 mb-2 block animate-pulse">
-            hourglass_empty
-          </span>
-          <p className="text-slate-400 font-typewriter uppercase tracking-widest text-sm">
-            Czekaj na start
-          </p>
-          <p className="text-slate-600 text-xs mt-1">Mistrz gry niedługo rozpocznie rozgrywkę</p>
-        </div>
+        <InfoCard
+          icon="hourglass_empty"
+          iconClassName="text-[36px] text-primary/60 mb-2 animate-pulse"
+          title="Czekaj na start"
+          titleClassName="text-sm text-slate-400"
+          description="Mistrz gry niedługo rozpocznie rozgrywkę"
+          className="mx-5 mt-5 p-5"
+        />
       )}
     </>
   );

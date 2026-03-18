@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { PublicPlayer } from "@/db";
+import { SectionHeader } from "@/components/ui";
 
 interface GMSettingsTabProps {
   players: PublicPlayer[];
@@ -36,9 +37,7 @@ export default function GMSettingsTab({
 
   return (
     <div>
-      <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-1">
-        Liczba mafii — następna runda
-      </p>
+      <SectionHeader className="mb-1">Liczba mafii — następna runda</SectionHeader>
       <p className="text-slate-600 text-xs mb-3">
         Ta wartość zostanie użyta przy kolejnym remacie.
       </p>
@@ -71,9 +70,7 @@ export default function GMSettingsTab({
 
       {/* GM Transfer Section */}
       <div className="mt-6 pt-4 border-t border-slate-700">
-        <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-3">
-          Przekaż rolę MG
-        </p>
+        <SectionHeader className="mb-3">Przekaż rolę MG</SectionHeader>
         {transferGmError && (
           <p className="text-red-400 text-xs font-typewriter mb-2">{transferGmError}</p>
         )}

@@ -2,6 +2,7 @@
 
 import type { PublicPlayer } from "@/db";
 import type { ActionType } from "@/db/types";
+import { SectionHeader } from "@/components/ui";
 
 export default function VotePanel({
   targets,
@@ -45,10 +46,9 @@ export default function VotePanel({
 
   return (
     <div className="mx-5 mt-4">
-      <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-3 pl-1">
-        <span className="material-symbols-outlined text-[14px] align-middle mr-1">how_to_vote</span>
+      <SectionHeader icon="how_to_vote" className="text-slate-400 mb-3 pl-1">
         Kogo oskarżasz?
-      </p>
+      </SectionHeader>
       {error && <p className="text-red-400 text-xs font-typewriter mb-2 px-1">{error}</p>}
       <div className="flex flex-col gap-2">
         {alivePlayers.map((p) => (

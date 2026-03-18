@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
+import { SectionHeader, InfoCard } from "@/components/ui";
 import { useGameStore } from "../_stores/gameStore";
 
 interface DetectiveResult {
@@ -29,9 +30,7 @@ export default function DayView(_props: DayViewProps = {} as DayViewProps) {
       {/* Role card for non-host players */}
       {!isHost && (
         <div className="mx-5 mt-5">
-          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2 pl-1">
-            Twoja rola
-          </p>
+          <SectionHeader className="pl-1">Twoja rola</SectionHeader>
           <button
             onClick={() => setRoleVisible((v) => !v)}
             className="w-full p-5 rounded-xl bg-black/60 border border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98]"
@@ -78,9 +77,7 @@ export default function DayView(_props: DayViewProps = {} as DayViewProps) {
             {PHASE_ICONS[phase]}
           </span>
           <div>
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
-              Faza gry
-            </p>
+            <SectionHeader className="mb-0">Faza gry</SectionHeader>
             <p className="font-typewriter text-xl font-bold text-white uppercase tracking-wider">
               {PHASE_LABELS[phase]}
             </p>
@@ -111,14 +108,12 @@ export default function DayView(_props: DayViewProps = {} as DayViewProps) {
 
       {/* Day message for non-host players */}
       {!isHost && (
-        <div className="mx-5 mt-4 p-4 rounded-xl bg-black/30 border border-slate-800 text-center">
-          <span className="material-symbols-outlined text-[28px] text-yellow-500/60 mb-1 block">
-            wb_sunny
-          </span>
-          <p className="text-slate-500 font-typewriter uppercase tracking-widest text-xs">
-            Dzień — dyskutujcie i szukajcie mafii
-          </p>
-        </div>
+        <InfoCard
+          icon="wb_sunny"
+          iconClassName="text-yellow-500/60"
+          title="Dzień — dyskutujcie i szukajcie mafii"
+          className="mx-5 mt-4"
+        />
       )}
     </>
   );

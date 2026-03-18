@@ -7,6 +7,7 @@ import GMGameTab from "./GMGameTab";
 import GMMessageTab from "./GMMessageTab";
 import GMMissionTab from "./GMMissionTab";
 import GMSettingsTab from "./GMSettingsTab";
+import { TabBar } from "@/components/ui";
 
 interface GMPanelProps {
   phase: GamePhase;
@@ -63,23 +64,7 @@ export default function GMPanel({
 
   return (
     <div className="mx-5 mt-5 rounded-xl bg-black/40 border border-primary/20 overflow-hidden">
-      {/* Tab bar */}
-      <div className="flex border-b border-slate-800 overflow-x-auto">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => onTabChange(t.id)}
-            className={`flex-1 min-w-0 flex flex-col items-center py-2 gap-0.5 transition-colors text-[10px] font-typewriter uppercase tracking-wider whitespace-nowrap ${
-              tab === t.id
-                ? "text-primary border-b-2 border-primary"
-                : "text-slate-500 hover:text-slate-300"
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <TabBar tabs={TABS} activeTab={tab} onTabChange={(id) => onTabChange(id as typeof tab)} />
 
       {/* Tab content */}
       <div className="p-4">

@@ -4,7 +4,7 @@ import type { PublicPlayer, GameStateResponse } from "@/db";
 import type { Role, ActionType } from "@/db/types";
 import { ACTION_CONFIRMED } from "@/lib/constants";
 import MafiaConsensusStatus from "./MafiaConsensusStatus";
-import { Button } from "@/components/ui";
+import { Button, SectionHeader, InfoCard } from "@/components/ui";
 
 export interface ActionState {
   pending: boolean;
@@ -66,10 +66,9 @@ export default function NightActionPanel({
     if (role === "mafia" && !roleHidden && mafiaTeamActions) {
       return (
         <div className="mx-5 mt-4">
-          <p className="text-red-400 text-xs font-typewriter uppercase tracking-widest mb-3 pl-1">
-            <span className="material-symbols-outlined text-[14px] align-middle mr-1">skull</span>
+          <SectionHeader icon="skull" className="text-red-400 mb-3 pl-1">
             Status głosowania mafii
-          </p>
+          </SectionHeader>
           <MafiaConsensusStatus
             mafiaTeamActions={mafiaTeamActions}
             currentNickname={currentNickname}
@@ -124,30 +123,21 @@ export default function NightActionPanel({
 
   if (!action) {
     return (
-      <div className="mx-5 mt-4 p-4 rounded-xl bg-black/30 border border-slate-800 text-center">
-        <span className="material-symbols-outlined text-[28px] text-slate-600 mb-1 block">
-          bedtime
-        </span>
-        <p className="text-slate-500 font-typewriter uppercase tracking-widest text-xs">
-          Noc — czekaj na rozkazy
-        </p>
+      <InfoCard icon="bedtime" title="Noc — czekaj na rozkazy" className="mx-5 mt-4">
         {roleHidden && (
           <p className="text-primary/60 text-xs mt-2 font-typewriter">
             ↑ Odkryj rolę aby wykonać akcję nocną
           </p>
         )}
-      </div>
+      </InfoCard>
     );
   }
 
   return (
     <div className="mx-5 mt-4">
-      <p className={`text-xs font-typewriter uppercase tracking-widest mb-3 pl-1 ${action.color}`}>
-        <span className="material-symbols-outlined text-[14px] align-middle mr-1">
-          {action.icon}
-        </span>
+      <SectionHeader icon={action.icon} className={`mb-3 pl-1 ${action.color}`}>
         {action.label}
-      </p>
+      </SectionHeader>
       {error && <p className="text-red-400 text-xs font-typewriter mb-2 px-1">{error}</p>}
       <div className="flex flex-col gap-2">
         {targets.map((p) => (

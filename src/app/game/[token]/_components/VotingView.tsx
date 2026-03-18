@@ -1,4 +1,5 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
+import { SectionHeader } from "@/components/ui";
 import VotePanel from "./VotePanel"; // Updated to use _components
 
 interface VoteTally {
@@ -62,9 +63,7 @@ export default function VotingView({
       {/* Role card for non-host players */}
       {!isHost && (
         <div className="mx-5 mt-5">
-          <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2 pl-1">
-            Twoja rola
-          </p>
+          <SectionHeader className="pl-1">Twoja rola</SectionHeader>
           <button
             onClick={() => setRoleVisible((v) => !v)}
             className="w-full p-5 rounded-xl bg-black/60 border border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98]"
@@ -111,9 +110,7 @@ export default function VotingView({
             {PHASE_ICONS[phase]}
           </span>
           <div>
-            <p className="text-slate-500 text-xs font-typewriter uppercase tracking-widest">
-              Faza gry
-            </p>
+            <SectionHeader className="mb-0">Faza gry</SectionHeader>
             <p className="font-typewriter text-xl font-bold text-white uppercase tracking-wider">
               {PHASE_LABELS[phase]}
             </p>
@@ -140,12 +137,9 @@ export default function VotingView({
       {voteTally && (
         <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-slate-700">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest">
-              <span className="material-symbols-outlined text-[12px] align-middle mr-1">
-                how_to_vote
-              </span>
+            <SectionHeader icon="how_to_vote" className="text-slate-400 mb-0">
               Głosy na żywo
-            </p>
+            </SectionHeader>
             <span className="text-slate-500 text-xs font-typewriter">
               {voteTally.votedCount}/{voteTally.totalVoters} oddanych
             </span>

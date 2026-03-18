@@ -52,7 +52,7 @@ import { useMessageForm } from "./_hooks/useMessageForm";
 import { useMissionForm } from "./_hooks/useMissionForm";
 import { useGameStore } from "./_stores/gameStore";
 import { createHttpGameService } from "./_services/gameService";
-import { GameLayout } from "@/components/ui";
+import { PageLayout } from "@/components/ui";
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -180,7 +180,11 @@ export default function GameClient() {
     await rematchGame(mafiaCountSetting);
   };
 
-  const handleGmAction = async (forPlayerId: string, actionType: string, targetPlayerId: string) => {
+  const handleGmAction = async (
+    forPlayerId: string,
+    actionType: string,
+    targetPlayerId: string
+  ) => {
     await submitGmAction(forPlayerId, actionType as any, targetPlayerId);
   };
 
@@ -334,7 +338,7 @@ export default function GameClient() {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <GameLayout>
+    <PageLayout>
       <ToastOverlay />
 
       <GameHeader
@@ -532,6 +536,6 @@ export default function GameClient() {
           },
         }}
       />
-    </GameLayout>
+    </PageLayout>
   );
 }

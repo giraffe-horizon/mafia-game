@@ -1,7 +1,7 @@
 "use client";
 
 import CharacterPicker from "@/components/CharacterPicker";
-import { Button, GameLayout } from "@/components/ui";
+import { Button, PageLayout, FormField } from "@/components/ui";
 
 export interface FormData {
   onboardingNickname: string;
@@ -46,7 +46,7 @@ export default function OnboardingScreen({
     characterSelection;
   const { onboardingLoading, onboardingError } = loadingState;
   return (
-    <GameLayout>
+    <PageLayout>
       <div className="relative z-20 flex items-center p-4 pb-2 justify-between">
         <div className="size-12 shrink-0 opacity-0 pointer-events-none" />
         <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-typewriter text-primary drop-shadow-[0_0_8px_rgba(218,11,11,0.5)]">
@@ -72,10 +72,7 @@ export default function OnboardingScreen({
         </p>
 
         <div className="flex flex-col gap-4 w-full mb-6">
-          <label className="flex flex-col w-full group/input">
-            <p className="text-slate-400 text-sm font-typewriter leading-normal pb-2 uppercase tracking-widest pl-1 transition-colors group-focus-within/input:text-primary">
-              Twoje imię
-            </p>
+          <FormField label="Twoje imię">
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-slate-500">
                 <span className="material-symbols-outlined text-[20px]">person</span>
@@ -89,20 +86,17 @@ export default function OnboardingScreen({
                 onKeyDown={(e) => e.key === "Enter" && onSubmit()}
               />
             </div>
-          </label>
+          </FormField>
 
           {characters.length > 0 && (
-            <div className="flex flex-col w-full">
-              <p className="text-slate-400 text-sm font-typewriter leading-normal pb-3 uppercase tracking-widest pl-1">
-                Wybierz postać
-              </p>
+            <FormField label="Wybierz postać" className="[&>p]:pb-3">
               <CharacterPicker
                 characters={characters}
                 selectedId={selectedCharacterId}
                 onSelect={onCharacterSelect}
                 disabledIds={takenCharacterIds}
               />
-            </div>
+            </FormField>
           )}
 
           {onboardingError && (
@@ -123,6 +117,6 @@ export default function OnboardingScreen({
           {onboardingLoading ? "Dołączam..." : "Dołącz do gry"}
         </Button>
       </div>
-    </GameLayout>
+    </PageLayout>
   );
 }
