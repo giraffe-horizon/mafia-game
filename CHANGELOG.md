@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.5.0...v1.6.0) (2026-03-18)
+
+
+### Features
+
+* persist lobby settings (game mode, mafia count) across rounds ([134ffe4](https://github.com/giraffe-horizon/mafia-game/commit/134ffe4838c052d09355eab262198558e59f1310))
+
 # [1.5.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.4.0...v1.5.0) (2026-03-18)
 
 
