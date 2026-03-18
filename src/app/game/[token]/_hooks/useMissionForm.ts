@@ -1,9 +1,10 @@
 import { useState } from "react";
-import * as apiClient from "@/lib/api-client";
+import type { GameService } from "../_services/gameService";
 
 interface UseMissionFormParams {
   token: string;
   refetch: () => Promise<void>;
+  gameService: GameService;
 }
 
 interface UseMissionFormReturn {
@@ -25,7 +26,11 @@ interface UseMissionFormReturn {
   handleDeleteMission: (missionId: string) => Promise<void>;
 }
 
-export function useMissionForm({ token, refetch }: UseMissionFormParams): UseMissionFormReturn {
+export function useMissionForm({
+  token,
+  refetch,
+  gameService,
+}: UseMissionFormParams): UseMissionFormReturn {
   const [msnTarget, setMsnTarget] = useState("");
   const [msnDesc, setMsnDesc] = useState("");
   const [msnSecret, setMsnSecret] = useState(false);
@@ -39,17 +44,13 @@ export function useMissionForm({ token, refetch }: UseMissionFormParams): UseMis
     setMsnPending(true);
     setMsnError("");
     try {
-      await apiClient.createMission(token, {
-        targetPlayerId: msnTarget,
-        description: msnDesc,
-        isSecret: msnSecret,
-        points: msnPoints,
-      });
+      await gameService.createMission(token, msnTarget, msnDesc, msnSecret, msnPoints);
       setMsnDesc("");
       setMsnTarget("");
       setMsnSecret(false);
       setMsnPoints(1);
       setMsnPreset("custom");
+      await refetch();
     } catch (error) {
       setMsnError(error instanceof Error ? error.message : "Błąd połączenia");
     } finally {
@@ -59,19 +60,19 @@ export function useMissionForm({ token, refetch }: UseMissionFormParams): UseMis
 
   const handleCompleteMission = async (missionId: string) => {
     try {
-      await apiClient.completeMission(token, missionId);
+      await gameService.completeMission(token, missionId);
       await refetch();
-    } catch {
-      /* ignore */
+    } catch (error) {
+      setMsnError(error instanceof Error ? error.message : "Błąd ukończenia misji");
     }
   };
 
   const handleDeleteMission = async (missionId: string) => {
     try {
-      await apiClient.deleteMission(token, missionId);
+      await gameService.deleteMission(token, missionId);
       await refetch();
-    } catch {
-      /* ignore */
+    } catch (error) {
+      setMsnError(error instanceof Error ? error.message : "Błąd usuwania misji");
     }
   };
 

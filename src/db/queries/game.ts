@@ -3,6 +3,9 @@ import type {
   GameRow,
   GamePlayerRow,
   GameStateResponse,
+  GameStatus,
+  GamePhase,
+  Role,
   PublicPlayer,
   CharacterRow,
 } from "@/db/types";
@@ -159,7 +162,7 @@ export async function getGameState(
       nickname: p.nickname,
       isAlive: p.is_alive === 1,
       isHost: p.is_host === 1,
-      role: gameRow.status === "playing" ? (p.role as any) : null,
+      role: gameRow.status === "playing" ? (p.role as Role | null) : null,
       isYou: p.token === token, // Use token comparison like original
       character: p.character_id_data
         ? {
@@ -321,8 +324,8 @@ export async function getGameState(
     game: {
       id: gameRow.id,
       code: gameRow.code,
-      status: gameRow.status as any,
-      phase: gameRow.phase as any,
+      status: gameRow.status as GameStatus,
+      phase: gameRow.phase as GamePhase,
       round: gameRow.round,
       winner: gameRow.winner,
     },
@@ -330,7 +333,7 @@ export async function getGameState(
       playerId: playerRow.player_id,
       nickname: playerRow.nickname,
       token: playerRow.token,
-      role: playerRow.role as any,
+      role: playerRow.role as Role | null,
       isAlive: playerRow.is_alive === 1,
       isHost: playerRow.is_host === 1,
       isSetupComplete: !!playerRow.nickname,

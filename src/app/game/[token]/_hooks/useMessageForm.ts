@@ -1,9 +1,10 @@
 import { useState } from "react";
-import * as apiClient from "@/lib/api-client";
+import type { GameService } from "../_services/gameService";
 
 interface UseMessageFormParams {
   token: string;
   refetch: () => Promise<void>;
+  gameService: GameService;
 }
 
 interface UseMessageFormReturn {
@@ -17,7 +18,11 @@ interface UseMessageFormReturn {
   handleSendMessage: () => Promise<void>;
 }
 
-export function useMessageForm({ token, refetch }: UseMessageFormParams): UseMessageFormReturn {
+export function useMessageForm({
+  token,
+  refetch,
+  gameService,
+}: UseMessageFormParams): UseMessageFormReturn {
   const [msgTarget, setMsgTarget] = useState("");
   const [msgContent, setMsgContent] = useState("");
   const [msgPending, setMsgPending] = useState(false);
@@ -28,10 +33,7 @@ export function useMessageForm({ token, refetch }: UseMessageFormParams): UseMes
     setMsgPending(true);
     setMsgError("");
     try {
-      await apiClient.sendMessage(token, {
-        content: msgContent,
-        ...(msgTarget && { toPlayerId: msgTarget }),
-      });
+      await gameService.sendMessage(token, msgTarget || "all", msgContent);
       setMsgContent("");
       await refetch();
     } catch (error) {

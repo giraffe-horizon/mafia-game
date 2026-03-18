@@ -1,9 +1,10 @@
 import { useState } from "react";
-import * as apiClient from "@/lib/api-client";
+import type { GameService } from "../_services/gameService";
 
 interface UseOnboardingParams {
   token: string;
   refetch: () => Promise<void>;
+  gameService: GameService;
 }
 
 interface UseOnboardingReturn {
@@ -18,7 +19,11 @@ interface UseOnboardingReturn {
   handleCharacterUpdate: (setShowSettingsModal: (show: boolean) => void) => Promise<void>;
 }
 
-export function useOnboarding({ token, refetch }: UseOnboardingParams): UseOnboardingReturn {
+export function useOnboarding({
+  token,
+  refetch,
+  gameService,
+}: UseOnboardingParams): UseOnboardingReturn {
   const [onboardingNickname, setOnboardingNickname] = useState("");
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [onboardingLoading, setOnboardingLoading] = useState(false);
@@ -36,10 +41,7 @@ export function useOnboarding({ token, refetch }: UseOnboardingParams): UseOnboa
     setOnboardingError("");
     setOnboardingLoading(true);
     try {
-      await apiClient.setupPlayer(token, {
-        nickname: onboardingNickname.trim(),
-        characterId: selectedCharacterId,
-      });
+      await gameService.setupPlayer(token, onboardingNickname.trim(), selectedCharacterId);
       await refetch();
     } catch (error) {
       setOnboardingError(error instanceof Error ? error.message : "Błąd połączenia");
@@ -51,11 +53,11 @@ export function useOnboarding({ token, refetch }: UseOnboardingParams): UseOnboa
   const handleCharacterUpdate = async (setShowSettingsModal: (show: boolean) => void) => {
     if (!selectedCharacterId) return;
     try {
-      await apiClient.updateCharacter(token, { characterId: selectedCharacterId });
+      await gameService.updateCharacter(token, selectedCharacterId);
       setShowSettingsModal(false);
-      refetch();
-    } catch {
-      /* silent */
+      await refetch();
+    } catch (error) {
+      setOnboardingError(error instanceof Error ? error.message : "Błąd aktualizacji postaci");
     }
   };
 

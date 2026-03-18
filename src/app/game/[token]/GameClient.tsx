@@ -35,8 +35,11 @@ import { useOnboarding } from "./_hooks/useOnboarding";
 import { useMessageForm } from "./_hooks/useMessageForm";
 import { useMissionForm } from "./_hooks/useMissionForm";
 import { useGameStore } from "./_stores/gameStore";
-import { createHttpGameService } from "./_services/gameService";
+import { createHttpGameService, type GameService } from "./_services/gameService";
 import { PageLayout } from "@/components/ui";
+
+// Stateless service — safe to create at module level
+const gameService: GameService = createHttpGameService();
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -78,7 +81,7 @@ export default function GameClient() {
     setSelectedCharacterId,
     handleSetup,
     handleCharacterUpdate,
-  } = useOnboarding({ token, refetch });
+  } = useOnboarding({ token, refetch, gameService });
   const {
     msgTarget,
     msgContent,
@@ -87,7 +90,7 @@ export default function GameClient() {
     setMsgTarget,
     setMsgContent,
     handleSendMessage,
-  } = useMessageForm({ token, refetch });
+  } = useMessageForm({ token, refetch, gameService });
   const {
     msnTarget,
     msnDesc,
@@ -102,7 +105,7 @@ export default function GameClient() {
     handleCreateMission,
     handleCompleteMission,
     handleDeleteMission,
-  } = useMissionForm({ token, refetch });
+  } = useMissionForm({ token, refetch, gameService });
 
   // UI state (remains in component)
   const [roleVisible, setRoleVisible] = useState(false);
@@ -116,7 +119,6 @@ export default function GameClient() {
   // Initialize store with token and service
   useEffect(() => {
     if (token) {
-      const gameService = createHttpGameService();
       initialize(token, gameService);
     }
   }, [token, initialize]);

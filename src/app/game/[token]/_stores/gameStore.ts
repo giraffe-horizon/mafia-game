@@ -148,7 +148,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     apiClient
       .fetchCharacters()
       .then((characters) => set({ characters }))
-      .catch(() => {});
+      .catch((error) => {
+        console.error(
+          "Failed to fetch characters:",
+          error instanceof Error ? error.message : error
+        );
+      });
 
     // Start polling
     get().startPolling();
@@ -380,8 +385,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         await get().refetch();
       }
       return result;
-    } catch {
-      return { success: false };
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
+      return { success: false, error: errorMsg };
     }
   },
 

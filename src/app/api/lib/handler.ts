@@ -11,8 +11,11 @@ export interface ApiContextWithToken extends ApiContext {
   token: string;
 }
 
-export type ApiHandler<T = any> = (req: NextRequest, ctx: ApiContext) => Promise<NextResponse<T>>;
-export type ApiHandlerWithToken<T = any> = (
+export type ApiHandler<T = unknown> = (
+  req: NextRequest,
+  ctx: ApiContext
+) => Promise<NextResponse<T>>;
+export type ApiHandlerWithToken<T = unknown> = (
   req: NextRequest,
   ctx: ApiContextWithToken
 ) => Promise<NextResponse<T>>;
