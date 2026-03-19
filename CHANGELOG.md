@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/giraffe-horizon/mafia-game/compare/v1.8.0...v1.8.1) (2026-03-19)
+
+
+### Bug Fixes
+
+* reset role visibility on new round only + hide lobby ranking between rounds (closes [#10](https://github.com/giraffe-horizon/mafia-game/issues/10)) ([#25](https://github.com/giraffe-horizon/mafia-game/issues/25)) ([edd6ebf](https://github.com/giraffe-horizon/mafia-game/commit/edd6ebf8e55a4b1915b7e28152b79f4de96b530d))
+
 # [1.8.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.7.0...v1.8.0) (2026-03-19)
 
 
