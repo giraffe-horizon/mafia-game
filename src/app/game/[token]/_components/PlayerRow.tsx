@@ -35,7 +35,11 @@ export default function PlayerRow({
 
   const handleSaveRename = () => {
     const trimmedName = editNickname.trim();
-    if (trimmedName.length >= 1 && trimmedName.length <= MAX_NICKNAME_LENGTH && trimmedName !== player.nickname) {
+    if (
+      trimmedName.length >= 1 &&
+      trimmedName.length <= MAX_NICKNAME_LENGTH &&
+      trimmedName !== player.nickname
+    ) {
       onRename?.(trimmedName);
     }
     setIsEditing(false);
