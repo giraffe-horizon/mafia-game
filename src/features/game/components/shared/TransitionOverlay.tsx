@@ -3,9 +3,26 @@
 import { useEffect, useState, useCallback } from "react";
 import { useGameStore } from "@/features/game/store/gameStore";
 
+function triggerVibration(screen: { title: string; subtitle?: string }) {
+  try {
+    if (!navigator.vibrate) return;
+    const text = `${screen.title} ${screen.subtitle ?? ""}`.toLowerCase();
+    const isDeathScreen =
+      text.includes("nie przeżył") || text.includes("wyeliminowan") || text.includes("wyrok");
+    if (isDeathScreen) {
+      navigator.vibrate([100, 50, 100]);
+    } else {
+      navigator.vibrate(200);
+    }
+  } catch {
+    // Vibration API not supported
+  }
+}
+
 export default function TransitionOverlay() {
   const transition = useGameStore((s) => s.transition);
   const clearTransition = useGameStore((s) => s.clearTransition);
+  const isHost = useGameStore((s) => s.state?.currentPlayer?.isHost ?? false);
 
   const [currentScreenIndex, setCurrentScreenIndex] = useState(0);
   const [fadeState, setFadeState] = useState<"in" | "out">("in");
@@ -14,14 +31,12 @@ export default function TransitionOverlay() {
     if (!transition) return;
 
     if (currentScreenIndex < transition.screens.length - 1) {
-      // Fade out, then advance to next screen
       setFadeState("out");
       setTimeout(() => {
         setCurrentScreenIndex((i) => i + 1);
         setFadeState("in");
       }, 300);
     } else {
-      // Last screen — fade out and close
       setFadeState("out");
       setTimeout(() => {
         clearTransition();
@@ -40,13 +55,21 @@ export default function TransitionOverlay() {
     return () => clearTimeout(timer);
   }, [transition, currentScreenIndex, advanceOrClose]);
 
-  // Reset state when a new transition starts
+  // Reset state when a new transition starts + vibrate
   useEffect(() => {
     if (transition) {
       setCurrentScreenIndex(0);
       setFadeState("in");
+      triggerVibration(transition.screens[0]);
     }
   }, [transition]);
+
+  // Vibrate on screen change (after the first screen)
+  useEffect(() => {
+    if (transition && currentScreenIndex > 0) {
+      triggerVibration(transition.screens[currentScreenIndex]);
+    }
+  }, [transition, currentScreenIndex]);
 
   if (!transition) return null;
 
@@ -56,7 +79,7 @@ export default function TransitionOverlay() {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-background-dark/95 backdrop-blur-sm"
-      onClick={advanceOrClose}
+      onClick={isHost ? undefined : advanceOrClose}
     >
       <div
         className={`flex flex-col items-center gap-4 px-8 text-center transition-all duration-300 ease-out ${
@@ -88,6 +111,20 @@ export default function TransitionOverlay() {
             />
           ))}
         </div>
+      )}
+
+      {/* GM skip button */}
+      {isHost && (
+        <button
+          type="button"
+          className="absolute bottom-24 font-typewriter uppercase text-sm tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            clearTransition();
+          }}
+        >
+          Pomiń
+        </button>
       )}
     </div>
   );

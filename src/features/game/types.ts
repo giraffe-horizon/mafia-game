@@ -100,6 +100,7 @@ export interface Toast {
 // ---------------------------------------------------------------------------
 
 export type TransitionType =
+  | "game_start"
   | "night_to_day"
   | "day_to_voting"
   | "voting_to_night"

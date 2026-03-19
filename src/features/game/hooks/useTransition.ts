@@ -19,6 +19,23 @@ function buildTransition(
 ): TransitionData | null {
   const screens: TransitionScreen[] = [];
 
+  // lobby → night (game start)
+  if (prevPhase === "lobby" && newPhase === "night" && round === 1) {
+    screens.push({
+      icon: "casino",
+      title: "Gra rozpoczęta!",
+      subtitle: "Role zostały przydzielone",
+      durationMs: 2500,
+    });
+    screens.push({
+      icon: "bedtime",
+      title: "Zapada noc...",
+      subtitle: "Runda 1",
+      durationMs: 2000,
+    });
+    return { type: "game_start", screens };
+  }
+
   // night → day
   if (prevPhase === "night" && newPhase === "day") {
     screens.push({
@@ -162,9 +179,6 @@ export function useTransition(): void {
     prevPhaseRef.current = phase;
 
     if (!prevPhase || prevPhase === phase) return;
-
-    // Don't show transitions from lobby
-    if (prevPhase === "lobby") return;
 
     const transition = buildTransition(prevPhase, phase, round ?? 1, lastPhaseResult, winner);
     if (transition) {
