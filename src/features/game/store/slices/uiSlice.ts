@@ -14,6 +14,10 @@ export interface UiSlice {
   setRoleVisible: (visible: boolean) => void;
   toggleRole: () => void;
 
+  // Active tab (bottom navigation)
+  activeTab: "night" | "day" | "votes" | "logs";
+  setActiveTab: (tab: "night" | "day" | "votes" | "logs") => void;
+
   // Loading states
   actionPending: boolean;
   actionError: string;
@@ -31,6 +35,8 @@ export interface UiSlice {
 export const createUiSlice: StateCreator<GameState, [], [], UiSlice> = (set, get) => ({
   toasts: [],
   roleVisible: false,
+  activeTab: "day",
+  setActiveTab: (tab) => set({ activeTab: tab }),
   actionPending: false,
   actionError: "",
   phasePending: false,

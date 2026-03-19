@@ -201,6 +201,12 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
         if (transition) {
           set({ transition });
         }
+
+        // Auto-switch active tab on phase change
+        if (newPhase === "night") get().setActiveTab("night");
+        else if (newPhase === "day") get().setActiveTab("day");
+        else if (newPhase === "voting") get().setActiveTab("votes");
+        // review/ended: stay on current tab
       }
 
       const prevRound = get().state?.game?.round;
