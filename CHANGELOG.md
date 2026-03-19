@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.8.2...v1.9.0) (2026-03-19)
+
+
+### Features
+
+* transition screens between game phases (closes [#9](https://github.com/giraffe-horizon/mafia-game/issues/9)) ([#28](https://github.com/giraffe-horizon/mafia-game/issues/28)) ([9d60421](https://github.com/giraffe-horizon/mafia-game/commit/9d60421ce5f9b17eaf450d60bc46de22358f1edb))
+
 ## [1.8.2](https://github.com/giraffe-horizon/mafia-game/compare/v1.8.1...v1.8.2) (2026-03-19)
 
 
