@@ -105,7 +105,7 @@ function CodeInput({
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
           autoFocus={i === 0}
-          className="w-12 h-14 text-center text-xl font-bold font-typewriter uppercase rounded-lg bg-black/40 border border-primary/30 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+          className="w-12 h-14 text-center text-xl font-bold font-display uppercase bg-surface-lowest border border-primary/30 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
         />
       ))}
     </div>
@@ -177,7 +177,7 @@ export default function HomeClient() {
       <div className="flex flex-col gap-3 w-full mb-6">
         {joinMode && (
           <div className="flex flex-col w-full">
-            <p className="text-slate-400 text-sm font-typewriter leading-normal pb-2 uppercase tracking-widest pl-1">
+            <p className="text-on-surface-dim text-sm font-display leading-normal pb-2 uppercase tracking-widest pl-1">
               Kod sesji
             </p>
             <CodeInput
@@ -189,9 +189,7 @@ export default function HomeClient() {
           </div>
         )}
 
-        {error && (
-          <p className="text-primary text-sm font-typewriter pl-1 animate-pulse">{error}</p>
-        )}
+        {error && <p className="text-primary text-sm font-display pl-1 animate-pulse">{error}</p>}
       </div>
 
       {/* Action buttons */}
@@ -200,10 +198,10 @@ export default function HomeClient() {
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 bg-stamp text-on-paper text-lg font-bold leading-normal tracking-[0.02em] transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined mr-2 text-[20px]">add_circle</span>
-            <span className="truncate uppercase font-typewriter tracking-wider">
+            <span className="truncate uppercase font-display tracking-wider">
               {loading ? "Tworzę..." : "Stwórz grę"}
             </span>
           </button>
@@ -212,10 +210,10 @@ export default function HomeClient() {
         <button
           onClick={handleJoin}
           disabled={loading}
-          className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-transparent border-2 border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 bg-transparent border-2 border-dashed border-surface-highest hover:border-on-surface-dim text-on-surface-dim hover:text-on-surface text-lg font-bold leading-normal tracking-[0.02em] transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined mr-2 text-[20px]">login</span>
-          <span className="truncate uppercase font-typewriter tracking-wider">
+          <span className="truncate uppercase font-display tracking-wider">
             {joinMode ? (loading ? "Dołączam..." : "Wejdź do gry") : "Dołącz do gry"}
           </span>
         </button>
@@ -227,7 +225,7 @@ export default function HomeClient() {
               setSessionCode("");
               setError("");
             }}
-            className="text-slate-500 hover:text-slate-300 text-sm font-typewriter uppercase tracking-widest transition-colors text-center"
+            className="text-on-surface-dim hover:text-on-surface text-sm font-display uppercase tracking-widest transition-colors text-center"
           >
             ← Wróć
           </button>

@@ -91,8 +91,8 @@ export default function LobbyView({
               <p className="text-on-surface-dim text-xs font-display uppercase tracking-widest mb-1">
                 Zeskanuj aby dołączyć
               </p>
-              <div className="p-3 bg-white">
-                <QRCode value={joinUrl} size={160} bgColor="#ffffff" fgColor="#1a0c0c" />
+              <div className="p-3 bg-secondary">
+                <QRCode value={joinUrl} size={160} bgColor="#d7c3b0" fgColor="#1a1a1a" />
               </div>
               <p className="text-on-surface-dim text-[10px] font-display text-center mt-1 break-all px-2">
                 {joinUrl}

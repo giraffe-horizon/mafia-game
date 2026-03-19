@@ -99,7 +99,7 @@ export default function SettingsModal({
           icon="logout"
           className="w-full mt-4"
         >
-          Opuść grę
+          Opuść operację
         </Button>
       )}
     </Modal>
