@@ -36,6 +36,10 @@ src/
 │   └── ranking/               # Legacy page (ranking is now a modal)
 ├── components/
 │   └── ui/                    # Reusable primitives (Button, Card, Badge, Modal, etc.)
+├── config/
+│   ├── server.ts              # ServerConfig — env vars, server-only (never import in client components)
+│   ├── client.ts              # ClientConfig — NEXT_PUBLIC_* vars, safe for browser
+│   └── index.ts               # Barrel re-export
 ├── db/
 │   ├── queries/               # 8 domain modules (game, player, actions, phase, etc.)
 │   ├── types.ts               # All DB + API types

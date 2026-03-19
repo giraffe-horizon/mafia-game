@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { getServerConfig } from "@/config/server";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +77,7 @@ export default function DevPage() {
     }
   }, [result]);
 
-  if (!process.env.ENABLE_DEV_TOOLS) {
+  if (!getServerConfig().enableDevTools) {
     return null;
   }
 
