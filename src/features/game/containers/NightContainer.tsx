@@ -26,9 +26,8 @@ export default function NightContainer() {
   const setChangingDecision = useGameStore((s) => s.setChangingDecision);
   const mafiaTeamActions = useGameStore((s) => s.state?.mafiaTeamActions);
   const doctorLastTargetId = useGameStore((s) => s.state?.doctorLastTargetId);
-  const investigatedPlayerIds = useGameStore((s) =>
-    s.state?.investigatedPlayers?.map((ip) => ip.playerId)
-  );
+  const investigatedPlayers = useGameStore((s) => s.state?.investigatedPlayers);
+  const investigatedPlayerIds = investigatedPlayers?.map((ip) => ip.playerId);
 
   if (!currentPlayer) return null;
 
