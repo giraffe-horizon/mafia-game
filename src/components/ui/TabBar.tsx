@@ -17,7 +17,10 @@ export default function TabBar({ tabs, activeTab, onTabChange, className, ...pro
   return (
     <div
       role="tablist"
-      className={cn("flex border-b border-slate-800 overflow-x-auto", className)}
+      className={cn(
+        "flex border-t border-surface-highest bg-surface-low",
+        className
+      )}
       {...props}
     >
       {tabs.map((t) => (
@@ -27,13 +30,13 @@ export default function TabBar({ tabs, activeTab, onTabChange, className, ...pro
           aria-selected={activeTab === t.id}
           onClick={() => onTabChange(t.id)}
           className={cn(
-            "flex-1 min-w-0 flex flex-col items-center py-2 gap-0.5 transition-colors text-[10px] font-typewriter uppercase tracking-wider whitespace-nowrap",
+            "flex-1 min-w-0 flex flex-col items-center py-2.5 gap-0.5 text-[9px] font-display font-black uppercase tracking-widest whitespace-nowrap transition-colors",
             activeTab === t.id
-              ? "text-primary border-b-2 border-primary"
-              : "text-slate-500 hover:text-slate-300"
+              ? "text-primary bg-surface-lowest border-t-2 border-t-primary"
+              : "text-on-surface/40 hover:text-on-surface/70"
           )}
         >
-          <span className="material-symbols-outlined text-[16px]">{t.icon}</span>
+          <span className="material-symbols-outlined text-[18px]">{t.icon}</span>
           {t.label}
         </button>
       ))}

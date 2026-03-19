@@ -7,22 +7,21 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const badgeVariants = {
-  mafia: "text-red-400 border-red-900/50 bg-red-950/30",
-  detective: "text-blue-400 border-blue-900/50 bg-blue-950/30",
-  doctor: "text-green-400 border-green-900/50 bg-green-950/30",
-  civilian: "text-slate-400 border-slate-700 bg-slate-900/30",
-  success: "text-green-400 border-green-900/50 bg-green-950/30",
-  warning: "text-yellow-400 border-yellow-900/50 bg-yellow-950/30",
-  danger: "text-red-400 border-red-900/50 bg-red-950/30",
+  mafia: "text-primary-dark border-primary-dark bg-primary-dark/10",
+  detective: "text-blue-400 border-blue-700 bg-blue-950/30",
+  doctor: "text-green-400 border-green-700 bg-green-950/30",
+  civilian: "text-on-surface/60 border-on-surface/30 bg-surface-highest/20",
+  success: "text-green-400 border-green-700 bg-green-950/30",
+  warning: "text-yellow-400 border-yellow-700 bg-yellow-950/30",
+  danger: "text-primary-dark border-primary-dark bg-primary-dark/10",
 };
 
 export default function Badge({ variant = "civilian", children, className, ...props }: BadgeProps) {
   return (
     <span
       className={cn(
-        // Base styles
-        "text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border",
-        // Variant styles
+        // Stamp style: sharp border, all caps, tiny text
+        "inline-block text-[10px] font-display font-black uppercase tracking-widest px-1.5 py-0.5 border rounded-none",
         badgeVariants[variant],
         className
       )}

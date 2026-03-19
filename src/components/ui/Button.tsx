@@ -10,18 +10,24 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const buttonVariants = {
+  // Primary = coral rubber stamp fill
   primary:
-    "bg-primary hover:bg-primary/90 text-white shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)]",
-  secondary: "bg-slate-700 hover:bg-slate-600 text-white border border-slate-600",
-  danger: "bg-red-900/50 hover:bg-red-800/50 border border-red-700/50 text-red-300",
+    "bg-primary text-on-secondary hover:bg-primary/90 font-black",
+  // Secondary = dashed border, transparent
+  secondary:
+    "bg-transparent border-2 border-dashed border-on-surface/40 text-on-surface hover:border-on-surface hover:bg-surface-highest/30",
+  // Danger = muted red
+  danger:
+    "bg-transparent border-2 border-dashed border-primary-dark/60 text-primary-dark hover:bg-primary-dark/10",
+  // Ghost = underline only
   ghost:
-    "bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-slate-200",
+    "bg-transparent text-on-surface/60 hover:text-on-surface underline underline-offset-2 decoration-dotted",
 };
 
 const buttonSizes = {
   sm: "h-8 px-3 text-xs",
   md: "h-10 px-4 text-sm",
-  lg: "h-14 px-6 text-lg",
+  lg: "h-12 px-6 text-base",
 };
 
 export default function Button({
@@ -38,18 +44,16 @@ export default function Button({
     <button
       disabled={disabled || loading}
       className={cn(
-        // Base styles
-        "flex items-center justify-center gap-2 rounded-lg font-typewriter font-bold uppercase tracking-wider transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden",
-        // Variant styles
+        // Base: sharp corners, uppercase, typewriter
+        "flex items-center justify-center gap-2 rounded-none font-display font-bold uppercase tracking-wider active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden transition-colors",
         buttonVariants[variant],
-        // Size styles
         buttonSizes[size],
         className
       )}
       {...props}
     >
       {loading ? (
-        <span className="material-symbols-outlined animate-spin text-[16px]">refresh</span>
+        <span className="material-symbols-outlined text-[16px] animate-spin">refresh</span>
       ) : icon ? (
         <span className="material-symbols-outlined text-[16px]">{icon}</span>
       ) : null}

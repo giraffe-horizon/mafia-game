@@ -4,19 +4,113 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary: #da0b0b;
-  --color-background-light: #f8f5f5;
-  --color-background-dark: #1a0c0c;
-  --font-display: "Be Vietnam Pro", sans-serif;
-  --font-typewriter: "Special Elite", monospace;
-  --radius: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-full: 9999px;
+  /* === Analog Intelligence Dossier palette === */
+  --color-background: #131313;         /* The Void — dark desk */
+  --color-surface-low: #1c1b1b;        /* The Folder */
+  --color-surface-lowest: #0e0e0e;     /* Deep shadows */
+  --color-surface-highest: #353534;    /* Subtle highlight */
+  --color-secondary: #d7c3b0;          /* Paper / Pergamin */
+  --color-secondary-dim: #c4af9c;      /* Slightly darker paper */
+  --color-primary: #ffb4ac;            /* The Stamp — de-saturated red */
+  --color-primary-dark: #da0b0b;       /* Accent red for critical */
+  --color-on-surface: #e8e0d8;         /* Cream text on dark */
+  --color-on-secondary: #1a1a1a;       /* Dark text on paper */
+  --color-stamp: #ffb4ac;              /* Rubber stamp color */
+  --color-accent-green: rgba(42, 58, 42, 0.6); /* CRT-monitor vibes */
+
+  /* === Legacy compat === */
+  --color-background-dark: #131313;
+  --color-background-light: #d7c3b0;
+
+  /* === Typography === */
+  --font-display: var(--font-space-grotesk), "Space Grotesk", monospace;
+  --font-typewriter: var(--font-space-grotesk), "Space Grotesk", monospace;
+
+  /* === Sharp corners everywhere (analog paper) === */
+  --radius: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-full: 9999px; /* only for circular elements */
 }
 
 @layer base {
   body {
     min-height: max(844px, 100dvh);
+    background: #131313;
+    color: #e8e0d8;
+  }
+
+  /* Grain texture overlay on body */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px;
+  }
+}
+
+@layer utilities {
+  /* Stamp utility — rubber stamp aesthetic */
+  .stamp {
+    display: inline-block;
+    border: 2px solid currentColor;
+    padding: 0.125rem 0.5rem;
+    font-family: var(--font-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.65rem;
+    user-select: none;
+  }
+
+  /* Paper card — pergamin background */
+  .paper-card {
+    background-color: #d7c3b0;
+    color: #1a1a1a;
+    border-radius: 0;
+  }
+
+  /* Redacted — black censorship bar */
+  .redacted {
+    background-color: #1a1a1a;
+    color: transparent;
+    user-select: none;
+    border-radius: 0;
+  }
+
+  /* Tape detail — corner tape effect via pseudo */
+  .tape-corner::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-2deg);
+    width: 48px;
+    height: 14px;
+    background: rgba(215, 195, 176, 0.35);
+    border: 1px solid rgba(215, 195, 176, 0.5);
+  }
+
+  /* Step animation — typewriter/projector feel */
+  .step-transition {
+    transition-timing-function: steps(1, end);
+    transition-duration: 0.1s;
+  }
+
+  /* CRT tint for GM panel / lobby */
+  .crt-tint {
+    background-color: var(--color-accent-green);
+  }
+
+  /* Dossier surface */
+  .dossier {
+    background-color: #1c1b1b;
+    border: 1px solid #353534;
+    border-radius: 0;
   }
 }
