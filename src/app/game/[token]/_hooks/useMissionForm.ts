@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { GameService } from "../_services/gameService";
+import type { GameService } from "@/app/game/[token]/_services/gameService";
 
 interface UseMissionFormParams {
   token: string;

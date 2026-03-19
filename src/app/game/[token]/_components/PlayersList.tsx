@@ -1,5 +1,5 @@
 import type { PublicPlayer } from "@/db";
-import PlayerRow from "./PlayerRow";
+import PlayerRow from "@/app/game/[token]/_components/PlayerRow";
 import { SectionHeader } from "@/components/ui";
 
 interface PlayersListProps {

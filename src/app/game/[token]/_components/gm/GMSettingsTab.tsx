@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { PublicPlayer } from "@/db";
 import { SectionHeader } from "@/components/ui";
+import { autoMafiaCount } from "@/lib/constants";
 
 interface GMSettingsTabProps {
   players: PublicPlayer[];
@@ -50,7 +51,7 @@ export default function GMSettingsTab({
               : "border-slate-700 text-slate-400 hover:border-slate-500"
           }`}
         >
-          Auto ({players.length <= 5 ? 1 : players.length <= 8 ? 2 : players.length <= 11 ? 3 : 4})
+          Auto ({autoMafiaCount(players.length)})
         </button>
         {Array.from({ length: Math.max(1, players.length - 3) }, (_, i) => i + 1).map((n) => (
           <button

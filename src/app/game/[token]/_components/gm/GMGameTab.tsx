@@ -4,7 +4,8 @@ import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { Role, ActionType, GamePhase } from "@/db/types";
-import { SectionHeader } from "@/components/ui";
+import { SectionHeader, Button } from "@/components/ui";
+import Select from "@/components/ui/Select";
 
 const ACTION_ROLE_MAP: Record<Role, ActionType> = {
   mafia: "kill",
@@ -156,45 +157,37 @@ export default function GMGameTab({
           <SectionHeader className="text-primary/70 mb-3">
             Zmień akcję gracza (override GM)
           </SectionHeader>
-          <select
+          <Select
             value={selectedPlayer}
-            onChange={(e) => {
-              setSelectedPlayer(e.target.value);
+            onChange={(value) => {
+              setSelectedPlayer(value);
               setSelectedTarget("");
             }}
-            className="w-full h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 mb-2 font-typewriter"
-          >
-            <option value="">— Wybierz gracza —</option>
-            {alivePlayers.map((p) => (
-              <option key={p.playerId} value={p.playerId}>
-                {p.nickname} ({ROLE_LABELS[p.role ?? "civilian"] ?? "?"})
-                {actedPlayerIds.has(p.playerId) ? " ✓" : " ⏳"}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "— Wybierz gracza —" },
+              ...alivePlayers.map((p) => ({
+                value: p.playerId,
+                label: `${p.nickname} (${ROLE_LABELS[p.role ?? "civilian"] ?? "?"})${actedPlayerIds.has(p.playerId) ? " ✓" : " ⏳"}`,
+              })),
+            ]}
+            className="mb-2 bg-black/40 border-slate-700"
+          />
           {selectedPlayer && (
             <>
-              <select
+              <Select
                 value={selectedTarget}
-                onChange={(e) => setSelectedTarget(e.target.value)}
-                className="w-full h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 mb-2 font-typewriter"
-              >
-                <option value="">— Wybierz cel —</option>
-                {alivePlayers
-                  .filter((p) => p.playerId !== selectedPlayer)
-                  .map((p) => (
-                    <option key={p.playerId} value={p.playerId}>
-                      {p.nickname}
-                    </option>
-                  ))}
-              </select>
-              <button
-                onClick={handleSubmit}
-                disabled={!selectedTarget && actionType !== "wait"}
-                className="w-full h-10 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-bold font-typewriter uppercase tracking-wider transition-all disabled:opacity-40"
-              >
+                onChange={setSelectedTarget}
+                options={[
+                  { value: "", label: "— Wybierz cel —" },
+                  ...alivePlayers
+                    .filter((p) => p.playerId !== selectedPlayer)
+                    .map((p) => ({ value: p.playerId, label: p.nickname })),
+                ]}
+                className="mb-2 bg-black/40 border-slate-700"
+              />
+              <Button onClick={handleSubmit} disabled={!selectedTarget && actionType !== "wait"}>
                 Zatwierdź
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -202,18 +195,14 @@ export default function GMGameTab({
 
       {/* Przycisk przejścia fazy */}
       {nextPhase ? (
-        <button
+        <Button
           onClick={() => onPhase(nextPhase.phase)}
           disabled={!canAdvancePhase}
-          className={`flex w-full items-center justify-center gap-2 rounded-lg h-12 transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.3)] active:scale-[0.98] font-typewriter uppercase tracking-wider text-sm ${
-            !canAdvancePhase
-              ? "bg-slate-700 text-slate-500 cursor-not-allowed"
-              : "bg-primary hover:bg-primary/90 text-white font-bold"
-          }`}
+          loading={phasePending}
+          icon={phase === "night" ? "wb_sunny" : phase === "day" ? "how_to_vote" : "bedtime"}
+          variant={canAdvancePhase ? "primary" : "secondary"}
+          className="w-full h-12"
         >
-          <span className="material-symbols-outlined text-[18px]">
-            {phase === "night" ? "wb_sunny" : phase === "day" ? "how_to_vote" : "bedtime"}
-          </span>
           {phasePending
             ? "Czekaj..."
             : phase === "night"
@@ -223,7 +212,7 @@ export default function GMGameTab({
                 : phase === "voting"
                   ? "Zacznij noc"
                   : nextPhase.label}
-        </button>
+        </Button>
       ) : (
         <p className="text-slate-500 text-sm font-typewriter text-center">
           Brak dostępnych przejść

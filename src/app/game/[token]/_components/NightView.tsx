@@ -1,7 +1,10 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS } from "@/lib/constants";
 import type { PublicPlayer, Role } from "@/db/types";
-import NightActionPanel, { type ActionState, type MafiaState } from "./NightActionPanel";
-import DeadSpectatorView from "./DeadSpectatorView";
+import NightActionPanel, {
+  type ActionState,
+  type MafiaState,
+} from "@/app/game/[token]/_components/NightActionPanel";
+import DeadSpectatorView from "@/app/game/[token]/_components/DeadSpectatorView";
 import { Card, SectionHeader } from "@/components/ui";
 
 export interface PlayerState {

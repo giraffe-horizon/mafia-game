@@ -1,7 +1,7 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
 import { SectionHeader, Card, InfoCard } from "@/components/ui";
-import DeadSpectatorView from "./DeadSpectatorView";
-import { useGameStore } from "../_stores/gameStore";
+import DeadSpectatorView from "@/app/game/[token]/_components/DeadSpectatorView";
+import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 
 interface DayViewProps {
   roleVisible: boolean;

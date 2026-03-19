@@ -1,4 +1,4 @@
-import { useGameStore } from "../_stores/gameStore";
+import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 
 interface HostMission {
   id: string;

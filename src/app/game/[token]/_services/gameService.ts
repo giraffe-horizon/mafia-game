@@ -26,6 +26,9 @@ export interface StartGameOpts {
 export interface GameService {
   // Core state management
   fetchState(token: string): Promise<GameStateResponse>;
+  fetchCharacters(): Promise<
+    Array<{ id: string; slug: string; name: string; name_pl: string; avatar_url: string }>
+  >;
 
   // Player actions
   submitAction(token: string, type: string, targetPlayerId?: string): Promise<ActionResult>;
@@ -103,6 +106,7 @@ export interface GameService {
 export function createHttpGameService(): GameService {
   return {
     fetchState: apiClient.fetchGameState,
+    fetchCharacters: apiClient.fetchCharacters,
 
     submitAction: async (
       token: string,

@@ -6,8 +6,7 @@ import type {
   RematchResult,
   LeaveResult,
   StartGameOpts,
-} from "../_services/gameService";
-import * as apiClient from "@/lib/api-client"; // only for fetchCharacters
+} from "@/app/game/[token]/_services/gameService";
 
 // Polling constants
 const POLL_INTERVAL = 2000;
@@ -32,6 +31,30 @@ interface GameState {
     name: string;
     name_pl: string;
     avatar_url: string;
+  }>;
+
+  // Ranking & scores
+  ranking: Array<{
+    playerId: string;
+    nickname: string;
+    role: string | null;
+    isAlive: boolean;
+    missionPoints: number;
+    missionsDone: number;
+    missionsTotal: number;
+    survived: boolean;
+    won: boolean;
+    totalScore: number;
+    roundsPlayed: number;
+  }>;
+  rankingMeta: { gameStatus: string; winner: string | null; round: number } | null;
+  roundScores: Array<{
+    playerId: string;
+    nickname: string;
+    missionPoints: number;
+    survived: boolean;
+    won: boolean;
+    totalScore: number;
   }>;
 
   // Toasts for messages
@@ -77,6 +100,10 @@ interface GameState {
   ) => Promise<ActionResult>;
   finalizeGame: () => Promise<ActionResult>;
 
+  // Ranking & scores
+  fetchRanking: () => Promise<void>;
+  fetchRoundScores: () => Promise<void>;
+
   // Toast management
   dismissToast: (id: string) => void;
 
@@ -90,6 +117,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   error: "",
   isPolling: false,
   characters: [],
+  ranking: [],
+  rankingMeta: null,
+  roundScores: [],
   toasts: [],
 
   // Loading states
@@ -147,6 +177,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       state: null,
       toasts: [],
       characters: [],
+      ranking: [],
+      rankingMeta: null,
+      roundScores: [],
       error: "",
       actionPending: false,
       actionError: "",
@@ -156,7 +189,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
 
     // Fetch characters
-    apiClient
+    service
       .fetchCharacters()
       .then((characters) => set({ characters }))
       .catch((error) => {
@@ -468,6 +501,31 @@ export const useGameStore = create<GameState>((set, get) => ({
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
       return { success: false, error: errorMsg };
+    }
+  },
+
+  fetchRanking: async () => {
+    const { _gameService, _token } = get();
+    if (!_gameService || !_token) return;
+    try {
+      const data = await _gameService.fetchRanking(_token);
+      set({
+        ranking: data.ranking,
+        rankingMeta: { gameStatus: data.gameStatus, winner: data.winner, round: data.round },
+      });
+    } catch {
+      // Ranking is optional — don't break the UI
+    }
+  },
+
+  fetchRoundScores: async () => {
+    const { _gameService, _token } = get();
+    if (!_gameService || !_token) return;
+    try {
+      const data = await _gameService.fetchRoundScores(_token);
+      set({ roundScores: data.scores });
+    } catch {
+      // Scores are optional — don't break the UI
     }
   },
 

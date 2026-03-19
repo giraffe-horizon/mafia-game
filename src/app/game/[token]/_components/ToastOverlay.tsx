@@ -1,4 +1,4 @@
-import { useGameStore } from "../_stores/gameStore";
+import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 
 export default function ToastOverlay() {
   // Get data from store
