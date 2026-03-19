@@ -7,6 +7,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "json-summary", "html"],
+      include: ["src/lib/**", "src/db/**"],
       exclude: [
         "coverage/**",
         "dist/**",
@@ -20,9 +21,9 @@ export default defineConfig({
         "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
         "**/*.test.{js,jsx,ts,tsx}",
         "**/__tests__/**",
-        "src/app/**", // Exclude Next.js app directory from coverage
+        "src/app/**",
+        "src/lib/api/**",
       ],
-      include: ["src/lib/**", "src/db/**"],
       thresholds: {
         statements: 60,
         functions: 55,
