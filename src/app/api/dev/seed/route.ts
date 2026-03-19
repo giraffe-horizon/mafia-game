@@ -52,7 +52,7 @@ const NICKNAMES = [
 ];
 
 export async function POST(req: NextRequest) {
-  if (process.env.NODE_ENV === "production") {
+  if (!process.env.ENABLE_DEV_TOOLS) {
     return NextResponse.json(null, { status: 404 });
   }
 

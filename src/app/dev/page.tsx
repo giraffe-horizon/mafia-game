@@ -76,7 +76,7 @@ export default function DevPage() {
     }
   }, [result]);
 
-  if (process.env.NODE_ENV === "production") {
+  if (!process.env.ENABLE_DEV_TOOLS) {
     return null;
   }
 

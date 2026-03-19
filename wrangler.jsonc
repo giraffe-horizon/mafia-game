@@ -18,6 +18,9 @@
   "env": {
     "staging": {
       "name": "mafia-game-staging",
+      "vars": {
+        "ENABLE_DEV_TOOLS": "true"
+      },
       "d1_databases": [
         {
           "binding": "DB",
