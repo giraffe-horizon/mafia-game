@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { completeMission } from "@/db";
-import { withApiHandlerMission } from "@/app/api/lib/handler";
+import { withApiHandlerMission } from "@/lib/api/handler";
 
 export const POST = withApiHandlerMission(async (_req: NextRequest, { db, token, missionId }) => {
   const result = await completeMission(db, token, missionId);

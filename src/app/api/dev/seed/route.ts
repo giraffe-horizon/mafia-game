@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/app/api/lib/db";
+import { getDb } from "@/lib/api/db";
 import { getServerConfig } from "@/config/server";
 import {
   createGame,

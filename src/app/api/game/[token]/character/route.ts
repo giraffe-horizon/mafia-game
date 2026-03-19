@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withApiHandler } from "@/app/api/lib/handler";
-import { updateCharacterSchema } from "@/app/api/lib/schemas";
+import { withApiHandler } from "@/lib/api/handler";
+import { updateCharacterSchema } from "@/lib/api/schemas";
 import { updateCharacter } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {

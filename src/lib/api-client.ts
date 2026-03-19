@@ -13,7 +13,7 @@ import type {
   UpdateCharacterInput,
   RematchInput,
   TransferGmInput,
-} from "@/app/api/lib/schemas";
+} from "@/lib/api/schemas";
 
 // Common fetch options
 const defaultOptions: RequestInit = {

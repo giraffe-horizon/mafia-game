@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withApiHandlerNoToken } from "@/app/api/lib/handler";
+import { withApiHandlerNoToken } from "@/lib/api/handler";
 import { getCharacters } from "@/db";
 
 export const GET = withApiHandlerNoToken(async (req: NextRequest, { db }) => {

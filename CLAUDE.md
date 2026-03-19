@@ -12,30 +12,42 @@ Real-time Mafia party game helper. GM manages from phone, players join via code/
 ```
 UI Components → Zustand Store → GameService → API Client → API Routes → DB Queries
 ```
-- **Zustand store** (`_stores/gameStore.ts`) is the SINGLE source of truth for game state
-- **GameService** (`_services/gameService.ts`) abstracts transport — all game operations go through it (never call `apiClient` directly from components or store)
+- **Zustand store** (`features/game/store/gameStore.ts`) is the SINGLE source of truth for game state
+- **GameService** (`features/game/service.ts`) abstracts transport — all game operations go through it (never call `apiClient` directly from components or store)
 - **API Client** (`lib/api-client.ts`) — typed fetch wrappers, used ONLY by GameService
-- **API Routes** use `withApiHandler()` wrapper + Zod validation — never raw `getCloudflareContext()`
+- **API Routes** use `withApiHandler()` wrapper (`lib/api/handler.ts`) + Zod validation (`lib/api/schemas.ts`) — never raw `getCloudflareContext()`
 - **DB Queries** in `src/db/queries/` — separated by domain (game, player, actions, phase, missions, messages, characters, ranking)
 
 ### File Structure
 ```
 src/
 ├── app/
-│   ├── _components/           # Home page client components
 │   ├── api/
-│   │   ├── lib/               # handler.ts (withApiHandler), schemas.ts (Zod), db.ts (getDb)
 │   │   └── game/[token]/      # Route handlers
 │   ├── game/[token]/
-│   │   ├── _components/       # Phase views + game UI (collocated, _ prefix = not routed)
-│   │   │   └── gm/            # GM panel tabs
-│   │   ├── _hooks/            # Form hooks (useOnboarding, useMessageForm, useMissionForm)
-│   │   ├── _services/         # GameService (transport abstraction)
-│   │   ├── _stores/           # Zustand gameStore
-│   │   └── GameClient.tsx     # Orchestrator (~450 lines max)
+│   │   ├── GameClient.tsx     # Orchestrator (~450 lines max)
+│   │   └── page.tsx
 │   └── ranking/               # Legacy page (ranking is now a modal)
+├── features/
+│   └── game/                  # Feature-first: all game code lives here
+│       ├── components/
+│       │   ├── shared/        # RoleCard, PhaseIndicator, ActionConfirmation, etc.
+│       │   ├── phases/        # NightView, DayView, VotingView, ReviewView
+│       │   ├── lobby/         # LobbyView, LobbyTransferGm, OnboardingScreen
+│       │   ├── players/       # PlayersList, PlayerRow, MissionsList
+│       │   ├── modals/        # RankingModal, SettingsModal
+│       │   ├── gm/            # GMPanel, GMGameTab, GMMessageTab, etc.
+│       │   ├── EndScreen.tsx, GameHeader.tsx, NightActionPanel.tsx, VotePanel.tsx
+│       │   └── index.ts
+│       ├── containers/        # Smart containers (DayContainer, NightContainer, etc.)
+│       ├── hooks/             # useOnboarding, usePlayerState, useCurrentPhase, etc.
+│       ├── store/             # Zustand gameStore + slices/
+│       ├── service.ts         # GameService (transport abstraction)
+│       ├── types.ts           # Game-specific UI types
+│       └── index.ts           # Barrel for the feature
 ├── components/
-│   └── ui/                    # Reusable primitives (Button, Card, Badge, Modal, etc.)
+│   ├── ui/                    # Reusable primitives (Button, Card, Badge, Modal, etc.)
+│   └── HomeClient.tsx         # Home page client component
 ├── config/
 │   ├── server.ts              # ServerConfig — async, server-only (never import in client components)
 │   ├── client.ts              # ClientConfig — async, called in layout.tsx, passed via React Context
@@ -47,6 +59,11 @@ src/
 │   ├── helpers.ts             # Utility functions (nanoid, now, generateSessionCode, buildRoles)
 │   └── index.ts               # Barrel re-export
 └── lib/
+    ├── api/                   # API route infrastructure
+    │   ├── handler.ts         # withApiHandler wrappers
+    │   ├── schemas.ts         # Zod validation schemas
+    │   ├── db.ts              # getDb() — D1 database accessor
+    │   └── index.ts           # Barrel re-export
     ├── api-client.ts           # Typed fetch wrappers (used by GameService only)
     ├── constants.ts            # ROLE_LABELS, ROLE_COLORS, PHASE_LABELS etc.
     ├── cn.ts                   # clsx + tailwind-merge
@@ -80,8 +97,8 @@ src/
 - Flow: `layout.tsx` → `await getClientConfig()` → `<ClientConfigProvider config={...}>` → `useClientConfig()`
 
 ### State Management
-- **Game state** → Zustand store (polling, toasts, actions, loading states)
-- **Form state** → local custom hooks (`useOnboarding`, `useMessageForm`, `useMissionForm`)
+- **Game state** → Zustand store in `features/game/store/` (polling, toasts, actions, loading states)
+- **Form state** → local custom hooks in `features/game/hooks/` (`useOnboarding`, `useMessageForm`, `useMissionForm`)
 - **UI state** (modals, tabs) → local `useState` in component
 - **NEVER** duplicate game state in component `useState` — read from store via selectors
 
@@ -108,7 +125,7 @@ src/
 - ALWAYS use `withApiHandler()` / `withApiHandlerNoToken()` / `withApiHandlerMission()`
 - ALWAYS validate request body with Zod schema from `schemas.ts`
 - NEVER expose internal error details to client — log server-side, return generic message
-- NEVER use `getCloudflareContext()` directly — use `getDb()` from `api/lib/db.ts`
+- NEVER use `getCloudflareContext()` directly — use `getDb()` from `lib/api/db.ts`
 
 ### DB Queries (`src/db/queries/`)
 - One module per domain — keep under 400 lines
