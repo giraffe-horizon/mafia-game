@@ -29,11 +29,13 @@ export default function OnboardingContainer() {
     handleSetup,
   } = useOnboarding({ token, refetch, gameService });
 
+  // Sync character selection from server only when character ID actually changes
+  const characterId = state?.currentPlayer?.character?.id;
   useEffect(() => {
-    if (state?.currentPlayer?.character) {
-      setSelectedCharacterId(state.currentPlayer.character.id);
+    if (characterId) {
+      setSelectedCharacterId(characterId);
     }
-  }, [state?.currentPlayer?.character, setSelectedCharacterId]);
+  }, [characterId, setSelectedCharacterId]);
 
   if (!state) return null;
 

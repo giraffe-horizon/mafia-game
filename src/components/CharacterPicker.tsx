@@ -52,7 +52,7 @@ export default function CharacterPicker({
             <div
               className={`w-full bg-secondary p-1.5 pb-0 border-2 transition-all ${
                 isSelected
-                  ? "border-primary shadow-[0_0_0_2px_var(--color-primary)]"
+                  ? "border-primary shadow-[0_0_0_3px_var(--color-primary)] scale-[1.03]"
                   : isDisabled
                     ? "border-surface-highest grayscale"
                     : "border-surface-highest hover:border-on-surface/40"
@@ -96,9 +96,9 @@ export default function CharacterPicker({
 
                 {/* WYBRANO stamp overlay */}
                 {isSelected && (
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center bg-primary/10">
                     <div className="rotate-[-10deg]">
-                      <span className="font-display font-black text-[11px] uppercase tracking-widest border-2 border-primary text-primary px-1.5 py-0.5 bg-black/30">
+                      <span className="font-display font-black text-sm uppercase tracking-widest border-2 border-primary text-primary px-2 py-1 bg-black/50 shadow-lg">
                         WYBRANO
                       </span>
                     </div>
