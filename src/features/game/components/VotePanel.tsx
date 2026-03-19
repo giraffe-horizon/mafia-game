@@ -1,7 +1,6 @@
 "use client";
 
 import type { PublicPlayer } from "@/db";
-import ActionConfirmation from "@/features/game/components/shared/ActionConfirmation";
 import { Stamp } from "@/components/ui";
 
 export default function VotePanel({

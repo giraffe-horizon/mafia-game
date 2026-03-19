@@ -170,7 +170,7 @@ export default function NightActionPanel({
           const isBlockedDetective =
             role === "detective" && investigatedPlayerIds?.includes(p.playerId);
           const isBlocked = isBlockedDoctor || isBlockedDetective;
-          const prevInvestigation =
+          const _prevInvestigation =
             role === "detective" && investigatedPlayerIds?.includes(p.playerId);
           return (
             <button
