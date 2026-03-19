@@ -16,7 +16,7 @@ export function buildTransition(
   const screens: TransitionScreen[] = [];
 
   // lobby → night (game start)
-  if (prevPhase === "lobby" && newPhase === "night" && round === 1) {
+  if (prevPhase === "lobby" && newPhase === "night") {
     screens.push({
       icon: "casino",
       title: "Gra rozpoczęta!",
@@ -26,7 +26,7 @@ export function buildTransition(
     screens.push({
       icon: "bedtime",
       title: "Zapada noc...",
-      subtitle: "Runda 1",
+      subtitle: `Runda ${round}`,
       durationMs: 2000,
     });
     return { type: "game_start", screens };
