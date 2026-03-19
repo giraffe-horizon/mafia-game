@@ -9,7 +9,7 @@ export interface ServerConfig {
   // Add more server-only settings here as needed
 }
 
-export function getServerConfig(): ServerConfig {
+export async function getServerConfig(): Promise<ServerConfig> {
   return {
     enableDevTools: process.env.ENABLE_DEV_TOOLS === "true",
   };

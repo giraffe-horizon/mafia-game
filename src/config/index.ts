@@ -3,3 +3,5 @@ export { getServerConfig } from "./server";
 
 export type { ClientConfig } from "./client";
 export { getClientConfig } from "./client";
+
+export { ClientConfigProvider, useClientConfig } from "./ConfigContext";

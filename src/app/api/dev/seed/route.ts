@@ -53,7 +53,7 @@ const NICKNAMES = [
 ];
 
 export async function POST(req: NextRequest) {
-  if (!getServerConfig().enableDevTools) {
+  if (!(await getServerConfig()).enableDevTools) {
     return NextResponse.json(null, { status: 404 });
   }
 
