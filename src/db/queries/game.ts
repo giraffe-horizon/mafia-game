@@ -541,7 +541,7 @@ export async function getGameState(
         .map(([round, msgs]) => ({
           round,
           events: msgs.map((m) => ({
-            type: m.event_type,
+            type: m.event_type as 'night_result' | 'vote_result' | 'game_start' | 'game_end',
             description: m.content,
             timestamp: m.created_at,
           })),
