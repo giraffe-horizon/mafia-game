@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Modal from "@/components/ui/Modal";
 import { RANKING_POLL_MS } from "@/lib/constants";
-import { useGameStore } from "../_stores/gameStore";
+import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 
 interface RankingModalProps {
   isOpen: boolean;

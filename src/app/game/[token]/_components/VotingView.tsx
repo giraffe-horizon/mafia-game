@@ -1,8 +1,8 @@
 import { ROLE_LABELS, ROLE_COLORS, ROLE_ICONS, PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
 import type { PublicPlayer } from "@/db/types";
 import { SectionHeader, Card } from "@/components/ui";
-import DeadSpectatorView from "./DeadSpectatorView";
-import VotePanel from "./VotePanel";
+import DeadSpectatorView from "@/app/game/[token]/_components/DeadSpectatorView";
+import VotePanel from "@/app/game/[token]/_components/VotePanel";
 
 interface VoteTally {
   votedCount: number;

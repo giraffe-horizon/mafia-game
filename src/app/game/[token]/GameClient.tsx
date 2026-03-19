@@ -8,35 +8,35 @@ import OnboardingScreen, {
   type FormData,
   type CharacterSelection,
   type LoadingState,
-} from "./_components/OnboardingScreen";
-import GMPanel from "./_components/gm/GMPanel";
-import EndScreen from "./_components/EndScreen";
-import ToastOverlay from "./_components/ToastOverlay";
-import GameHeader from "./_components/GameHeader";
-import LobbyView from "./_components/LobbyView";
+} from "@/app/game/[token]/_components/OnboardingScreen";
+import GMPanel from "@/app/game/[token]/_components/gm/GMPanel";
+import EndScreen from "@/app/game/[token]/_components/EndScreen";
+import ToastOverlay from "@/app/game/[token]/_components/ToastOverlay";
+import GameHeader from "@/app/game/[token]/_components/GameHeader";
+import LobbyView from "@/app/game/[token]/_components/LobbyView";
 import NightView, {
   type PlayerState as NightPlayerState,
   type NightViewState,
   type NightActionData,
-} from "./_components/NightView";
-import DayView from "./_components/DayView";
+} from "@/app/game/[token]/_components/NightView";
+import DayView from "@/app/game/[token]/_components/DayView";
 import VotingView, {
   type PlayerState as VotingPlayerState,
   type VotingViewState,
   type VoteState,
-} from "./_components/VotingView";
-import SettingsModal from "./_components/SettingsModal";
-import RankingModal from "./_components/RankingModal";
-import type { ActionState, MafiaState } from "./_components/NightActionPanel";
-import ReviewView from "./_components/ReviewView";
-import PlayersList from "./_components/PlayersList";
-import MissionsList from "./_components/MissionsList";
-import type { MessageFormProps, MissionFormProps } from "./types";
-import { useOnboarding } from "./_hooks/useOnboarding";
-import { useMessageForm } from "./_hooks/useMessageForm";
-import { useMissionForm } from "./_hooks/useMissionForm";
-import { useGameStore } from "./_stores/gameStore";
-import { createHttpGameService, type GameService } from "./_services/gameService";
+} from "@/app/game/[token]/_components/VotingView";
+import SettingsModal from "@/app/game/[token]/_components/SettingsModal";
+import RankingModal from "@/app/game/[token]/_components/RankingModal";
+import type { ActionState, MafiaState } from "@/app/game/[token]/_components/NightActionPanel";
+import ReviewView from "@/app/game/[token]/_components/ReviewView";
+import PlayersList from "@/app/game/[token]/_components/PlayersList";
+import MissionsList from "@/app/game/[token]/_components/MissionsList";
+import type { MessageFormProps, MissionFormProps } from "@/app/game/[token]/types";
+import { useOnboarding } from "@/app/game/[token]/_hooks/useOnboarding";
+import { useMessageForm } from "@/app/game/[token]/_hooks/useMessageForm";
+import { useMissionForm } from "@/app/game/[token]/_hooks/useMissionForm";
+import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
+import { createHttpGameService, type GameService } from "@/app/game/[token]/_services/gameService";
 import { PageLayout } from "@/components/ui";
 import { COPY_FEEDBACK_MS } from "@/lib/constants";
 

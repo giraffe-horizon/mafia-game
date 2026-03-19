@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import QRCode from "react-qr-code";
 import type { PublicPlayer } from "@/db";
-import LobbyTransferGm from "./LobbyTransferGm";
+import LobbyTransferGm from "@/app/game/[token]/_components/LobbyTransferGm";
 import { SectionHeader, InfoCard } from "@/components/ui";
 import {
   positionColor,
@@ -12,7 +12,7 @@ import {
   MIN_PLAYERS_SIMPLE,
   COPY_FEEDBACK_MS,
 } from "@/lib/constants";
-import { useGameStore } from "../_stores/gameStore";
+import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 
 interface LobbyViewProps {
   isHost: boolean;

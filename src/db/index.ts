@@ -1,14 +1,14 @@
 // Types and helpers
-export * from "./types";
-export * from "./helpers";
+export * from "@/db/types";
+export * from "@/db/helpers";
 
 // Query modules
-export * from "./queries/actions";
-export * from "./queries/characters";
-export * from "./queries/game";
-export * from "./queries/messages";
-export * from "./queries/missions";
-export * from "./queries/phase";
-export * from "./queries/player";
-export * from "./queries/ranking";
-export * from "./queries/roundScores";
+export * from "@/db/queries/actions";
+export * from "@/db/queries/characters";
+export * from "@/db/queries/game";
+export * from "@/db/queries/messages";
+export * from "@/db/queries/missions";
+export * from "@/db/queries/phase";
+export * from "@/db/queries/player";
+export * from "@/db/queries/ranking";
+export * from "@/db/queries/roundScores";

@@ -6,7 +6,7 @@ import type {
   RematchResult,
   LeaveResult,
   StartGameOpts,
-} from "../_services/gameService";
+} from "@/app/game/[token]/_services/gameService";
 
 // Polling constants
 const POLL_INTERVAL = 2000;

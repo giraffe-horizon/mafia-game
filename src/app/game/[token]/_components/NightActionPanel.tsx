@@ -3,7 +3,7 @@
 import type { PublicPlayer, GameStateResponse } from "@/db";
 import type { Role, ActionType } from "@/db/types";
 import { ACTION_CONFIRMED } from "@/lib/constants";
-import MafiaConsensusStatus from "./MafiaConsensusStatus";
+import MafiaConsensusStatus from "@/app/game/[token]/_components/MafiaConsensusStatus";
 import { Button, SectionHeader, InfoCard } from "@/components/ui";
 
 export interface ActionState {

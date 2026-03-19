@@ -9,8 +9,8 @@ import type {
   PublicPlayer,
 } from "@/db/types";
 import { generateSessionCode, now, nanoid } from "@/db/helpers";
-import { getPhaseProgress, getVoteTally, getMafiaTeamActions } from "./actions";
-import { checkWinConditions } from "./phase";
+import { getPhaseProgress, getVoteTally, getMafiaTeamActions } from "@/db/queries/actions";
+import { checkWinConditions } from "@/db/queries/phase";
 
 export async function createGame(
   db: D1Database,

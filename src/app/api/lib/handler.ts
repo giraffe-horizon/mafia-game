@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { getDb } from "./db";
+import { getDb } from "@/app/api/lib/db";
 import type { D1Database } from "@/db";
 
 export interface ApiContext {

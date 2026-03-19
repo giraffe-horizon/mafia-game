@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { SectionHeader, StatusItem, Button, Card } from "@/components/ui";
 import { positionColor } from "@/lib/constants";
-import { useGameStore } from "../_stores/gameStore";
+import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 
 export default function EndScreen(_props: Record<string, never> = {}) {
   const state = useGameStore((s) => s.state);

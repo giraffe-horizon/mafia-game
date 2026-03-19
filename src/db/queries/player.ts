@@ -1,5 +1,5 @@
 import type { D1Database, GameRow, GamePlayerRow } from "@/db/types";
-import { checkWinConditions } from "./phase";
+import { checkWinConditions } from "@/db/queries/phase";
 
 export async function setupPlayer(
   db: D1Database,

@@ -1,6 +1,6 @@
 import type { D1Database, GameRow, GamePlayerRow } from "@/db/types";
 import { now, nanoid, buildRoles } from "@/db/helpers";
-import { getMafiaKillActions } from "./actions";
+import { getMafiaKillActions } from "@/db/queries/actions";
 
 export async function startGame(
   db: D1Database,

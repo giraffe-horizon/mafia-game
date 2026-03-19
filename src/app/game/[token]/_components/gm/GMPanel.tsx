@@ -2,11 +2,11 @@
 
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { GamePhase, ActionType } from "@/db/types";
-import type { MessageFormProps, MissionFormProps } from "../../types";
-import GMGameTab from "./GMGameTab";
-import GMMessageTab from "./GMMessageTab";
-import GMMissionTab from "./GMMissionTab";
-import GMSettingsTab from "./GMSettingsTab";
+import type { MessageFormProps, MissionFormProps } from "@/app/game/[token]/types";
+import GMGameTab from "@/app/game/[token]/_components/gm/GMGameTab";
+import GMMessageTab from "@/app/game/[token]/_components/gm/GMMessageTab";
+import GMMissionTab from "@/app/game/[token]/_components/gm/GMMissionTab";
+import GMSettingsTab from "@/app/game/[token]/_components/gm/GMSettingsTab";
 import { TabBar } from "@/components/ui";
 
 interface GMPanelProps {
