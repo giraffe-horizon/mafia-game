@@ -10,7 +10,7 @@ interface DayViewProps {
   players: PublicPlayer[];
   phase: GamePhase;
   roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
+  toggleRole: () => void;
   detectiveResult?: GameStateResponse["detectiveResult"];
 }
 
@@ -20,7 +20,7 @@ export default function DayView({
   players,
   phase,
   roleVisible,
-  setRoleVisible,
+  toggleRole,
   detectiveResult,
 }: DayViewProps) {
   return (
@@ -30,7 +30,7 @@ export default function DayView({
         <RoleCard
           role={currentPlayer.role || undefined}
           roleVisible={roleVisible}
-          onToggle={() => setRoleVisible((v) => !v)}
+          onToggle={toggleRole}
         />
       )}
 

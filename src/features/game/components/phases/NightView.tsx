@@ -25,17 +25,13 @@ export default function NightView({
   actionData,
   players,
 }: NightViewProps) {
-  const { roleVisible, setRoleVisible } = viewState;
-  const { actionTargets, myAction, actionState, mafiaState } = actionData;
+  const { roleVisible, toggleRole } = viewState;
+  const { actionTargets, myAction, actionState, mafiaState, doctorLastTargetId } = actionData;
   return (
     <>
       {/* Role card for non-host players */}
       {!isHost && (
-        <RoleCard
-          role={currentPlayer.role}
-          roleVisible={roleVisible}
-          onToggle={() => setRoleVisible((v) => !v)}
-        />
+        <RoleCard role={currentPlayer.role} roleVisible={roleVisible} onToggle={toggleRole} />
       )}
 
       {/* Night action panel for alive players */}
@@ -47,6 +43,7 @@ export default function NightView({
           roleHidden={!roleVisible}
           actionState={actionState}
           mafiaState={mafiaState}
+          doctorLastTargetId={doctorLastTargetId}
         />
       )}
 

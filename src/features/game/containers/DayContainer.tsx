@@ -7,7 +7,7 @@ import DayView from "@/features/game/components/phases/DayView";
 
 export default function DayContainer() {
   const { isHost, currentPlayer, players } = usePlayerState();
-  const { roleVisible, setRoleVisible } = useRoleVisibility();
+  const { roleVisible, toggleRole } = useRoleVisibility();
   const phase = useGameStore((s) => s.state?.game.phase);
   const detectiveResult = useGameStore((s) => s.state?.detectiveResult);
 
@@ -20,7 +20,7 @@ export default function DayContainer() {
       players={players}
       phase={phase}
       roleVisible={roleVisible}
-      setRoleVisible={setRoleVisible}
+      toggleRole={toggleRole}
       detectiveResult={detectiveResult}
     />
   );

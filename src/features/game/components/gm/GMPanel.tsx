@@ -25,7 +25,6 @@ interface GMPanelProps {
   hostActions?: GameStateResponse["hostActions"];
   phaseProgress?: GameStateResponse["phaseProgress"];
   onGmAction: (forPlayerId: string, actionType: ActionType, targetPlayerId: string) => void;
-  onTransferGm: (playerId: string) => void;
   mafiaCountSetting: number;
   onMafiaCountSettingChange: (n: number) => void;
 }
@@ -42,7 +41,6 @@ export default function GMPanel({
   hostActions,
   phaseProgress,
   onGmAction,
-  onTransferGm,
   mafiaCountSetting,
   onMafiaCountSettingChange,
 }: GMPanelProps) {
@@ -90,7 +88,6 @@ export default function GMPanel({
             players={players}
             mafiaCountSetting={mafiaCountSetting}
             onMafiaCountSettingChange={onMafiaCountSettingChange}
-            onTransferGm={onTransferGm}
           />
         )}
       </div>

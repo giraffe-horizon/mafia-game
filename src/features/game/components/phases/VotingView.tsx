@@ -24,18 +24,14 @@ export default function VotingView({
   viewState,
   voteState,
 }: VotingViewProps) {
-  const { roleVisible, setRoleVisible, phase } = viewState;
+  const { roleVisible, toggleRole, phase } = viewState;
   const { players, myAction, actionPending, actionError, setChangingDecision, onVote, voteTally } =
     voteState;
   return (
     <>
       {/* Role card for non-host players */}
       {!isHost && (
-        <RoleCard
-          role={currentPlayer.role}
-          roleVisible={roleVisible}
-          onToggle={() => setRoleVisible((v) => !v)}
-        />
+        <RoleCard role={currentPlayer.role} roleVisible={roleVisible} onToggle={toggleRole} />
       )}
 
       {/* Phase indicator for host */}

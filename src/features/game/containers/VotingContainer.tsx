@@ -9,7 +9,7 @@ import VotingView from "@/features/game/components/phases/VotingView";
 
 export default function VotingContainer() {
   const { isHost, currentPlayer, players } = usePlayerState();
-  const { roleVisible, setRoleVisible } = useRoleVisibility();
+  const { roleVisible, toggleRole } = useRoleVisibility();
   const { phase } = useCurrentPhase();
 
   const myAction = useGameStore((s) => (s.changingDecision ? null : (s.state?.myAction ?? null)));
@@ -27,7 +27,7 @@ export default function VotingContainer() {
     role: currentPlayer.role || undefined,
   };
 
-  const viewState: VotingViewState = { roleVisible, setRoleVisible, phase };
+  const viewState: VotingViewState = { roleVisible, toggleRole, phase };
 
   const voteState: VoteState = {
     players,

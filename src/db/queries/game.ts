@@ -226,6 +226,20 @@ export async function getGameState(
     }
   }
 
+  // Get doctor's last protected target (for consecutive protection blocking)
+  let doctorLastTargetId: string | undefined;
+  if (playerRow.role === "doctor" && gameRow.status === "playing" && gameRow.round > 1) {
+    const lastProtect = await db
+      .prepare(
+        "SELECT target_player_id FROM game_actions WHERE game_id = ? AND player_id = ? AND action_type = 'protect' AND round = ? LIMIT 1"
+      )
+      .bind(gameRow.id, playerRow.player_id, gameRow.round - 1)
+      .first<{ target_player_id: string }>();
+    if (lastProtect) {
+      doctorLastTargetId = lastProtect.target_player_id;
+    }
+  }
+
   // Get current player's action in this round
   let myAction = null;
   if (gameRow.status === "playing") {
@@ -382,6 +396,7 @@ export async function getGameState(
     })),
     investigatedPlayers,
     detectiveResult,
+    doctorLastTargetId,
     myAction,
     mafiaTeamActions,
     voteTally,

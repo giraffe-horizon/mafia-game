@@ -26,7 +26,7 @@ export interface NightPlayerState {
 
 export interface NightViewState {
   roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
+  toggleRole: () => void;
 }
 
 export interface NightActionData {
@@ -34,6 +34,7 @@ export interface NightActionData {
   myAction: { actionType: string; targetPlayerId: string | null } | null;
   actionState: ActionState;
   mafiaState: MafiaState;
+  doctorLastTargetId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,7 +58,7 @@ export interface VotingPlayerState {
 
 export interface VotingViewState {
   roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
+  toggleRole: () => void;
   phase: string;
 }
 

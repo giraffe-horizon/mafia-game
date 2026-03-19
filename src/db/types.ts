@@ -146,6 +146,8 @@ export interface GameStateResponse {
     points: number;
   }[];
   investigatedPlayers?: { playerId: string; isMafia: boolean }[];
+  // Doctor only: last round's protected player (cannot protect same player consecutively)
+  doctorLastTargetId?: string;
   detectiveResult: {
     targetNickname: string;
     isMafia: boolean;
