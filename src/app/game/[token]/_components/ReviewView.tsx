@@ -1,5 +1,3 @@
-import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
-
 interface HostMission {
   id: string;
   playerNickname: string;
@@ -14,6 +12,7 @@ interface ReviewViewProps {
   hostMissions?: HostMission[];
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
+  onFinalize: () => void;
 }
 
 export default function ReviewView({
@@ -22,8 +21,8 @@ export default function ReviewView({
   hostMissions,
   onComplete,
   onDelete,
+  onFinalize,
 }: ReviewViewProps) {
-  const finalizeGame = useGameStore((s) => s.finalizeGame);
   if (!showPoints) return null;
 
   if (isHost) {
@@ -74,7 +73,7 @@ export default function ReviewView({
           </p>
         )}
         <button
-          onClick={() => finalizeGame()}
+          onClick={() => onFinalize()}
           className="w-full mt-3 flex items-center justify-center gap-2 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)]"
         >
           <span className="material-symbols-outlined text-[20px]">emoji_events</span>

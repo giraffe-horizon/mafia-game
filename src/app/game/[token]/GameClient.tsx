@@ -3,194 +3,30 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import type { ActionType, GamePhase, GameStateResponse } from "@/db";
-import OnboardingScreen, {
-  type FormData,
-  type CharacterSelection,
-  type LoadingState,
-} from "@/app/game/[token]/_components/OnboardingScreen";
-import GMPanel from "@/app/game/[token]/_components/gm/GMPanel";
-import EndScreen from "@/app/game/[token]/_components/EndScreen";
-import ToastOverlay from "@/app/game/[token]/_components/ToastOverlay";
-import GameHeader from "@/app/game/[token]/_components/GameHeader";
-import LobbyView from "@/app/game/[token]/_components/LobbyView";
-import NightView, {
-  type PlayerState as NightPlayerState,
-  type NightViewState,
-  type NightActionData,
-} from "@/app/game/[token]/_components/NightView";
-import DayView from "@/app/game/[token]/_components/DayView";
-import VotingView, {
-  type PlayerState as VotingPlayerState,
-  type VotingViewState,
-  type VoteState,
-} from "@/app/game/[token]/_components/VotingView";
-import SettingsModal from "@/app/game/[token]/_components/SettingsModal";
-import RankingModal from "@/app/game/[token]/_components/RankingModal";
-import type { ActionState, MafiaState } from "@/app/game/[token]/_components/NightActionPanel";
-import ReviewView from "@/app/game/[token]/_components/ReviewView";
-import PlayersList from "@/app/game/[token]/_components/PlayersList";
-import MissionsList from "@/app/game/[token]/_components/MissionsList";
-import type { MessageFormProps, MissionFormProps } from "@/app/game/[token]/types";
-import { useOnboarding } from "@/app/game/[token]/_hooks/useOnboarding";
-import { useMessageForm } from "@/app/game/[token]/_hooks/useMessageForm";
-import { useMissionForm } from "@/app/game/[token]/_hooks/useMissionForm";
 import { useCurrentPhase } from "@/app/game/[token]/_hooks/useCurrentPhase";
-import { useRoleVisibility } from "@/app/game/[token]/_hooks/useRoleVisibility";
-import { useActionTargets } from "@/app/game/[token]/_hooks/useActionTargets";
 import { usePlayerState } from "@/app/game/[token]/_hooks/usePlayerState";
+import { useOnboarding } from "@/app/game/[token]/_hooks/useOnboarding";
 import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 import { createHttpGameService, type GameService } from "@/app/game/[token]/_services/gameService";
+import OnboardingContainer from "@/app/game/[token]/_containers/OnboardingContainer";
+import LobbyContainer from "@/app/game/[token]/_containers/LobbyContainer";
+import NightContainer from "@/app/game/[token]/_containers/NightContainer";
+import DayContainer from "@/app/game/[token]/_containers/DayContainer";
+import VotingContainer from "@/app/game/[token]/_containers/VotingContainer";
+import ReviewContainer from "@/app/game/[token]/_containers/ReviewContainer";
+import EndContainer from "@/app/game/[token]/_containers/EndContainer";
+import GMPanelContainer from "@/app/game/[token]/_containers/GMPanelContainer";
+import PlayersListContainer from "@/app/game/[token]/_containers/PlayersListContainer";
+import ToastOverlay from "@/app/game/[token]/_components/ToastOverlay";
+import GameHeader from "@/app/game/[token]/_components/GameHeader";
+import MissionsList from "@/app/game/[token]/_components/MissionsList";
+import SettingsModal from "@/app/game/[token]/_components/SettingsModal";
+import RankingModal from "@/app/game/[token]/_components/RankingModal";
 import { PageLayout } from "@/components/ui";
-import { COPY_FEEDBACK_MS } from "@/lib/constants";
 
 // Stateless service — safe to create at module level
 const gameService: GameService = createHttpGameService();
 
-// ---------------------------------------------------------------------------
-// Extracted phase section components (were IIFE in JSX)
-// ---------------------------------------------------------------------------
-interface NightPhaseSectionProps {
-  isHost: boolean;
-  currentPlayer: { isAlive: boolean; role: string | null; nickname: string };
-  roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
-  actionPending: boolean;
-  actionError: string;
-  setChangingDecision: (v: boolean) => void;
-  onAction: (type: ActionType, targetId: string) => void;
-  mafiaTeamActions: GameStateResponse["mafiaTeamActions"];
-  actionTargets: GameStateResponse["players"];
-  myAction: GameStateResponse["myAction"];
-  players: GameStateResponse["players"];
-}
-
-function NightPhaseSection({
-  isHost,
-  currentPlayer,
-  roleVisible,
-  setRoleVisible,
-  actionPending,
-  actionError,
-  setChangingDecision,
-  onAction,
-  mafiaTeamActions,
-  actionTargets,
-  myAction,
-  players,
-}: NightPhaseSectionProps) {
-  const playerState: NightPlayerState = {
-    isAlive: currentPlayer.isAlive,
-    role: currentPlayer.role || undefined,
-  };
-
-  const viewState: NightViewState = {
-    roleVisible,
-    setRoleVisible,
-  };
-
-  const actionState: ActionState = {
-    pending: actionPending,
-    error: actionError,
-    onAction: (type, targetId) => {
-      setChangingDecision(false);
-      onAction(type, targetId);
-    },
-    onChangeDecision: () => setChangingDecision(true),
-  };
-
-  const mafiaState: MafiaState = {
-    teamActions: mafiaTeamActions,
-    currentNickname: currentPlayer.nickname,
-  };
-
-  const actionData: NightActionData = {
-    actionTargets,
-    myAction,
-    actionState,
-    mafiaState,
-  };
-
-  return (
-    <NightView
-      isHost={isHost}
-      currentPlayer={playerState}
-      viewState={viewState}
-      actionData={actionData}
-      players={players}
-    />
-  );
-}
-
-interface VotingPhaseSectionProps {
-  isHost: boolean;
-  currentPlayer: { isAlive: boolean; role: string | null };
-  roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
-  phase: GamePhase;
-  players: GameStateResponse["players"];
-  myAction: GameStateResponse["myAction"];
-  actionPending: boolean;
-  actionError: string;
-  changingDecision: boolean;
-  setChangingDecision: (v: boolean) => void;
-  onVote: (targetId: string) => void;
-  voteTally: GameStateResponse["voteTally"];
-}
-
-function VotingPhaseSection({
-  isHost,
-  currentPlayer,
-  roleVisible,
-  setRoleVisible,
-  phase,
-  players,
-  myAction,
-  actionPending,
-  actionError,
-  changingDecision,
-  setChangingDecision,
-  onVote,
-  voteTally,
-}: VotingPhaseSectionProps) {
-  const currentPlayerState: VotingPlayerState = {
-    isAlive: currentPlayer.isAlive,
-    role: currentPlayer.role || undefined,
-  };
-
-  const viewState: VotingViewState = {
-    roleVisible,
-    setRoleVisible,
-    phase,
-  };
-
-  const voteState: VoteState = {
-    players,
-    myAction,
-    actionPending,
-    actionError,
-    changingDecision,
-    setChangingDecision,
-    onVote: (targetId) => {
-      setChangingDecision(false);
-      onVote(targetId);
-    },
-    voteTally,
-  };
-
-  return (
-    <VotingView
-      isHost={isHost}
-      currentPlayer={currentPlayerState}
-      viewState={viewState}
-      voteState={voteState}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
 export default function GameClient() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
@@ -199,81 +35,25 @@ export default function GameClient() {
   const state = useGameStore((s) => s.state);
   const error = useGameStore((s) => s.error);
   const characters = useGameStore((s) => s.characters);
-  const actionPending = useGameStore((s) => s.actionPending);
-  const actionError = useGameStore((s) => s.actionError);
-  const phasePending = useGameStore((s) => s.phasePending);
-  const starting = useGameStore((s) => s.starting);
-  const changingDecision = useGameStore((s) => s.changingDecision);
-
-  // Store actions
-  const refetch = useGameStore((s) => s.refetch);
-  const setChangingDecision = useGameStore((s) => s.setChangingDecision);
-  const submitAction = useGameStore((s) => s.submitAction);
-  const advancePhase = useGameStore((s) => s.advancePhase);
-  const startGame = useGameStore((s) => s.startGame);
-  const kickPlayer = useGameStore((s) => s.kickPlayer);
-  const leaveGame = useGameStore((s) => s.leaveGame);
-  const transferGameMaster = useGameStore((s) => s.transferGameMaster);
-  const submitGmAction = useGameStore((s) => s.submitGmAction);
-
-  // Store initialization
   const initialize = useGameStore((s) => s.initialize);
-
-  const {
-    onboardingNickname,
-    selectedCharacterId,
-    onboardingLoading,
-    onboardingError,
-    setOnboardingNickname,
-    setSelectedCharacterId,
-    handleSetup,
-    handleCharacterUpdate,
-  } = useOnboarding({ token, refetch, gameService });
-  const {
-    msgTarget,
-    msgContent,
-    msgPending,
-    msgError,
-    setMsgTarget,
-    setMsgContent,
-    handleSendMessage,
-  } = useMessageForm({ token, refetch, gameService });
-  const {
-    msnTarget,
-    msnDesc,
-    msnPoints,
-    msnPreset,
-    msnPending,
-    msnError,
-    setMsnTarget,
-    setMsnDesc,
-    setMsnPoints,
-    setMsnPreset,
-    handleCreateMission,
-    handleCompleteMission,
-    handleDeleteMission,
-  } = useMissionForm({ token, refetch, gameService });
+  const refetch = useGameStore((s) => s.refetch);
+  const leaveGame = useGameStore((s) => s.leaveGame);
+  const setChangingDecision = useGameStore((s) => s.setChangingDecision);
 
   // Derived-state hooks
-  const {
-    phase: currentPhaseValue,
-    isLobby,
-    isPlaying,
-    isFinished,
-    round: currentRound,
-  } = useCurrentPhase();
-  const { roleVisible, setRoleVisible } = useRoleVisibility();
-  const { isHost, nonHostPlayers } = usePlayerState();
-  const actionTargets = useActionTargets(roleVisible);
+  const { phase, isLobby, isPlaying, isFinished, round } = useCurrentPhase();
+  const { isHost } = usePlayerState();
 
-  // UI state (remains in component)
-  const [copied, setCopied] = useState(false);
-  const [mafiaCount, setMafiaCount] = useState(0);
-  const [gameMode, setGameMode] = useState<"full" | "simple">("full");
-  const [mafiaCountSetting, setMafiaCountSetting] = useState(0);
-  const [mgTab, setMgTab] = useState<"game" | "message" | "mission" | "settings">("game");
+  // UI state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
+
+  // Onboarding (character sync for settings modal)
+  const { selectedCharacterId, setSelectedCharacterId, handleCharacterUpdate } = useOnboarding({
+    token,
+    refetch,
+    gameService,
+  });
 
   // Initialize store with token and service
   useEffect(() => {
@@ -285,26 +65,26 @@ export default function GameClient() {
     };
   }, [token, initialize]);
 
-  // Reset changingDecision when phase changes (must be before conditional returns!)
+  // Reset changingDecision when phase changes
   useEffect(() => {
     setChangingDecision(false);
-  }, [currentPhaseValue, currentRound, setChangingDecision]);
+  }, [phase, round, setChangingDecision]);
 
-  const handleAction = async (actionType: ActionType, targetPlayerId: string) => {
-    await submitAction(actionType, targetPlayerId);
-  };
+  // Sync selected character from server state
+  useEffect(() => {
+    if (state?.currentPlayer?.character) {
+      setSelectedCharacterId(state.currentPlayer.character.id);
+    }
+  }, [state?.currentPlayer?.character, setSelectedCharacterId]);
 
-  const handlePhase = async (newPhase: GamePhase) => {
-    await advancePhase(newPhase);
-  };
-
-  const handleStart = async (gameMode: "full" | "simple", mafiaCount: number) => {
-    await startGame(gameMode, mafiaCount);
-  };
-
-  const handleKick = async (playerId: string) => {
-    await kickPlayer(playerId);
-  };
+  // Lock body scroll when settings modal is open
+  useEffect(() => {
+    if (!showSettingsModal) return;
+    document.body.classList.add("overflow-hidden");
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [showSettingsModal]);
 
   const handleLeave = async () => {
     if (!confirm("Czy na pewno chcesz opuścić grę?")) return;
@@ -314,85 +94,7 @@ export default function GameClient() {
     }
   };
 
-  const handleGmAction = async (
-    forPlayerId: string,
-    actionType: ActionType,
-    targetPlayerId: string
-  ) => {
-    await submitGmAction(forPlayerId, actionType, targetPlayerId);
-  };
-
-  const handleTransferGm = async (newHostPlayerId: string) => {
-    await transferGameMaster(newHostPlayerId);
-  };
-
-  // Sync lobby settings from server (persisted across rounds)
-  const lobbySettings = state?.lobbySettings;
-  useEffect(() => {
-    if (lobbySettings) {
-      setGameMode(lobbySettings.mode);
-      setMafiaCount(lobbySettings.mafiaCount);
-    }
-  }, [lobbySettings]);
-
-  useEffect(() => {
-    if (state?.currentPlayer?.character) {
-      setSelectedCharacterId(state.currentPlayer.character.id);
-    }
-  }, [state?.currentPlayer?.character, setSelectedCharacterId]);
-
-  useEffect(() => {
-    if (!showSettingsModal) return;
-    document.body.classList.add("overflow-hidden");
-    return () => {
-      document.body.classList.remove("overflow-hidden");
-    };
-  }, [showSettingsModal]);
-
-  function copyCode() {
-    if (!state) return;
-    navigator.clipboard.writeText(state.game.code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Grouped props for prop drilling reduction
-  // ---------------------------------------------------------------------------
-  const messageForm: MessageFormProps = {
-    msgTarget,
-    msgContent,
-    msgPending,
-    msgError,
-    onMsgTargetChange: setMsgTarget,
-    onMsgContentChange: setMsgContent,
-    onSendMessage: handleSendMessage,
-  };
-
-  const missionForm: MissionFormProps & {
-    hostMissions?: GameStateResponse["hostMissions"];
-    onCompleteMission: (id: string) => void;
-    onDeleteMission: (id: string) => void;
-  } = {
-    msnTarget,
-    msnDesc,
-    msnPoints,
-    msnPreset,
-    msnPending,
-    msnError,
-    onMsnTargetChange: setMsnTarget,
-    onMsnDescChange: setMsnDesc,
-    onMsnPointsChange: setMsnPoints,
-    onMsnPresetChange: setMsnPreset,
-    onCreateMission: handleCreateMission,
-    hostMissions: state?.hostMissions,
-    onCompleteMission: handleCompleteMission,
-    onDeleteMission: handleDeleteMission,
-  };
-
-  // ---------------------------------------------------------------------------
-  // Loading / Error screens
-  // ---------------------------------------------------------------------------
+  // Error screen
   if (error) {
     return (
       <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark">
@@ -408,6 +110,7 @@ export default function GameClient() {
     );
   }
 
+  // Loading screen
   if (!state) {
     return (
       <div className="flex min-h-screen w-full md:max-w-lg flex-col items-center justify-center bg-background-dark">
@@ -423,48 +126,17 @@ export default function GameClient() {
 
   // Onboarding screen
   if (!state.currentPlayer.isSetupComplete && !state.currentPlayer.isHost) {
-    const formData: FormData = {
-      onboardingNickname,
-      onNicknameChange: setOnboardingNickname,
-    };
-
-    const characterSelection: CharacterSelection = {
-      characters,
-      selectedCharacterId,
-      onCharacterSelect: setSelectedCharacterId,
-      takenCharacterIds: state.takenCharacterIds,
-    };
-
-    const loadingState: LoadingState = {
-      onboardingLoading,
-      onboardingError,
-    };
-
-    return (
-      <OnboardingScreen
-        gameCode={state.game.code}
-        formData={formData}
-        characterSelection={characterSelection}
-        loadingState={loadingState}
-        onSubmit={handleSetup}
-      />
-    );
+    return <OnboardingContainer />;
   }
 
-  const { game, currentPlayer, players, missions } = state;
-  const phase = game.phase;
-  const myAction = changingDecision ? null : state.myAction;
-  const joinUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/?code=${game.code}`;
+  const { game, currentPlayer, missions } = state;
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
   return (
     <PageLayout>
       <ToastOverlay />
 
       <GameHeader
-        phase={phase}
+        phase={game.phase}
         round={game.round}
         isHost={isHost}
         currentPlayer={currentPlayer}
@@ -474,117 +146,21 @@ export default function GameClient() {
 
       {/* Scrollable content */}
       <div className="relative z-10 flex-1 flex flex-col overflow-y-auto pb-6">
-        {/* ── LOBBY ── */}
-        {isLobby && (
-          <LobbyView
-            isHost={isHost}
-            gameCode={game.code}
-            joinUrl={joinUrl}
-            copied={copied}
-            copyCode={copyCode}
-            setCopied={setCopied}
-            nonHostPlayers={nonHostPlayers}
-            gameMode={gameMode}
-            setGameMode={setGameMode}
-            mafiaCount={mafiaCount}
-            setMafiaCount={setMafiaCount}
-            starting={starting}
-            onStart={() => handleStart(gameMode, mafiaCount)}
-            onTransferGm={handleTransferGm}
-          />
-        )}
+        {isLobby && <LobbyContainer />}
+        {isPlaying && phase === "night" && <NightContainer />}
+        {isPlaying && phase === "day" && <DayContainer />}
+        {isPlaying && phase === "voting" && <VotingContainer />}
 
-        {/* ── NIGHT ── */}
-        {isPlaying && phase === "night" && (
-          <NightPhaseSection
-            isHost={isHost}
-            currentPlayer={currentPlayer}
-            roleVisible={roleVisible}
-            setRoleVisible={setRoleVisible}
-            actionPending={actionPending}
-            actionError={actionError}
-            setChangingDecision={setChangingDecision}
-            onAction={handleAction}
-            mafiaTeamActions={state.mafiaTeamActions}
-            actionTargets={actionTargets}
-            myAction={myAction}
-            players={players}
-          />
-        )}
-
-        {/* ── DAY ── */}
-        {isPlaying && phase === "day" && (
-          <DayView roleVisible={roleVisible} setRoleVisible={setRoleVisible} />
-        )}
-
-        {/* ── VOTING ── */}
-        {isPlaying && phase === "voting" && (
-          <VotingPhaseSection
-            isHost={isHost}
-            currentPlayer={currentPlayer}
-            roleVisible={roleVisible}
-            setRoleVisible={setRoleVisible}
-            phase={phase}
-            players={players}
-            myAction={myAction}
-            actionPending={actionPending}
-            actionError={actionError}
-            changingDecision={changingDecision}
-            setChangingDecision={setChangingDecision}
-            onVote={(targetId) => handleAction("vote", targetId)}
-            voteTally={state.voteTally}
-          />
-        )}
-
-        {/* ── Missions (non-host) ── */}
+        {/* Missions (non-host) */}
         {!isHost && <MissionsList missions={missions} showPoints={state.showPoints} />}
 
-        {/* ── REVIEW ── */}
-        {isPlaying && phase === "review" && (
-          <ReviewView
-            isHost={isHost}
-            showPoints={state.showPoints}
-            hostMissions={state.hostMissions}
-            onComplete={handleCompleteMission}
-            onDelete={handleDeleteMission}
-          />
-        )}
+        {isPlaying && phase === "review" && <ReviewContainer />}
+        {isFinished && <EndContainer />}
 
-        {/* ── FINISHED ── */}
-        {isFinished && <EndScreen />}
+        {/* GM panel */}
+        {isPlaying && isHost && <GMPanelContainer />}
 
-        {/* ── MG panel ── */}
-        {isPlaying && isHost && (
-          <GMPanel
-            phase={phase}
-            players={nonHostPlayers}
-            tab={mgTab}
-            onTabChange={setMgTab}
-            phasePending={phasePending}
-            onPhase={handlePhase}
-            messageForm={messageForm}
-            missionForm={missionForm}
-            hostActions={state.hostActions}
-            phaseProgress={state.phaseProgress}
-            onGmAction={handleGmAction}
-            onTransferGm={handleTransferGm}
-            mafiaCountSetting={mafiaCountSetting}
-            onMafiaCountSettingChange={setMafiaCountSetting}
-          />
-        )}
-
-        {/* ── Players list ── */}
-        <PlayersList
-          players={players}
-          isPlaying={isPlaying}
-          isFinished={isFinished}
-          isLobby={isLobby}
-          isHost={isHost}
-          currentPlayerRole={currentPlayer.role || undefined}
-          roleVisible={roleVisible}
-          onKick={handleKick}
-          investigatedPlayers={state.investigatedPlayers}
-        />
+        <PlayersListContainer />
       </div>
 
       <RankingModal isOpen={showRanking} onClose={() => setShowRanking(false)} token={token} />
