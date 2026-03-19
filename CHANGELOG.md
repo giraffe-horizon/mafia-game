@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.7.0...v1.8.0) (2026-03-19)
+
+
+### Features
+
+* enable dev tools (seed) on staging ([#24](https://github.com/giraffe-horizon/mafia-game/issues/24)) ([18a5064](https://github.com/giraffe-horizon/mafia-game/commit/18a5064d475055bf6548b699ea2a8f420f2bb20e))
+
 # [1.7.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.6.0...v1.7.0) (2026-03-18)
 
 
