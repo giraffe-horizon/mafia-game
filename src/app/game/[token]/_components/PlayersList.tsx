@@ -1,6 +1,5 @@
 import type { PublicPlayer } from "@/db";
 import PlayerRow from "./PlayerRow";
-import { SectionHeader } from "@/components/ui";
 
 interface PlayersListProps {
   players: PublicPlayer[];
@@ -29,10 +28,31 @@ export default function PlayersList({
     ? new Map(investigatedPlayers.map((ip) => [ip.playerId, ip.isMafia]))
     : null;
 
+  const aliveCount = players.filter((p) => !p.isHost && p.isAlive).length;
+  const totalCount = players.filter((p) => !p.isHost).length;
+
   return (
     <div className="mx-5 mt-5">
-      <SectionHeader className="mb-3 pl-1">Gracze ({players.length})</SectionHeader>
-      <div className="flex flex-col gap-2">
+      {/* LISTA OBECNOŚCI AGENTÓW header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[14px] text-on-surface/30">group</span>
+          <p className="font-display font-bold uppercase tracking-widest text-[10px] text-on-surface/30">
+            Lista obecności agentów
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {isPlaying && aliveCount < totalCount && (
+            <span className="font-display text-[10px] text-on-surface/25">
+              {aliveCount}/{totalCount}
+            </span>
+          )}
+          <span className="border border-on-surface/20 px-2 py-0.5 font-display font-bold text-[10px] text-on-surface/40">
+            {players.length}
+          </span>
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
         {players.map((p) => (
           <PlayerRow
             key={p.playerId}

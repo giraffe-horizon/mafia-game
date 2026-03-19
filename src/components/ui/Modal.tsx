@@ -31,7 +31,7 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/85 flex items-center justify-center z-50"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -40,23 +40,26 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
-        className={cn("bg-slate-900 rounded-lg max-w-md w-full mx-4", className)}
+        className={cn("bg-surface-low border border-on-surface/12 max-w-md w-full mx-4", className)}
       >
         {title && (
-          <div className="flex items-center justify-between p-6 pb-4">
-            <h3 id={titleId} className="text-white font-bold text-lg font-typewriter">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-on-surface/10">
+            <h3
+              id={titleId}
+              className="font-display font-bold uppercase tracking-widest text-on-surface text-sm"
+            >
               {title}
             </h3>
             <button
               onClick={onClose}
               aria-label="Zamknij"
-              className="text-slate-400 hover:text-slate-200 transition-colors"
+              className="size-8 flex items-center justify-center text-on-surface/40 hover:text-on-surface"
             >
-              <span className="material-symbols-outlined text-[24px]">close</span>
+              <span className="material-symbols-outlined text-[20px]">close</span>
             </button>
           </div>
         )}
-        <div className={cn("p-6", title && "pt-0")}>{children}</div>
+        <div className={cn("p-5", title && "pt-4")}>{children}</div>
       </div>
     </div>
   );

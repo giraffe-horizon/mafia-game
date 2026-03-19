@@ -48,20 +48,26 @@ export default function SettingsModal({
   const { onSave, onLeaveGame } = modalActions;
 
   return (
-    <Modal isOpen={isVisible} onClose={onClose} title="Ustawienia gracza">
+    <Modal isOpen={isVisible} onClose={onClose} title="Ustawienia agenta">
       <div className="space-y-4">
+        {/* Pseudonym display */}
         <div>
-          <label className="block text-slate-400 text-sm mb-2 font-typewriter">Nazwa</label>
-          <input
-            type="text"
-            value={playerNickname || ""}
-            readOnly
-            className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white"
-          />
+          <p className="font-display font-bold uppercase tracking-widest text-[10px] text-on-surface/30 mb-1">
+            Pseudonim operacyjny
+          </p>
+          <div className="border border-on-surface/15 bg-background px-3 py-2">
+            <span className="font-display text-on-surface/70 text-sm uppercase tracking-wide">
+              {playerNickname || "—"}
+            </span>
+          </div>
         </div>
+
+        {/* Character picker */}
         {characters.length > 0 && !currentPlayer.isHost && (
           <div>
-            <label className="block text-slate-400 text-sm mb-3 font-typewriter">Postać</label>
+            <p className="font-display font-bold uppercase tracking-widest text-[10px] text-on-surface/30 mb-2">
+              Tożsamość operacyjna
+            </p>
             <CharacterPicker
               characters={characters}
               selectedId={selectedCharacterId}
@@ -70,7 +76,8 @@ export default function SettingsModal({
           </div>
         )}
       </div>
-      <div className="flex gap-3 mt-6">
+
+      <div className="flex gap-3 mt-5">
         <Button onClick={onClose} variant="secondary" className="flex-1">
           Anuluj
         </Button>
@@ -85,6 +92,7 @@ export default function SettingsModal({
           </Button>
         )}
       </div>
+
       {!currentPlayer.isHost && (
         <Button
           onClick={() => {
@@ -93,9 +101,9 @@ export default function SettingsModal({
           }}
           variant="danger"
           icon="logout"
-          className="w-full mt-4"
+          className="w-full mt-3"
         >
-          Opuść grę
+          Opuść operację
         </Button>
       )}
     </Modal>
