@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ROLE_LABELS } from "@/lib/constants";
+import { ROLE_LABELS, MAX_NICKNAME_LENGTH } from "@/lib/constants";
 import type { PublicPlayer } from "@/db";
 import { Badge } from "@/components/ui";
 
@@ -35,7 +35,7 @@ export default function PlayerRow({
 
   const handleSaveRename = () => {
     const trimmedName = editNickname.trim();
-    if (trimmedName.length >= 1 && trimmedName.length <= 20 && trimmedName !== player.nickname) {
+    if (trimmedName.length >= 1 && trimmedName.length <= MAX_NICKNAME_LENGTH && trimmedName !== player.nickname) {
       onRename?.(trimmedName);
     }
     setIsEditing(false);
@@ -110,7 +110,7 @@ export default function PlayerRow({
                 }}
                 className="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white max-w-[120px]"
                 placeholder="Nazwa gracza"
-                maxLength={20}
+                maxLength={MAX_NICKNAME_LENGTH}
                 autoFocus
               />
               <button

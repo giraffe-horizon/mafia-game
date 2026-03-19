@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { MAX_NICKNAME_LENGTH } from "@/lib/constants";
 
 // Common reusable schemas
 const gameMode = z.enum(["full", "simple"]);
 const nonEmptyString = z.string().min(1);
 const playerId = z.string().min(1);
-const nickname = z.string().min(1).max(20);
+const nickname = z.string().min(1).max(MAX_NICKNAME_LENGTH);
 
 // API endpoint schemas
 export const createGameSchema = z.object({
