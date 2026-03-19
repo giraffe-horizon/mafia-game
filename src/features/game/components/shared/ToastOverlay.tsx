@@ -6,7 +6,7 @@ export default function ToastOverlay() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="absolute top-14 left-0 right-0 z-50 flex flex-col gap-2 px-4 pointer-events-none">
+    <div className="fixed top-14 left-0 right-0 z-[60] flex flex-col gap-2 px-4 pointer-events-none md:max-w-lg md:mx-auto">
       {toasts.map((t, i) => (
         <div
           key={t.id}

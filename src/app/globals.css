@@ -22,6 +22,10 @@
   --color-on-paper: #1a1a1a;
   --color-on-paper-dim: #3a3530;
 
+  /* Aliases for secondary (= paper) */
+  --color-secondary: #d7c3b0;
+  --color-on-secondary: #1a1a1a;
+
   --color-accent-green: #2a3a2a;
   --color-accent-green-bright: #3d5c3d;
 

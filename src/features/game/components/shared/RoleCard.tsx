@@ -25,7 +25,7 @@ const roleTint: Record<string, string> = {
 };
 
 const roleTextColor: Record<string, string> = {
-  mafia: "text-primary-dark",
+  mafia: "text-stamp",
   detective: "text-blue-400",
   doctor: "text-green-400",
   civilian: "text-on-surface/50",
@@ -58,7 +58,7 @@ export default function RoleCard({ role, roleVisible, onToggle }: RoleCardProps)
                 {ROLE_LABELS[roleKey]}
               </p>
               {role === "mafia" && (
-                <p className="text-primary-dark/60 text-xs font-display mt-1 uppercase tracking-wider">
+                <p className="text-stamp/60 text-xs font-display mt-1 uppercase tracking-wider">
                   Twoi wspólnicy są oznaczeni
                 </p>
               )}
@@ -79,7 +79,7 @@ export default function RoleCard({ role, roleVisible, onToggle }: RoleCardProps)
               Stuknij aby zobaczyć rolę
             </p>
             <div className="ml-auto">
-              <div className="redacted w-20 h-4 bg-on-secondary/80">&nbsp;</div>
+              <div className="redacted w-20 h-4 bg-on-paper/80">&nbsp;</div>
             </div>
           </div>
         )}
