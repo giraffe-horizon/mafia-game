@@ -66,11 +66,13 @@ export default function SettingsModal({
             <label className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/40 block mb-3">
               Postać
             </label>
-            <CharacterPicker
-              characters={characters}
-              selectedId={selectedCharacterId}
-              onSelect={onCharacterSelect}
-            />
+            <div className="max-h-[40vh] overflow-y-auto">
+              <CharacterPicker
+                characters={characters}
+                selectedId={selectedCharacterId}
+                onSelect={onCharacterSelect}
+              />
+            </div>
           </div>
         )}
       </div>

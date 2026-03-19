@@ -41,7 +41,7 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         className={cn(
-          "bg-surface-low border border-surface-highest max-w-md w-full mx-4",
+          "bg-surface-low border border-surface-highest max-w-md w-full mx-4 max-h-[90vh] flex flex-col",
           className
         )}
       >
@@ -64,7 +64,7 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
             </button>
           </div>
         )}
-        <div className={cn("p-5", title && "pt-4")}>{children}</div>
+        <div className={cn("p-5 overflow-y-auto flex-1", title && "pt-4")}>{children}</div>
       </div>
     </div>
   );

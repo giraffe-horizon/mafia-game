@@ -90,12 +90,14 @@ export default function OnboardingScreen({
 
           {characters.length > 0 && (
             <FormField label="TOŻSAMOŚĆ AGENTA:" className="[&>p]:pb-3">
-              <CharacterPicker
-                characters={characters}
-                selectedId={selectedCharacterId}
-                onSelect={onCharacterSelect}
-                disabledIds={takenCharacterIds}
-              />
+              <div className="max-h-[45vh] overflow-y-auto">
+                <CharacterPicker
+                  characters={characters}
+                  selectedId={selectedCharacterId}
+                  onSelect={onCharacterSelect}
+                  disabledIds={takenCharacterIds}
+                />
+              </div>
             </FormField>
           )}
 
