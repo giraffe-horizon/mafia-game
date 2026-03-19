@@ -165,7 +165,9 @@ export default function LobbyView({
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
               {starting ? "Startuję..." : "Rozpocznij grę"}
             </button>
-            <LobbyTransferGm players={nonHostPlayers} onTransfer={onTransferGm} />
+            <div className="mt-4 pt-4 border-t border-slate-800">
+              <LobbyTransferGm players={nonHostPlayers} onTransfer={onTransferGm} />
+            </div>
           </div>
         </>
       )}

@@ -190,7 +190,6 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
       const phaseChanged = prevPhase != null && newPhase != null && prevPhase !== newPhase;
 
       // Set transition BEFORE updating state so the overlay blocks the view
-      // before the new phase content renders underneath
       if (phaseChanged) {
         const transition = buildTransition(
           prevPhase,
