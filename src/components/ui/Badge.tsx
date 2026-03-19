@@ -1,28 +1,43 @@
-import React from "react";
+import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "mafia" | "detective" | "doctor" | "civilian" | "success" | "warning" | "danger";
-  children: React.ReactNode;
+export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+  variant?:
+    | "default"
+    | "mafia"
+    | "detective"
+    | "doctor"
+    | "civilian"
+    | "success"
+    | "warning"
+    | "danger"
+    | "paper";
+  rotated?: boolean;
 }
 
-const badgeVariants = {
-  mafia: "text-primary-dark border-primary-dark bg-primary-dark/10",
-  detective: "text-blue-400 border-blue-700 bg-blue-950/30",
-  doctor: "text-green-400 border-green-700 bg-green-950/30",
-  civilian: "text-on-surface/60 border-on-surface/30 bg-surface-highest/20",
-  success: "text-green-400 border-green-700 bg-green-950/30",
-  warning: "text-yellow-400 border-yellow-700 bg-yellow-950/30",
-  danger: "text-primary-dark border-primary-dark bg-primary-dark/10",
-};
-
-export default function Badge({ variant = "civilian", children, className, ...props }: BadgeProps) {
+export function Badge({
+  variant = "default",
+  rotated = false,
+  className,
+  children,
+  ...props
+}: BadgeProps) {
   return (
     <span
       className={cn(
-        // Stamp style: sharp border, all caps, tiny text
-        "inline-block text-[10px] font-display font-black uppercase tracking-widest px-1.5 py-0.5 border rounded-none",
-        badgeVariants[variant],
+        // Stamp style — rectangular, uppercase, monospace
+        "inline-block font-display font-bold text-xs uppercase tracking-widest",
+        "border px-2 py-0.5",
+        rotated && "-rotate-1",
+        variant === "default" && "border-on-surface/40 text-on-surface",
+        variant === "paper" && "border-on-paper/40 text-on-paper",
+        variant === "mafia" && "border-stamp text-stamp",
+        variant === "detective" && "border-blue-400 text-blue-400",
+        variant === "doctor" && "border-green-400 text-green-400",
+        variant === "civilian" && "border-on-surface-dim text-on-surface-dim",
+        variant === "success" && "border-stamp-green text-stamp-green",
+        variant === "warning" && "border-stamp-gold text-stamp-gold",
+        variant === "danger" && "border-stamp text-stamp",
         className
       )}
       {...props}
@@ -32,4 +47,4 @@ export default function Badge({ variant = "civilian", children, className, ...pr
   );
 }
 
-export type { BadgeProps };
+export default Badge;

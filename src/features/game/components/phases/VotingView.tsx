@@ -1,4 +1,3 @@
-import { SectionHeader } from "@/components/ui";
 import type {
   VotingPlayerState as PlayerState,
   VotingViewState,
@@ -28,7 +27,7 @@ export default function VotingView({
   const { players, myAction, actionPending, actionError, setChangingDecision, onVote, voteTally } =
     voteState;
   return (
-    <>
+    <div className="bg-[#0e0a00]">
       {/* Role card for non-host players */}
       {!isHost && (
         <RoleCard role={currentPlayer.role} roleVisible={roleVisible} onToggle={toggleRole} />
@@ -57,30 +56,39 @@ export default function VotingView({
         <DeadSpectatorView currentPlayer={currentPlayer} players={players} />
       )}
 
-      {/* Vote tally */}
+      {/* Vote tally — dossier style */}
       {voteTally && (
-        <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-slate-700">
-          <div className="flex items-center justify-between mb-3">
-            <SectionHeader icon="how_to_vote" className="text-slate-400 mb-0">
-              Głosy na żywo
-            </SectionHeader>
-            <span className="text-slate-500 text-xs font-typewriter">
-              {voteTally.votedCount}/{voteTally.totalVoters} oddanych
+        <div className="mx-4 mt-4 border border-on-surface/20 bg-surface-low">
+          <div className="border-b border-on-surface/10 px-3 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[14px] text-on-surface/40">
+                how_to_vote
+              </span>
+              <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
+                Głosy na żywo
+              </span>
+            </div>
+            <span className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest">
+              {voteTally.votedCount}/{voteTally.totalVoters}
             </span>
           </div>
           {voteTally.results.length > 0 ? (
-            <div className="flex flex-col gap-2">
+            <div className="p-3 flex flex-col gap-2">
               {voteTally.results.map((r, i) => (
                 <div key={r.playerId} className="flex items-center gap-3">
-                  <span className="text-white text-sm font-medium flex-1">{r.nickname}</span>
-                  <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <span
+                    className={`font-display text-sm flex-1 uppercase tracking-wide ${i === 0 ? "text-primary font-black" : "text-on-surface/70"}`}
+                  >
+                    {r.nickname}
+                  </span>
+                  <div className="w-24 h-1.5 bg-surface-highest/40">
                     <div
-                      className={`h-full rounded-full transition-all duration-300 ${i === 0 ? "bg-primary" : "bg-slate-600"}`}
+                      className={`h-full ${i === 0 ? "bg-primary" : "bg-on-surface/30"}`}
                       style={{ width: `${(r.votes / voteTally.totalVoters) * 100}%` }}
                     />
                   </div>
                   <span
-                    className={`text-sm font-bold font-typewriter min-w-[2rem] text-right ${i === 0 ? "text-primary" : "text-slate-500"}`}
+                    className={`font-display font-bold text-xs min-w-[1.5rem] text-right ${i === 0 ? "text-primary" : "text-on-surface/40"}`}
                   >
                     {r.votes}
                   </span>
@@ -88,12 +96,12 @@ export default function VotingView({
               ))}
             </div>
           ) : (
-            <p className="text-slate-600 text-xs font-typewriter text-center">
+            <p className="font-display text-on-surface/30 text-xs text-center p-4 uppercase tracking-widest">
               Nikt jeszcze nie zagłosował
             </p>
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -12,7 +12,9 @@ export default function VotesTab() {
   if (isLobby) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
-        <span className="material-symbols-outlined text-[48px] text-on-surface/20">how_to_vote</span>
+        <span className="material-symbols-outlined text-[48px] text-on-surface/20">
+          how_to_vote
+        </span>
         <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center">
           Głosowanie będzie dostępne po rozpoczęciu gry
         </p>
@@ -25,7 +27,9 @@ export default function VotesTab() {
       <div className="flex-1 flex flex-col">
         <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
           <span className="material-symbols-outlined text-[16px] text-primary">how_to_vote</span>
-          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">Głosowanie</span>
+          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
+            Głosowanie
+          </span>
         </div>
         <VotingContainer />
       </div>
@@ -37,8 +41,12 @@ export default function VotesTab() {
     return (
       <div className="flex-1 flex flex-col">
         <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
-          <span className="material-symbols-outlined text-[16px] text-on-surface/40">how_to_vote</span>
-          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">Historia głosowań</span>
+          <span className="material-symbols-outlined text-[16px] text-on-surface/40">
+            how_to_vote
+          </span>
+          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
+            Historia głosowań
+          </span>
         </div>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
           {voteHistory.map((roundVote) => (
@@ -48,7 +56,7 @@ export default function VotesTab() {
                   Runda {roundVote.round}
                 </span>
                 {roundVote.results.some((r) => r.eliminated) && (
-                  <Stamp variant="classified" rotate={0} className="ml-auto text-[9px]">
+                  <Stamp color="red" rotate={0} className="ml-auto text-[9px]">
                     Eliminacja
                   </Stamp>
                 )}
@@ -66,7 +74,9 @@ export default function VotesTab() {
                       {result.votes} {result.votes === 1 ? "głos" : "głosów"}
                     </span>
                     {result.eliminated && (
-                      <span className="material-symbols-outlined text-[16px] text-primary">skull</span>
+                      <span className="material-symbols-outlined text-[16px] text-primary">
+                        skull
+                      </span>
                     )}
                   </div>
                 ))}

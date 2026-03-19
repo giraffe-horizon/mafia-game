@@ -1,29 +1,21 @@
-import React from "react";
+import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "highlighted" | "danger" | "paper";
-  children: React.ReactNode;
+export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "paper" | "highlighted" | "danger" | "crt";
 }
 
-const cardVariants = {
-  // Dark folder card
-  default: "bg-surface-low border border-surface-highest/60",
-  // Highlighted — subtle primary accent
-  highlighted: "bg-surface-low border border-primary/30",
-  // Danger — red outline
-  danger: "bg-surface-low border border-primary-dark/40",
-  // Paper dossier sheet (light)
-  paper: "bg-secondary text-on-secondary border border-secondary-dim",
-};
-
-export default function Card({ variant = "default", children, className, ...props }: CardProps) {
+export function Card({ variant = "default", className, children, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        // Base: no rounded corners (paper has sharp edges)
-        "rounded-none p-4",
-        cardVariants[variant],
+        // Base — no border-radius, depth by layering
+        "p-4",
+        variant === "default" && "bg-surface-low text-on-surface",
+        variant === "paper" && "bg-paper text-on-paper",
+        variant === "highlighted" && "bg-surface-low border-l-2 border-stamp text-on-surface",
+        variant === "danger" && "bg-surface-low border-l-2 border-stamp text-on-surface",
+        variant === "crt" && "bg-accent-green border border-accent-green-bright text-stamp-green",
         className
       )}
       {...props}
@@ -33,4 +25,4 @@ export default function Card({ variant = "default", children, className, ...prop
   );
 }
 
-export type { CardProps };
+export default Card;

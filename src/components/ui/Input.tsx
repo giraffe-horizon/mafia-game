@@ -1,79 +1,66 @@
-import React from "react";
+import { forwardRef, type InputHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  icon?: string; // material symbols icon name
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  error?: string;
+  onPaper?: boolean;
 }
 
-interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  icon?: string; // material symbols icon name
-}
-
-export function Input({ icon, className, ...props }: InputProps) {
-  if (icon) {
-    return (
-      <div className="relative">
-        <span className="absolute inset-y-0 left-0 flex items-center pl-0 text-on-surface/40">
-          <span className="material-symbols-outlined text-[18px]">{icon}</span>
-        </span>
-        <input
-          className={cn(
-            // No bg, single bottom border
-            "flex w-full bg-transparent text-on-surface border-0 border-b border-on-surface/30",
-            "focus:outline-none focus:border-primary h-10 font-display font-medium",
-            "placeholder:text-on-surface/30 transition-colors pl-7 pr-0",
-            className
-          )}
-          {...props}
-        />
-      </div>
-    );
-  }
-
-  return (
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ className, error, onPaper = false, ...props }, ref) => (
     <input
+      ref={ref}
       className={cn(
-        "flex w-full bg-transparent text-on-surface border-0 border-b border-on-surface/30",
-        "focus:outline-none focus:border-primary h-10 px-0 font-display font-medium",
-        "placeholder:text-on-surface/30 transition-colors",
+        "w-full bg-transparent",
+        "border-0 border-b-2 outline-none",
+        "font-display text-sm tracking-wide",
+        "py-2 px-0",
+        "placeholder:opacity-40",
+        onPaper
+          ? ["border-on-paper/30 text-on-paper placeholder:text-on-paper", "focus:border-on-paper"]
+          : [
+              "border-on-surface/30 text-on-surface placeholder:text-on-surface",
+              "focus:border-stamp",
+            ],
+        error && "border-stamp",
         className
       )}
       {...props}
     />
-  );
+  )
+);
+Input.displayName = "Input";
+
+export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  error?: string;
+  onPaper?: boolean;
 }
 
-export function TextArea({ icon, className, ...props }: TextAreaProps) {
-  if (icon) {
-    return (
-      <div className="relative">
-        <span className="absolute top-2 left-0 flex items-start pl-0 text-on-surface/40">
-          <span className="material-symbols-outlined text-[18px]">{icon}</span>
-        </span>
-        <textarea
-          className={cn(
-            "flex w-full bg-transparent text-on-surface border border-on-surface/20 p-3",
-            "focus:outline-none focus:border-primary font-display font-medium",
-            "placeholder:text-on-surface/30 transition-colors resize-none pl-7 rounded-none",
-            className
-          )}
-          {...props}
-        />
-      </div>
-    );
-  }
-
-  return (
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, error, onPaper = false, ...props }, ref) => (
     <textarea
+      ref={ref}
       className={cn(
-        "flex w-full bg-transparent text-on-surface border border-on-surface/20 p-3",
-        "focus:outline-none focus:border-primary font-display font-medium",
-        "placeholder:text-on-surface/30 transition-colors resize-none rounded-none",
+        "w-full bg-transparent resize-none",
+        "border-0 border-b-2 outline-none",
+        "font-display text-sm tracking-wide",
+        "py-2 px-0",
+        "placeholder:opacity-40",
+        onPaper
+          ? ["border-on-paper/30 text-on-paper placeholder:text-on-paper", "focus:border-on-paper"]
+          : [
+              "border-on-surface/30 text-on-surface placeholder:text-on-surface",
+              "focus:border-stamp",
+            ],
+        error && "border-stamp",
         className
       )}
       {...props}
     />
-  );
-}
+  )
+);
+Textarea.displayName = "Textarea";
 
-export type { InputProps, TextAreaProps };
+/* Legacy aliases for backward compatibility */
+export const TextArea = Textarea;
+export type { TextareaProps as TextAreaProps };

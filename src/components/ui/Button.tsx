@@ -1,65 +1,77 @@
-import React from "react";
+import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
-  icon?: string; // material symbols icon name
-  children: React.ReactNode;
+  icon?: string;
+  fullWidth?: boolean;
 }
 
-const buttonVariants = {
-  // Primary = coral rubber stamp fill
-  primary:
-    "bg-primary text-on-secondary hover:bg-primary/90 font-black",
-  // Secondary = dashed border, transparent
-  secondary:
-    "bg-transparent border-2 border-dashed border-on-surface/40 text-on-surface hover:border-on-surface hover:bg-surface-highest/30",
-  // Danger = muted red
-  danger:
-    "bg-transparent border-2 border-dashed border-primary-dark/60 text-primary-dark hover:bg-primary-dark/10",
-  // Ghost = underline only
-  ghost:
-    "bg-transparent text-on-surface/60 hover:text-on-surface underline underline-offset-2 decoration-dotted",
-};
-
-const buttonSizes = {
-  sm: "h-8 px-3 text-xs",
-  md: "h-10 px-4 text-sm",
-  lg: "h-12 px-6 text-base",
-};
-
-export default function Button({
+export function Button({
   variant = "primary",
   size = "md",
   loading = false,
-  disabled = false,
   icon,
-  children,
+  fullWidth = false,
   className,
+  children,
+  disabled,
   ...props
 }: ButtonProps) {
+  const isDisabled = disabled || loading;
+
   return (
     <button
-      disabled={disabled || loading}
       className={cn(
-        // Base: sharp corners, uppercase, typewriter
-        "flex items-center justify-center gap-2 rounded-none font-display font-bold uppercase tracking-wider active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden transition-colors",
-        buttonVariants[variant],
-        buttonSizes[size],
+        // Base — sharp, uppercase, tracking
+        "inline-flex items-center justify-center gap-2",
+        "font-display font-bold uppercase tracking-widest",
+        "transition-colors duration-[0.1s]",
+        "border-0 outline-none",
+        "disabled:opacity-40 disabled:cursor-not-allowed",
+        // Size
+        size === "sm" && "px-3 py-1.5 text-xs",
+        size === "md" && "px-4 py-2.5 text-sm",
+        size === "lg" && "px-6 py-3 text-base",
+        // Variant — primary: coral fill (rubber stamp)
+        variant === "primary" && [
+          "bg-stamp text-on-paper",
+          "hover:bg-stamp-dark",
+          "active:scale-95",
+        ],
+        // secondary: dashed border
+        variant === "secondary" && [
+          "bg-transparent text-on-surface border-2 border-dashed border-on-surface/50",
+          "hover:border-on-surface hover:text-on-surface",
+          "active:scale-95",
+        ],
+        // danger: red stamp
+        variant === "danger" && [
+          "bg-transparent text-stamp border-2 border-dashed border-stamp",
+          "hover:bg-stamp hover:text-on-paper",
+          "active:scale-95",
+        ],
+        // ghost: underline only
+        variant === "ghost" && [
+          "bg-transparent text-on-surface-dim underline decoration-dotted underline-offset-4",
+          "hover:text-on-surface",
+        ],
+        fullWidth && "w-full",
         className
       )}
+      disabled={isDisabled}
       {...props}
     >
       {loading ? (
-        <span className="material-symbols-outlined text-[16px] animate-spin">refresh</span>
+        <span className="material-symbols-outlined text-base animate-spin">refresh</span>
       ) : icon ? (
-        <span className="material-symbols-outlined text-[16px]">{icon}</span>
+        <span className="material-symbols-outlined text-base">{icon}</span>
       ) : null}
-      <span className="truncate">{children}</span>
+      {children}
     </button>
   );
 }
 
-export type { ButtonProps };
+export default Button;

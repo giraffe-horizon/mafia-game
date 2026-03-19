@@ -4,113 +4,157 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* === Analog Intelligence Dossier palette === */
-  --color-background: #131313;         /* The Void — dark desk */
-  --color-surface-low: #1c1b1b;        /* The Folder */
-  --color-surface-lowest: #0e0e0e;     /* Deep shadows */
-  --color-surface-highest: #353534;    /* Subtle highlight */
-  --color-secondary: #d7c3b0;          /* Paper / Pergamin */
-  --color-secondary-dim: #c4af9c;      /* Slightly darker paper */
-  --color-primary: #ffb4ac;            /* The Stamp — de-saturated red */
-  --color-primary-dark: #da0b0b;       /* Accent red for critical */
-  --color-on-surface: #e8e0d8;         /* Cream text on dark */
-  --color-on-secondary: #1a1a1a;       /* Dark text on paper */
-  --color-stamp: #ffb4ac;              /* Rubber stamp color */
-  --color-accent-green: rgba(42, 58, 42, 0.6); /* CRT-monitor vibes */
+  /* Core palette — Analog Intelligence Dossier */
+  --color-background: #131313;
+  --color-surface-low: #1c1b1b;
+  --color-surface-lowest: #0e0e0e;
+  --color-surface-highest: #353534;
 
-  /* === Legacy compat === */
+  --color-paper: #d7c3b0;
+  --color-paper-dim: #c4af9d;
+  --color-stamp: #ffb4ac;
+  --color-stamp-dark: #e8938a;
+  --color-stamp-green: #7ab87a;
+  --color-stamp-gold: #c8a84b;
+
+  --color-on-surface: #e8e0d8;
+  --color-on-surface-dim: #a09890;
+  --color-on-paper: #1a1a1a;
+  --color-on-paper-dim: #3a3530;
+
+  --color-accent-green: #2a3a2a;
+  --color-accent-green-bright: #3d5c3d;
+
+  /* Legacy aliases for backward compatibility */
+  --color-primary: #ffb4ac;
+  --color-primary-dark: #e8938a;
   --color-background-dark: #131313;
   --color-background-light: #d7c3b0;
 
-  /* === Typography === */
-  --font-display: var(--font-space-grotesk), "Space Grotesk", monospace;
-  --font-typewriter: var(--font-space-grotesk), "Space Grotesk", monospace;
+  /* Typography — Space Grotesk only */
+  --font-display: "Space Grotesk", sans-serif;
+  --font-typewriter: "Space Grotesk", monospace;
+  --font-body: "Space Grotesk", sans-serif;
 
-  /* === Sharp corners everywhere (analog paper) === */
+  /* Zero border-radius — paper has sharp edges */
   --radius: 0;
   --radius-lg: 0;
   --radius-xl: 0;
-  --radius-full: 9999px; /* only for circular elements */
+  --radius-full: 0;
 }
 
 @layer base {
   body {
-    min-height: max(844px, 100dvh);
-    background: #131313;
+    background-color: #131313;
     color: #e8e0d8;
+    font-family: "Space Grotesk", sans-serif;
+    min-height: max(844px, 100dvh);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
   }
 
-  /* Grain texture overlay on body */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-repeat: repeat;
-    background-size: 256px;
+  * {
+    border-radius: 0 !important;
+  }
+
+  ::selection {
+    background-color: rgb(255 180 172 / 0.3);
   }
 }
 
 @layer utilities {
-  /* Stamp utility — rubber stamp aesthetic */
-  .stamp {
-    display: inline-block;
-    border: 2px solid currentColor;
-    padding: 0.125rem 0.5rem;
-    font-family: var(--font-display);
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    font-size: 0.65rem;
-    user-select: none;
+  /* Grain texture overlay */
+  .grain {
+    position: relative;
   }
-
-  /* Paper card — pergamin background */
-  .paper-card {
-    background-color: #d7c3b0;
-    color: #1a1a1a;
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    z-index: 1;
     border-radius: 0;
   }
 
-  /* Redacted — black censorship bar */
+  /* Rubber stamp utility */
+  .stamp {
+    display: inline-block;
+    font-family: "Space Grotesk", monospace;
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 2px solid currentColor;
+    padding: 2px 8px;
+    opacity: 0.9;
+    transform: rotate(-2deg);
+    mix-blend-mode: multiply;
+    border-radius: 0 !important;
+  }
+
+  .stamp-red {
+    color: #e8938a;
+    border-color: #e8938a;
+  }
+
+  .stamp-green {
+    color: #7ab87a;
+    border-color: #7ab87a;
+  }
+
+  .stamp-gold {
+    color: #c8a84b;
+    border-color: #c8a84b;
+  }
+
+  /* Paper card — aged document */
+  .paper-card {
+    background-color: #d7c3b0;
+    color: #1a1a1a;
+    border-radius: 0 !important;
+  }
+
+  /* Redacted / loading state */
   .redacted {
     background-color: #1a1a1a;
     color: transparent;
     user-select: none;
-    border-radius: 0;
+    border-radius: 0 !important;
   }
 
-  /* Tape detail — corner tape effect via pseudo */
+  /* Tape corner effect */
+  .tape-corner {
+    position: relative;
+  }
   .tape-corner::before {
     content: "";
     position: absolute;
-    top: -6px;
+    top: -4px;
     left: 50%;
-    transform: translateX(-50%) rotate(-2deg);
+    transform: translateX(-50%) rotate(-1deg);
     width: 48px;
-    height: 14px;
-    background: rgba(215, 195, 176, 0.35);
-    border: 1px solid rgba(215, 195, 176, 0.5);
+    height: 16px;
+    background: rgb(215 195 176 / 0.5);
+    border-left: 1px solid rgb(215 195 176 / 0.3);
+    border-right: 1px solid rgb(215 195 176 / 0.3);
+    z-index: 10;
+    border-radius: 0 !important;
   }
 
-  /* Step animation — typewriter/projector feel */
+  /* Step animations instead of smooth */
   .step-transition {
-    transition-timing-function: steps(1, end);
-    transition-duration: 0.1s;
+    transition-timing-function: steps(3, end);
+    transition-duration: 0.15s;
   }
 
-  /* CRT tint for GM panel / lobby */
-  .crt-tint {
-    background-color: var(--color-accent-green);
-  }
-
-  /* Dossier surface */
-  .dossier {
-    background-color: #1c1b1b;
-    border: 1px solid #353534;
-    border-radius: 0;
+  /* CRT surface for GM panel */
+  .crt-surface {
+    background-color: #2a3a2a;
+    border: 1px solid #3d5c3d;
+    border-radius: 0 !important;
   }
 }
