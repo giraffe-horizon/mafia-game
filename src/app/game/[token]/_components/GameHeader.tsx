@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { PHASE_LABELS } from "@/lib/constants";
@@ -5,6 +7,7 @@ import { PHASE_LABELS } from "@/lib/constants";
 interface GameHeaderProps {
   phase: string;
   round: number;
+  gameCode: string;
   isHost: boolean;
   currentPlayer: {
     character?: {
@@ -16,56 +19,77 @@ interface GameHeaderProps {
   };
   onShowSettings: () => void;
   onShowRanking: () => void;
+  onShowGMPanel: () => void;
 }
 
 export default function GameHeader({
   phase,
   round,
+  gameCode,
   isHost,
   currentPlayer,
   onShowSettings,
   onShowRanking,
+  onShowGMPanel,
 }: GameHeaderProps) {
   const [imgError, setImgError] = useState(false);
   const handleImgError = useCallback(() => setImgError(true), []);
 
   return (
-    <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-800">
-      <div className="flex items-center gap-1">
+    <div className="relative z-10 flex items-center justify-between px-3 py-2 border-b border-on-surface/10 bg-surface-low">
+      {/* Left: back + ranking */}
+      <div className="flex items-center gap-0.5">
         <Link
           href="/"
-          className="size-9 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
+          className="size-9 flex items-center justify-center text-on-surface/35 hover:text-on-surface"
         >
-          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
         </Link>
         <button
           onClick={onShowRanking}
-          className="size-9 flex items-center justify-center text-slate-500 hover:text-amber-400 transition-colors"
+          className="size-9 flex items-center justify-center text-on-surface/35 hover:text-on-surface"
           title="Ranking sesji"
         >
           <span className="material-symbols-outlined text-[18px]">leaderboard</span>
         </button>
       </div>
-      <div className="text-center">
-        <h2 className="font-typewriter text-white text-sm font-semibold">{PHASE_LABELS[phase]}</h2>
-        {round > 0 && <p className="text-slate-500 text-xs font-typewriter">Runda {round}</p>}
+
+      {/* Center: code + phase + TAJNE badge */}
+      <div className="flex flex-col items-center">
+        <div className="flex items-center gap-2">
+          <span className="font-display font-bold text-on-surface tracking-widest text-sm">
+            {gameCode}
+          </span>
+          <span className="stamp stamp-red text-[9px] py-0 px-1">TAJNE</span>
+        </div>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <p className="font-display text-on-surface/40 uppercase tracking-widest text-[10px]">
+            {PHASE_LABELS[phase] ?? phase}
+          </p>
+          {round > 0 && <p className="text-on-surface/25 text-[10px] font-display">· R{round}</p>}
+        </div>
       </div>
-      <div className="size-9 flex items-center justify-center">
-        {isHost ? (
+
+      {/* Right: avatar + GM trigger */}
+      <div className="flex items-center gap-0.5">
+        {isHost && (
           <button
-            onClick={onShowSettings}
-            className="w-8 h-8 rounded-full border-2 border-primary/50 hover:border-primary transition-colors bg-primary/10 flex items-center justify-center"
+            onClick={onShowGMPanel}
+            className="size-9 flex items-center justify-center text-stamp hover:text-stamp/80"
+            title="Panel Mistrza Gry"
           >
-            <span className="material-symbols-outlined text-[16px] text-primary">
-              manage_accounts
-            </span>
+            <span className="material-symbols-outlined text-[20px]">manage_accounts</span>
           </button>
-        ) : currentPlayer.character ? (
-          <button
-            onClick={onShowSettings}
-            className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors overflow-hidden flex items-center justify-center"
-          >
-            {currentPlayer.character.avatarUrl && !imgError ? (
+        )}
+
+        {/* Avatar / settings button */}
+        <button
+          onClick={onShowSettings}
+          className="size-9 flex items-center justify-center"
+          title="Ustawienia"
+        >
+          {currentPlayer.character && !imgError ? (
+            <div className="w-7 h-7 border border-on-surface/20 overflow-hidden">
               <img
                 src={currentPlayer.character.avatarUrl}
                 alt={currentPlayer.character.namePl}
@@ -74,20 +98,13 @@ export default function GameHeader({
                 className="w-full h-full object-cover"
                 onError={handleImgError}
               />
-            ) : (
-              <div className="w-full h-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
-                {currentPlayer.character.namePl.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </button>
-        ) : (
-          <button
-            onClick={onShowSettings}
-            className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors bg-slate-800 flex items-center justify-center"
-          >
-            <span className="material-symbols-outlined text-[16px] text-slate-400">person</span>
-          </button>
-        )}
+            </div>
+          ) : (
+            <span className="material-symbols-outlined text-[20px] text-on-surface/40 hover:text-on-surface">
+              person
+            </span>
+          )}
+        </button>
       </div>
     </div>
   );

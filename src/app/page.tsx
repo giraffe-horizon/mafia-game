@@ -4,49 +4,69 @@ export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (
-    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-light dark:bg-background-dark group overflow-hidden">
-      {/* Noir atmospheric background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-background-dark/40 via-background-dark/70 to-background-dark z-10" />
-        <div
-          className="w-full h-full bg-cover bg-center bg-no-repeat opacity-20 dark:opacity-15"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse at 50% 30%, rgba(218,11,11,0.15) 0%, transparent 70%), radial-gradient(ellipse at 80% 80%, rgba(50,0,0,0.8) 0%, transparent 50%)",
-          }}
-        />
+    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background overflow-hidden">
+      {/* Desk surface texture */}
+      <div className="absolute inset-0 z-0 grain" />
+
+      {/* Atmospheric vignette */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-radial-[ellipse_at_50%_30%] from-stamp/5 via-transparent to-transparent" />
       </div>
 
-      {/* Top bar */}
-      <div className="relative z-20 flex items-center p-4 pb-2 justify-between">
-        <div className="size-12 shrink-0 opacity-0 pointer-events-none" />
-        <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-typewriter text-primary drop-shadow-[0_0_8px_rgba(218,11,11,0.5)]">
-          MAFIA
-        </h2>
-        <div className="size-12 shrink-0" />
+      {/* Top classification bar */}
+      <div className="relative z-10 flex items-center justify-between px-4 py-2 border-b border-on-surface/8">
+        <span className="text-on-surface/20 font-display text-[9px] uppercase tracking-widest">
+          Dok. nr: MFG-001
+        </span>
+        <span className="stamp stamp-red text-[9px] py-0 px-1.5">ŚCIŚLE TAJNE</span>
+        <span className="text-on-surface/20 font-display text-[9px] uppercase tracking-widest">
+          OPERACJA
+        </span>
       </div>
 
-      <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
-        {/* Hero icon */}
-        <div className="flex justify-center mb-8">
-          <div className="w-32 h-32 rounded-full border-2 border-primary/40 flex items-center justify-center bg-background-dark/80 shadow-[0_0_30px_rgba(218,11,11,0.2)] relative overflow-hidden">
-            <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl" />
-            <span className="material-symbols-outlined text-[64px] text-primary relative z-10 drop-shadow-md">
-              local_police
-            </span>
+      {/* Main dossier card */}
+      <div className="relative z-10 flex-1 flex flex-col px-6 pt-8 pb-8">
+        {/* Header dossier block */}
+        <div className="border border-on-surface/15 bg-surface-low p-5 mb-6 tape-corner">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-on-surface/30 font-display font-bold uppercase tracking-widest text-[10px] mb-1">
+                Nazwa operacji
+              </p>
+              <h1 className="font-display font-bold text-[40px] leading-none uppercase tracking-wider text-stamp">
+                MAFIA
+              </h1>
+              <p className="text-on-surface/40 font-display text-xs uppercase tracking-widest mt-1">
+                System zarządzania rozgrywką
+              </p>
+            </div>
+            <div className="shrink-0 w-16 h-16 border border-on-surface/20 flex items-center justify-center bg-background">
+              <span className="material-symbols-outlined text-[32px] text-on-surface/30">
+                skull
+              </span>
+            </div>
+          </div>
+
+          {/* Redacted field */}
+          <div className="mt-4 pt-3 border-t border-on-surface/8">
+            <p className="text-on-surface/20 font-display text-[9px] uppercase tracking-widest mb-1">
+              Kod dostępu
+            </p>
+            <div className="flex gap-1">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={`redact-${i}`}
+                  className="redacted w-6 h-4 font-display text-[10px]"
+                  aria-hidden="true"
+                >
+                  X
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Heading */}
-        <h1 className="text-white tracking-tight text-[40px] font-bold leading-none text-center pb-8 font-typewriter drop-shadow-md uppercase">
-          Witamy w
-          <br />
-          <span className="text-primary text-[48px] drop-shadow-[0_0_12px_rgba(218,11,11,0.6)]">
-            Mieście
-          </span>
-        </h1>
-
-        {/* Client interactive content */}
+        {/* Interactive section */}
         <HomeClient />
       </div>
     </div>

@@ -55,24 +55,23 @@ export default function GMMissionTab({
           {hostMissions.map((m) => (
             <div
               key={m.id}
-              className={`p-3 rounded-lg border ${m.isCompleted ? "bg-green-950/20 border-green-900/30 opacity-60" : "bg-black/30 border-slate-700"}`}
+              className={`p-3 border ${m.isCompleted ? "border-green-700/20 bg-green-950/10 opacity-60" : "border-on-surface/12 bg-surface-low"}`}
             >
               <div className="flex items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span
-                      className={`text-[10px] font-typewriter font-bold uppercase ${m.isCompleted ? "text-green-500" : "text-slate-500"}`}
+                      className={`text-[10px] font-display font-bold uppercase ${m.isCompleted ? "text-green-500" : "text-on-surface/40"}`}
                     >
                       {m.playerNickname}
                     </span>
-                    <span className="text-slate-700 text-[10px]">·</span>
-                    <span className="text-yellow-600 text-[10px] font-typewriter">
-                      +{m.points}pkt
-                    </span>
-                    {m.isCompleted && <span className="text-green-500 text-[10px]">✓</span>}
+                    <span className="text-stamp text-[10px] font-display">+{m.points}pkt</span>
+                    {m.isCompleted && (
+                      <span className="stamp stamp-green text-[8px] py-0 px-1">WYKONANO</span>
+                    )}
                   </div>
                   <p
-                    className={`text-xs ${m.isCompleted ? "text-slate-500 line-through" : "text-slate-300"}`}
+                    className={`text-xs font-display ${m.isCompleted ? "text-on-surface/35 line-through" : "text-on-surface"}`}
                   >
                     {m.description}
                   </p>
@@ -82,21 +81,17 @@ export default function GMMissionTab({
                     <button
                       onClick={() => onCompleteMission(m.id)}
                       title="Oznacz jako wykonaną"
-                      className="w-7 h-7 flex items-center justify-center rounded bg-green-900/30 hover:bg-green-900/60 border border-green-800/40 transition-all"
+                      className="w-7 h-7 flex items-center justify-center border border-green-700/40 bg-green-950/20 text-green-400 hover:bg-green-950/40"
                     >
-                      <span className="material-symbols-outlined text-[14px] text-green-400">
-                        check
-                      </span>
+                      <span className="material-symbols-outlined text-[14px]">check</span>
                     </button>
                   )}
                   <button
                     onClick={() => onDeleteMission(m.id)}
                     title="Usuń misję"
-                    className="w-7 h-7 flex items-center justify-center rounded bg-red-950/30 hover:bg-red-950/60 border border-red-900/30 transition-all"
+                    className="w-7 h-7 flex items-center justify-center border border-stamp/30 bg-stamp/5 text-stamp hover:bg-stamp/10"
                   >
-                    <span className="material-symbols-outlined text-[14px] text-red-500">
-                      delete
-                    </span>
+                    <span className="material-symbols-outlined text-[14px]">delete</span>
                   </button>
                 </div>
               </div>
@@ -105,19 +100,19 @@ export default function GMMissionTab({
         </div>
       )}
       {hostMissions && hostMissions.length === 0 && (
-        <p className="text-slate-600 text-xs font-typewriter text-center py-2">
+        <p className="text-on-surface/25 text-xs font-display text-center py-2 uppercase tracking-wider">
           Brak misji — utwórz poniżej
         </p>
       )}
 
-      <div className="border-t border-slate-800 pt-3">
+      <div className="border-t border-on-surface/10 pt-3">
         <SectionHeader className="mb-3">Nowa misja</SectionHeader>
       </div>
 
       <select
         value={msnTarget}
         onChange={(e) => onMsnTargetChange(e.target.value)}
-        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm font-typewriter focus:outline-none focus:border-primary/50"
+        className="w-full bg-background border border-on-surface/20 px-3 py-2 text-on-surface text-sm font-display focus:outline-none focus:border-stamp"
       >
         <option value="">Wybierz gracza...</option>
         {players.map((p) => (
@@ -130,7 +125,7 @@ export default function GMMissionTab({
       <select
         value={msnPreset}
         onChange={(e) => handlePresetChange(e.target.value)}
-        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm font-typewriter focus:outline-none focus:border-primary/50"
+        className="w-full bg-background border border-on-surface/20 px-3 py-2 text-on-surface text-sm font-display focus:outline-none focus:border-stamp"
       >
         <option value="custom">— Własne zadanie —</option>
         {MISSION_PRESETS.map((p, i) => (
@@ -148,7 +143,7 @@ export default function GMMissionTab({
         }}
         placeholder="Opis misji..."
         rows={3}
-        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm font-typewriter placeholder:text-slate-600 focus:outline-none focus:border-primary/50 resize-none"
+        className="w-full bg-background border border-on-surface/20 px-3 py-2 text-on-surface text-sm font-display placeholder:text-on-surface/20 focus:outline-none focus:border-stamp resize-none"
       />
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1 ml-auto">
@@ -156,14 +151,10 @@ export default function GMMissionTab({
             <button
               key={pts}
               onClick={() => onMsnPointsChange(pts)}
-              className={`w-9 h-9 rounded-lg text-sm font-typewriter font-bold border transition-all ${
+              className={`w-9 h-9 text-sm font-display font-bold border ${
                 msnPoints === pts
-                  ? pts === 1
-                    ? "bg-green-900/40 border-green-700 text-green-400"
-                    : pts === 2
-                      ? "bg-yellow-900/40 border-yellow-700 text-yellow-400"
-                      : "bg-red-900/40 border-red-700 text-red-400"
-                  : "border-slate-700 text-slate-500 hover:border-slate-500"
+                  ? "border-stamp bg-stamp/10 text-stamp"
+                  : "border-on-surface/20 text-on-surface/35 hover:border-on-surface/40"
               }`}
             >
               {pts}
@@ -171,11 +162,11 @@ export default function GMMissionTab({
           ))}
         </div>
       </div>
-      {msnError && <p className="text-red-400 text-xs font-typewriter">{msnError}</p>}
+      {msnError && <p className="text-stamp text-xs font-display">{msnError}</p>}
       <button
         onClick={onCreateMission}
         disabled={msnPending || !msnTarget || !msnDesc.trim()}
-        className="flex items-center justify-center gap-2 h-10 rounded-lg bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary font-typewriter uppercase tracking-wider text-sm transition-all disabled:opacity-40"
+        className="flex items-center justify-center gap-2 h-10 bg-stamp text-on-paper border border-stamp font-display font-bold uppercase tracking-widest text-xs hover:bg-stamp/90 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <span className="material-symbols-outlined text-[16px]">add_task</span>
         {msnPending ? "Tworzę..." : "Utwórz misję"}

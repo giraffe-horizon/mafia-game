@@ -54,32 +54,31 @@ export default function GMGameTab({
     setSelectedTarget("");
   }
 
-  // GM can advance phase when all actions are done AND mafia is unanimous (for night phase)
   const canAdvancePhase =
     (phaseProgress?.allDone ?? true) && (phaseProgress?.mafiaUnanimous ?? true) && !phasePending;
 
   return (
-    <div>
-      {/* Hint Box */}
+    <div className="flex flex-col gap-4">
+      {/* Phase hint */}
       {phaseProgress && (
-        <div className="mb-4 p-3 bg-slate-800 rounded-lg border-l-4 border-primary">
-          <p className="text-sm text-slate-300">{phaseProgress.hint}</p>
+        <div className="border-l-2 border-stamp pl-3 py-1">
+          <p className="text-on-surface/60 text-xs font-display">{phaseProgress.hint}</p>
         </div>
       )}
 
-      {/* Progress Bar */}
-      {phaseProgress && (
-        <div className="mb-4">
+      {/* Action progress */}
+      {phaseProgress && phaseProgress.requiredActions.length > 0 && (
+        <div>
           <div className="flex items-center justify-between mb-2">
             <SectionHeader className="mb-0">Postęp akcji</SectionHeader>
-            <span className="text-xs text-slate-400">
+            <span className="text-on-surface/35 text-[10px] font-display">
               {phaseProgress.requiredActions.filter((a) => a.done).length}/
               {phaseProgress.requiredActions.length}
             </span>
           </div>
-          <div className="w-full bg-slate-800 rounded-full h-2">
+          <div className="w-full bg-surface-highest h-1 mb-3">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-stamp h-1"
               style={{
                 width: `${
                   phaseProgress.requiredActions.length === 0
@@ -91,31 +90,23 @@ export default function GMGameTab({
               }}
             />
           </div>
-        </div>
-      )}
-
-      {/* Lista graczy ze statusem */}
-      {phaseProgress && phaseProgress.requiredActions.length > 0 && (
-        <div className="mb-4">
-          <SectionHeader>Status graczy</SectionHeader>
           <div className="flex flex-col gap-1">
             {[...phaseProgress.requiredActions]
               .sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
               .map((action) => (
                 <div
                   key={action.playerId}
-                  className="flex items-center gap-3 p-2 rounded-lg bg-black/20"
+                  className="flex items-center gap-2 py-1.5 border-b border-on-surface/8 last:border-0"
                 >
                   <span
-                    className={`material-symbols-outlined text-[16px] ${
-                      action.done ? "text-green-500" : "text-yellow-500"
+                    className={`material-symbols-outlined text-[14px] shrink-0 ${
+                      action.done ? "text-green-400" : "text-on-surface/30"
                     }`}
                   >
                     {action.done ? "check_circle" : "schedule"}
                   </span>
-                  <span className="text-white text-xs font-medium flex-1">
+                  <span className="text-on-surface text-xs font-display flex-1">
                     {action.nickname}
-                    {/* Show mafia voting target if available */}
                     {action.role === "mafia" &&
                       hostActions &&
                       (() => {
@@ -123,17 +114,12 @@ export default function GMGameTab({
                           (ha) => ha.playerId === action.playerId && ha.actionType === "kill"
                         );
                         return mafiaAction?.targetNickname ? (
-                          <span className="text-red-300 ml-2">→ {mafiaAction.targetNickname}</span>
+                          <span className="text-stamp/70 ml-2">→ {mafiaAction.targetNickname}</span>
                         ) : null;
                       })()}
                   </span>
-                  <span className="text-slate-400 text-xs font-typewriter">{action.role}</span>
-                  <span
-                    className={`text-xs font-typewriter ${
-                      action.done ? "text-green-400" : "text-yellow-400"
-                    }`}
-                  >
-                    {action.done ? "✅ Gotowe" : "⏳ Oczekuje"}
+                  <span className="text-on-surface/25 text-[10px] font-display uppercase tracking-wider">
+                    {ROLE_LABELS[action.role] ?? action.role}
                   </span>
                 </div>
               ))}
@@ -141,28 +127,26 @@ export default function GMGameTab({
         </div>
       )}
 
-      {/* Mafia consensus status */}
+      {/* Mafia consensus warning */}
       {phase === "night" && phaseProgress && !phaseProgress.mafiaUnanimous && (
-        <div className="mb-4 p-2 rounded-lg bg-red-950/20 border border-red-900/30">
-          <span className="text-red-400 text-xs font-typewriter">
-            ⚠️ Mafia nie jest zgodna — przejście do dnia zablokowane
+        <div className="border border-stamp/30 bg-stamp/5 p-3">
+          <span className="text-stamp text-xs font-display uppercase tracking-wider">
+            Mafia nie jest zgodna — przejście zablokowane
           </span>
         </div>
       )}
 
-      {/* GM override sekcja */}
+      {/* GM override */}
       {alivePlayers.length > 0 && (phase === "night" || phase === "voting") && (
-        <div className="mt-3 p-4 rounded-xl bg-primary/5 border border-primary/20 mb-4">
-          <SectionHeader className="text-primary/70 mb-3">
-            Zmień akcję gracza (override GM)
-          </SectionHeader>
+        <div className="border border-on-surface/12 bg-surface-low p-3">
+          <SectionHeader className="mb-2 text-on-surface/50">Override akcji gracza</SectionHeader>
           <select
             value={selectedPlayer}
             onChange={(e) => {
               setSelectedPlayer(e.target.value);
               setSelectedTarget("");
             }}
-            className="w-full h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 mb-2 font-typewriter"
+            className="w-full h-10 bg-background border border-on-surface/20 text-on-surface text-sm px-3 mb-2 font-display focus:outline-none focus:border-stamp"
           >
             <option value="">— Wybierz gracza —</option>
             {alivePlayers.map((p) => (
@@ -177,7 +161,7 @@ export default function GMGameTab({
               <select
                 value={selectedTarget}
                 onChange={(e) => setSelectedTarget(e.target.value)}
-                className="w-full h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 mb-2 font-typewriter"
+                className="w-full h-10 bg-background border border-on-surface/20 text-on-surface text-sm px-3 mb-2 font-display focus:outline-none focus:border-stamp"
               >
                 <option value="">— Wybierz cel —</option>
                 {alivePlayers
@@ -191,24 +175,24 @@ export default function GMGameTab({
               <button
                 onClick={handleSubmit}
                 disabled={!selectedTarget && actionType !== "wait"}
-                className="w-full h-10 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-bold font-typewriter uppercase tracking-wider transition-all disabled:opacity-40"
+                className="w-full h-10 bg-stamp text-on-paper font-display font-bold uppercase tracking-widest text-xs border border-stamp hover:bg-stamp/90 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Zatwierdź
+                Zatwierdź override
               </button>
             </>
           )}
         </div>
       )}
 
-      {/* Przycisk przejścia fazy */}
+      {/* Phase advance button */}
       {nextPhase ? (
         <button
           onClick={() => onPhase(nextPhase.phase)}
           disabled={!canAdvancePhase}
-          className={`flex w-full items-center justify-center gap-2 rounded-lg h-12 transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.3)] active:scale-[0.98] font-typewriter uppercase tracking-wider text-sm ${
+          className={`flex w-full items-center justify-center gap-2 h-12 font-display font-bold uppercase tracking-widest text-sm border-2 ${
             !canAdvancePhase
-              ? "bg-slate-700 text-slate-500 cursor-not-allowed"
-              : "bg-primary hover:bg-primary/90 text-white font-bold"
+              ? "border-on-surface/15 text-on-surface/25 cursor-not-allowed"
+              : "border-stamp bg-stamp text-on-paper hover:bg-stamp/90"
           }`}
         >
           <span className="material-symbols-outlined text-[18px]">
@@ -225,13 +209,13 @@ export default function GMGameTab({
                   : nextPhase.label}
         </button>
       ) : (
-        <p className="text-slate-500 text-sm font-typewriter text-center">
+        <p className="text-on-surface/30 text-xs font-display text-center uppercase tracking-wider">
           Brak dostępnych przejść
         </p>
       )}
 
       {!canAdvancePhase && phaseProgress && (
-        <p className="text-slate-500 text-xs font-typewriter text-center mt-2">
+        <p className="text-on-surface/30 text-[10px] font-display text-center">
           Czekaj na:{" "}
           {phaseProgress.requiredActions
             .filter((a) => !a.done)

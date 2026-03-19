@@ -63,11 +63,18 @@ export default function GMPanel({
   ];
 
   return (
-    <div className="mx-5 mt-5 rounded-xl bg-black/40 border border-primary/20 overflow-hidden">
-      <TabBar tabs={TABS} activeTab={tab} onTabChange={(id) => onTabChange(id as typeof tab)} />
+    <div className="flex flex-col h-full">
+      {/* GM Panel tabs (position: static, inside overlay) */}
+      <TabBar
+        tabs={TABS}
+        activeTab={tab}
+        onTabChange={(id) => onTabChange(id as typeof tab)}
+        position="top"
+        className="border-t-0 border-b border-on-surface/10"
+      />
 
       {/* Tab content */}
-      <div className="p-4">
+      <div className="flex-1 overflow-y-auto p-4">
         {tab === "game" && (
           <GMGameTab
             hostActions={hostActions}

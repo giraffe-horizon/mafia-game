@@ -27,57 +27,99 @@ export default function ReviewView({
   if (!showPoints) return null;
 
   if (isHost) {
+    const pending = hostMissions?.filter((m) => !m.isCompleted) ?? [];
+    const done = hostMissions?.filter((m) => m.isCompleted) ?? [];
+
     return (
-      <div className="mx-5 mt-5 p-5 rounded-xl bg-amber-950/20 border border-amber-700/30">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="material-symbols-outlined text-[28px] text-amber-400">rate_review</span>
-          <div>
-            <p className="font-typewriter text-amber-400 text-sm font-bold uppercase tracking-widest">
+      <div className="mx-5 mt-5">
+        {/* Dossier header */}
+        <div className="border border-on-surface/15 bg-surface-low p-4 mb-4 tape-corner">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="material-symbols-outlined text-[20px] text-on-surface/40">
+              rate_review
+            </span>
+            <p className="font-display font-bold uppercase tracking-widest text-[10px] text-on-surface/40">
               Przegląd misji
             </p>
-            <p className="text-slate-500 text-xs mt-0.5">Oceń misje przed zakończeniem rundy</p>
           </div>
+          <p className="font-display font-bold text-lg uppercase tracking-wider text-on-surface">
+            Oceń wykonanie zadań
+          </p>
+          <p className="text-on-surface/30 text-xs font-display mt-0.5">
+            Potwierdź lub odrzuć misje przed zakończeniem rundy
+          </p>
         </div>
-        {hostMissions
-          ?.filter((m) => !m.isCompleted)
-          .map((m) => (
-            <div
-              key={m.id}
-              className="flex items-center gap-3 p-3 mb-2 rounded-lg bg-black/30 border border-slate-800"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium">{m.playerNickname}</p>
-                <p className="text-slate-400 text-xs mt-0.5">{m.description}</p>
-                <p className="text-slate-600 text-xs">{m.points} pkt</p>
+
+        {/* Pending missions */}
+        {pending.length > 0 && (
+          <div className="flex flex-col gap-2 mb-4">
+            {pending.map((m) => (
+              <div key={m.id} className="border border-on-surface/12 bg-surface-low p-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-on-surface/60 text-[10px] font-display uppercase tracking-widest mb-0.5">
+                      {m.playerNickname}
+                    </p>
+                    <p className="text-on-surface text-sm font-display">{m.description}</p>
+                    <p className="text-on-surface/30 text-[10px] font-display mt-1">
+                      {m.points} pkt
+                    </p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => onComplete(m.id)}
+                      className="size-9 flex items-center justify-center border border-green-700/40 bg-green-950/20 text-green-400 hover:bg-green-950/40"
+                      title="Wykonana"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">check</span>
+                    </button>
+                    <button
+                      onClick={() => onDelete(m.id)}
+                      className="size-9 flex items-center justify-center border border-stamp/30 bg-stamp/5 text-stamp hover:bg-stamp/10"
+                      title="Niewykonana"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onComplete(m.id)}
-                  className="size-9 flex items-center justify-center rounded-lg bg-green-900/30 border border-green-700/40 text-green-400 hover:bg-green-900/50 transition-all"
-                  title="Wykonana"
-                >
-                  <span className="material-symbols-outlined text-[18px]">check</span>
-                </button>
-                <button
-                  onClick={() => onDelete(m.id)}
-                  className="size-9 flex items-center justify-center rounded-lg bg-red-900/30 border border-red-700/40 text-red-400 hover:bg-red-900/50 transition-all"
-                  title="Niewykonana — usuń"
-                >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
-                </button>
+            ))}
+          </div>
+        )}
+
+        {/* Completed missions with WYKONANO stamp */}
+        {done.length > 0 && (
+          <div className="flex flex-col gap-2 mb-4 opacity-60">
+            {done.map((m) => (
+              <div
+                key={m.id}
+                className="border border-green-700/20 bg-green-950/10 p-3 flex items-center gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-on-surface/40 text-[10px] font-display uppercase tracking-widest mb-0.5">
+                    {m.playerNickname}
+                  </p>
+                  <p className="text-on-surface/50 text-sm font-display line-through">
+                    {m.description}
+                  </p>
+                </div>
+                <span className="stamp stamp-green text-[9px] shrink-0">WYKONANO</span>
               </div>
-            </div>
-          ))}
-        {(!hostMissions || hostMissions.filter((m) => !m.isCompleted).length === 0) && (
-          <p className="text-green-400/60 text-xs font-typewriter text-center mb-3">
+            ))}
+          </div>
+        )}
+
+        {pending.length === 0 && (
+          <p className="text-green-400/50 text-xs font-display text-center mb-4 uppercase tracking-wider">
             ✓ Wszystkie misje ocenione
           </p>
         )}
+
         <button
           onClick={() => finalizeGame()}
-          className="w-full mt-3 flex items-center justify-center gap-2 h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold font-typewriter uppercase tracking-wider transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)]"
+          className="w-full flex items-center justify-center gap-2 h-12 bg-stamp text-on-paper font-display font-bold uppercase tracking-widest text-sm border-2 border-stamp hover:bg-stamp/90"
         >
-          <span className="material-symbols-outlined text-[20px]">emoji_events</span>
+          <span className="material-symbols-outlined text-[18px]">emoji_events</span>
           Zakończ rundę
         </button>
       </div>
@@ -86,11 +128,11 @@ export default function ReviewView({
 
   // Non-host waiting view
   return (
-    <div className="mx-5 mt-5 p-5 rounded-xl bg-black/30 border border-slate-800 text-center">
-      <span className="material-symbols-outlined text-[36px] text-amber-400/60 mb-2 block">
+    <div className="mx-5 mt-5 p-5 border border-on-surface/10 bg-surface-low text-center">
+      <span className="material-symbols-outlined text-[36px] text-on-surface/20 mb-2 block">
         hourglass_empty
       </span>
-      <p className="text-slate-400 font-typewriter uppercase tracking-widest text-sm">
+      <p className="text-on-surface/35 font-display uppercase tracking-widest text-sm">
         MG ocenia misje...
       </p>
     </div>

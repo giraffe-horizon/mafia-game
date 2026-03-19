@@ -23,7 +23,6 @@ function CodeInput({
       const cleaned = rawValue.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
       if (!cleaned) return;
 
-      // Multi-char = paste via onChange (some browsers don't fire onPaste)
       if (cleaned.length > 1) {
         const pasted = cleaned.slice(0, length);
         onChange(pasted);
@@ -88,7 +87,7 @@ function CodeInput({
   );
 
   return (
-    <div className="flex gap-2 justify-center">
+    <div className="flex gap-1.5 justify-center">
       {Array.from({ length }, (_, i) => (
         <input
           key={`char-${i}`}
@@ -105,7 +104,7 @@ function CodeInput({
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
           autoFocus={i === 0}
-          className="w-12 h-14 text-center text-xl font-bold font-typewriter uppercase rounded-lg bg-black/40 border border-primary/30 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+          className="w-11 h-13 text-center text-xl font-bold font-display uppercase bg-surface-low border border-on-surface/20 text-on-surface focus:outline-none focus:border-stamp focus:bg-stamp/5"
         />
       ))}
     </div>
@@ -120,7 +119,6 @@ export default function HomeClient() {
   const [error, setError] = useState("");
   const autoJoinAttempted = useRef(false);
 
-  // Auto-fill ?code= from URL (e.g. from QR code scan)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
@@ -128,7 +126,6 @@ export default function HomeClient() {
       autoJoinAttempted.current = true;
       setSessionCode(code.toUpperCase());
       setJoinMode(true);
-      // Auto-join immediately
       handleJoinWithCode(code.toUpperCase());
     }
   }, []);
@@ -139,8 +136,8 @@ export default function HomeClient() {
     try {
       const data = await apiClient.createGame();
       router.push(`/game/${data.token}`);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Błąd połączenia");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Błąd połączenia");
     } finally {
       setLoading(false);
     }
@@ -156,8 +153,8 @@ export default function HomeClient() {
     try {
       const data = await apiClient.joinGame({ code: code.trim() });
       router.push(`/game/${data.token}`);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Błąd połączenia");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Błąd połączenia");
     } finally {
       setLoading(false);
     }
@@ -172,14 +169,27 @@ export default function HomeClient() {
   }
 
   return (
-    <>
-      {/* Inputs */}
-      <div className="flex flex-col gap-3 w-full mb-6">
+    <div className="flex flex-col gap-4 flex-1">
+      {/* Create game */}
+      {!joinMode && (
+        <button
+          onClick={handleCreate}
+          disabled={loading}
+          className="w-full h-14 bg-stamp text-on-paper font-display font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-2 border-2 border-stamp hover:bg-stamp/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span className="material-symbols-outlined text-[18px]">add_circle</span>
+          {loading ? "Tworzę..." : "Nowa operacja"}
+        </button>
+      )}
+
+      {/* Join area — dashed border dossier */}
+      <div className="border border-dashed border-on-surface/20 p-4">
+        <p className="text-on-surface/30 font-display font-bold uppercase tracking-widest text-[10px] mb-3 text-center">
+          {joinMode ? "Wpisz kod operacji" : "Dołącz do operacji"}
+        </p>
+
         {joinMode && (
-          <div className="flex flex-col w-full">
-            <p className="text-slate-400 text-sm font-typewriter leading-normal pb-2 uppercase tracking-widest pl-1">
-              Kod sesji
-            </p>
+          <div className="mb-4">
             <CodeInput
               value={sessionCode}
               onChange={setSessionCode}
@@ -190,34 +200,18 @@ export default function HomeClient() {
         )}
 
         {error && (
-          <p className="text-primary text-sm font-typewriter pl-1 animate-pulse">{error}</p>
-        )}
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex flex-col gap-4 w-full mt-auto">
-        {!joinMode && (
-          <button
-            onClick={handleCreate}
-            disabled={loading}
-            className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <span className="material-symbols-outlined mr-2 text-[20px]">add_circle</span>
-            <span className="truncate uppercase font-typewriter tracking-wider">
-              {loading ? "Tworzę..." : "Stwórz grę"}
-            </span>
-          </button>
+          <p className="text-stamp text-xs font-display text-center mb-3 uppercase tracking-wider">
+            {error}
+          </p>
         )}
 
         <button
           onClick={handleJoin}
           disabled={loading}
-          className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-transparent border-2 border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full h-12 border border-on-surface/25 text-on-surface font-display font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-2 hover:border-on-surface/50 hover:bg-on-surface/5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span className="material-symbols-outlined mr-2 text-[20px]">login</span>
-          <span className="truncate uppercase font-typewriter tracking-wider">
-            {joinMode ? (loading ? "Dołączam..." : "Wejdź do gry") : "Dołącz do gry"}
-          </span>
+          <span className="material-symbols-outlined text-[18px]">login</span>
+          {joinMode ? (loading ? "Dołączam..." : "Wejdź") : "Dołącz"}
         </button>
 
         {joinMode && (
@@ -227,12 +221,12 @@ export default function HomeClient() {
               setSessionCode("");
               setError("");
             }}
-            className="text-slate-500 hover:text-slate-300 text-sm font-typewriter uppercase tracking-widest transition-colors text-center"
+            className="w-full mt-2 text-on-surface/30 text-xs font-display uppercase tracking-widest text-center hover:text-on-surface/60"
           >
             ← Wróć
           </button>
         )}
       </div>
-    </>
+    </div>
   );
 }

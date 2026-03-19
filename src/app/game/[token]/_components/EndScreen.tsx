@@ -57,7 +57,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
           setTotalRounds(rankingData.round);
         }
       } catch {
-        // Scores are optional — don't break the end screen
+        // Scores are optional
       }
     }
 
@@ -78,9 +78,9 @@ export default function EndScreen(_props: Record<string, never> = {}) {
     }
   };
 
-  const winnerLabel = game.winner === "mafia" ? "Mafia wygrała!" : "Miasto wygrało!";
+  const winnerLabel = game.winner === "mafia" ? "MAFIA WYGRYWA" : "MIASTO WYGRYWA";
   const winnerIcon = game.winner === "mafia" ? "masks" : "groups";
-  const winnerColor = game.winner === "mafia" ? "text-red-500" : "text-green-400";
+  const isMafiaWin = game.winner === "mafia";
 
   const isWinner =
     (game.winner === "mafia" && currentPlayer.role === "mafia") ||
@@ -108,32 +108,38 @@ export default function EndScreen(_props: Record<string, never> = {}) {
     i === 0
       ? "text-amber-400"
       : i === 1
-        ? "text-slate-300"
+        ? "text-on-surface/60"
         : i === 2
           ? "text-orange-400"
-          : "text-slate-500";
+          : "text-on-surface/35";
 
   return (
     <div className="mx-5 mt-5">
-      {/* Section 1: Winner */}
-      <div className="p-6 rounded-xl bg-black/60 border border-primary/20 text-center">
-        <span className={`material-symbols-outlined text-[56px] ${winnerColor} mb-3 block`}>
+      {/* Dramatic stamp winner announcement */}
+      <div className="border border-on-surface/15 bg-surface-low p-6 text-center mb-5 tape-corner">
+        <span
+          className={`material-symbols-outlined text-[52px] mb-3 block ${isMafiaWin ? "text-stamp" : "text-green-400"}`}
+        >
           {winnerIcon}
         </span>
-        <p
-          className={`font-typewriter text-2xl font-bold uppercase tracking-widest ${winnerColor} mb-2`}
-        >
-          {winnerLabel}
-        </p>
+
+        {/* Stamp-style winner text */}
+        <div className="flex justify-center mb-4">
+          <span className={`stamp ${isMafiaWin ? "stamp-red" : "stamp-green"} text-lg px-4 py-2`}>
+            {winnerLabel}
+          </span>
+        </div>
+
         {!isHost && (
           <p
-            className={`font-typewriter text-sm uppercase tracking-wider ${isWinner ? "text-green-400" : "text-slate-500"}`}
+            className={`font-display font-bold uppercase tracking-widest text-sm ${isWinner ? "text-green-400" : "text-on-surface/40"}`}
           >
-            {isWinner ? "Wygrałeś!" : "Przegrałeś"}
+            {isWinner ? "✓ Wygrałeś tę rundę" : "Przegrałeś"}
           </p>
         )}
+
         {isHost && (
-          <div className="mt-4 flex flex-col gap-2">
+          <div className="mt-4">
             <Button
               onClick={handleRematch}
               disabled={rematchPending}
@@ -141,29 +147,35 @@ export default function EndScreen(_props: Record<string, never> = {}) {
               icon="replay"
               className="mx-auto"
             >
-              {rematchPending ? "Resetuję..." : "NASTĘPNA RUNDA"}
+              {rematchPending ? "Resetuję..." : "Następna runda"}
             </Button>
           </div>
         )}
       </div>
 
-      {/* Combined scoring table: round breakdown + cumulative total */}
+      {/* Scoring table */}
       {roundScores.length > 0 && (
-        <div className="mt-5">
+        <div className="mb-5">
           <SectionHeader className="mb-3 pl-1">
             Punktacja {totalRounds > 1 ? `— runda ${totalRounds}` : ""}
           </SectionHeader>
           <Card className="overflow-hidden">
-            <table className="w-full text-sm font-typewriter">
+            <table className="w-full text-sm font-display">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-500 text-xs uppercase tracking-wider">
+                <tr className="border-b border-on-surface/10 text-on-surface/30 text-[10px] uppercase tracking-wider">
                   <th className="text-left py-2 px-3">#</th>
                   <th className="text-left py-2 px-1">Gracz</th>
-                  <th className="text-center py-2 px-1">📋</th>
-                  <th className="text-center py-2 px-1">💀</th>
-                  <th className="text-center py-2 px-1">⭐</th>
+                  <th className="text-center py-2 px-1" title="Misje">
+                    M
+                  </th>
+                  <th className="text-center py-2 px-1" title="Przeżycie">
+                    P
+                  </th>
+                  <th className="text-center py-2 px-1" title="Wygrana">
+                    W
+                  </th>
                   <th className="text-center py-2 px-1">Runda</th>
-                  <th className="text-right py-2 px-3 text-primary">Ogółem</th>
+                  <th className="text-right py-2 px-3 text-stamp">Razem</th>
                 </tr>
               </thead>
               <tbody>
@@ -176,18 +188,20 @@ export default function EndScreen(_props: Record<string, never> = {}) {
                   .map((s, i) => (
                     <tr
                       key={s.playerId}
-                      className={`border-b border-slate-800/50 ${i === 0 ? "bg-amber-950/10" : ""}`}
+                      className={`border-b border-on-surface/8 ${i === 0 ? "bg-amber-950/10" : ""}`}
                     >
                       <td className={`py-2 px-3 font-bold ${positionColor(i)}`}>{i + 1}</td>
-                      <td className="py-2 px-1 text-white">{s.nickname}</td>
-                      <td className="text-center py-2 px-1 text-slate-400">
+                      <td className="py-2 px-1 text-on-surface">{s.nickname}</td>
+                      <td className="text-center py-2 px-1 text-on-surface/40">
                         {s.missionPoints > 0 ? `+${s.missionPoints}` : "—"}
                       </td>
-                      <td className="text-center py-2 px-1 text-slate-400">
+                      <td className="text-center py-2 px-1 text-on-surface/40">
                         {s.survived ? "+1" : "—"}
                       </td>
-                      <td className="text-center py-2 px-1 text-slate-400">{s.won ? "+3" : "—"}</td>
-                      <td className="text-center py-2 px-1 text-slate-500">{s.totalScore}</td>
+                      <td className="text-center py-2 px-1 text-on-surface/40">
+                        {s.won ? "+3" : "—"}
+                      </td>
+                      <td className="text-center py-2 px-1 text-on-surface/35">{s.totalScore}</td>
                       <td className={`text-right py-2 px-3 font-bold text-lg ${positionColor(i)}`}>
                         {s.cumulativeScore}
                       </td>
@@ -196,36 +210,36 @@ export default function EndScreen(_props: Record<string, never> = {}) {
               </tbody>
             </table>
           </Card>
-          <div className="mt-2 flex gap-3 text-xs text-slate-600 font-typewriter px-1">
-            <span>📋 Misje</span>
-            <span>💀 Przeżycie (+1)</span>
-            <span>⭐ Wygrana (+3)</span>
+          <div className="mt-2 flex gap-3 text-[10px] text-on-surface/25 font-display px-1 uppercase tracking-wider">
+            <span>M = Misje</span>
+            <span>P = Przeżycie (+1)</span>
+            <span>W = Wygrana (+3)</span>
           </div>
         </div>
       )}
 
       {/* Mission summary (GM only) */}
       {isHost && missionSummary.length > 0 && (
-        <div className="mt-5">
+        <div className="mb-5">
           <SectionHeader className="mb-3 pl-1">Podsumowanie misji</SectionHeader>
           <div className="flex flex-col gap-2">
             {missionSummary.map((s) => (
               <StatusItem
                 key={s.nickname}
                 icon={
-                  <span className="material-symbols-outlined text-[18px] text-slate-500">
+                  <span className="material-symbols-outlined text-[18px] text-on-surface/30">
                     person
                   </span>
                 }
                 label={s.nickname}
-                labelClassName="text-white"
+                labelClassName="text-on-surface"
                 trailing={
                   <>
-                    <span className="text-slate-400 text-xs font-typewriter">
-                      {s.completed}/{s.total} misji
+                    <span className="text-on-surface/40 text-xs font-display">
+                      {s.completed}/{s.total}
                     </span>
                     {s.points > 0 && (
-                      <span className="text-yellow-400 text-xs font-typewriter font-bold">
+                      <span className="text-stamp text-xs font-display font-bold">
                         +{s.points}pkt
                       </span>
                     )}
@@ -236,8 +250,6 @@ export default function EndScreen(_props: Record<string, never> = {}) {
           </div>
         </div>
       )}
-
-      {/* Player roles — removed, already shown in PlayersList below */}
     </div>
   );
 }

@@ -36,49 +36,52 @@ export default function GMSettingsTab({
   }
 
   return (
-    <div>
-      <SectionHeader className="mb-1">Liczba mafii — następna runda</SectionHeader>
-      <p className="text-slate-600 text-xs mb-3">
-        Ta wartość zostanie użyta przy kolejnym remacie.
-      </p>
-      <div className="flex items-center gap-2 flex-wrap">
-        <button
-          onClick={() => onMafiaCountSettingChange(0)}
-          className={`px-3 py-2 rounded-lg text-sm font-typewriter uppercase tracking-wider border transition-all ${
-            mafiaCountSetting === 0
-              ? "bg-primary/20 border-primary/50 text-primary"
-              : "border-slate-700 text-slate-400 hover:border-slate-500"
-          }`}
-        >
-          Auto ({players.length <= 5 ? 1 : players.length <= 8 ? 2 : players.length <= 11 ? 3 : 4})
-        </button>
-        {Array.from({ length: Math.max(1, players.length - 3) }, (_, i) => i + 1).map((n) => (
+    <div className="flex flex-col gap-4">
+      <div>
+        <SectionHeader className="mb-1">Liczba mafii — następna runda</SectionHeader>
+        <p className="text-on-surface/30 text-xs font-display mb-3">
+          Używane przy kolejnym remacie.
+        </p>
+        <div className="flex items-center gap-2 flex-wrap">
           <button
-            key={n}
-            onClick={() => onMafiaCountSettingChange(n)}
-            className={`w-10 h-10 rounded-lg text-sm font-bold font-typewriter border transition-all ${
-              mafiaCountSetting === n
-                ? "bg-primary/20 border-primary/50 text-primary"
-                : "border-slate-700 text-slate-400 hover:border-slate-500"
+            onClick={() => onMafiaCountSettingChange(0)}
+            className={`px-3 py-2 text-sm font-display uppercase tracking-wider border ${
+              mafiaCountSetting === 0
+                ? "border-stamp bg-stamp/10 text-stamp"
+                : "border-on-surface/20 text-on-surface/40 hover:border-on-surface/40"
             }`}
           >
-            {n}
+            Auto ({players.length <= 5 ? 1 : players.length <= 8 ? 2 : players.length <= 11 ? 3 : 4}
+            )
           </button>
-        ))}
+          {Array.from({ length: Math.max(1, players.length - 3) }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              onClick={() => onMafiaCountSettingChange(n)}
+              className={`w-10 h-10 text-sm font-bold font-display border ${
+                mafiaCountSetting === n
+                  ? "border-stamp bg-stamp/10 text-stamp"
+                  : "border-on-surface/20 text-on-surface/40 hover:border-on-surface/40"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+        <p className="text-on-surface/25 text-[10px] mt-2 font-display">reszta cywile</p>
       </div>
-      <p className="text-slate-600 text-xs mt-2">reszta cywile</p>
 
       {/* GM Transfer Section */}
-      <div className="mt-6 pt-4 border-t border-slate-700">
+      <div className="pt-4 border-t border-on-surface/10">
         <SectionHeader className="mb-3">Przekaż rolę MG</SectionHeader>
         {transferGmError && (
-          <p className="text-red-400 text-xs font-typewriter mb-2">{transferGmError}</p>
+          <p className="text-stamp text-xs font-display mb-2">{transferGmError}</p>
         )}
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <select
             value={transferGmTarget}
             onChange={(e) => setTransferGmTarget(e.target.value)}
-            className="flex-1 h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 font-typewriter"
+            className="flex-1 h-10 bg-background border border-on-surface/20 text-on-surface text-sm px-3 font-display focus:outline-none focus:border-stamp"
           >
             <option value="">— Wybierz gracza —</option>
             {players
@@ -92,9 +95,9 @@ export default function GMSettingsTab({
           <button
             onClick={handleTransferGm}
             disabled={!transferGmTarget || transferGmPending}
-            className="px-4 h-10 rounded-lg bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary font-typewriter uppercase tracking-wider text-sm transition-all disabled:opacity-40"
+            className="px-4 h-10 bg-stamp text-on-paper border border-stamp font-display font-bold uppercase tracking-widest text-xs hover:bg-stamp/90 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {transferGmPending ? "Przekazuję..." : "Przekaż"}
+            {transferGmPending ? "..." : "Przekaż"}
           </button>
         </div>
       </div>
