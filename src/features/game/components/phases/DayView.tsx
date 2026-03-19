@@ -24,7 +24,7 @@ export default function DayView({
   detectiveResult,
 }: DayViewProps) {
   return (
-    <div className="bg-[#1a1000] min-h-full">
+    <div className="bg-background min-h-full">
       {/* Role card for non-host players */}
       {!isHost && (
         <RoleCard
@@ -43,8 +43,8 @@ export default function DayView({
           <div
             className={`border p-4 ${
               detectiveResult.isMafia
-                ? "border-primary/40 bg-[#1a0505]"
-                : "border-green-900/40 bg-[#021002]"
+                ? "border-primary/40 bg-surface-lowest"
+                : "border-green-900/40 bg-surface-low"
             }`}
           >
             <div className="flex items-center gap-3 mb-3">

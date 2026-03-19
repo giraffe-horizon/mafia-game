@@ -27,7 +27,7 @@ export default function VotingView({
   const { players, myAction, actionPending, actionError, setChangingDecision, onVote, voteTally } =
     voteState;
   return (
-    <div className="bg-[#0e0a00]">
+    <div className="bg-background">
       {/* Role card for non-host players */}
       {!isHost && (
         <RoleCard role={currentPlayer.role} roleVisible={roleVisible} onToggle={toggleRole} />

@@ -34,7 +34,7 @@ export default function GMMessageTab({
         placeholder="Treść wiadomości..."
         rows={3}
       />
-      {msgError && <p className="text-red-400 text-xs font-typewriter">{msgError}</p>}
+      {msgError && <p className="text-red-400 text-xs font-display">{msgError}</p>}
       <Button
         variant="ghost"
         onClick={onSendMessage}

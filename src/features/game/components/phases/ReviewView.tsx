@@ -23,7 +23,7 @@ export default function ReviewView({
   if (isHost) {
     return (
       <div className="mx-4 mt-4">
-        <div className="border border-amber-900/40 bg-[#1a1000]">
+        <div className="border border-amber-900/40 bg-surface-low">
           <div className="border-b border-amber-900/40 px-3 py-2 flex items-center gap-2">
             <span className="material-symbols-outlined text-[16px] text-amber-400">
               rate_review
@@ -57,7 +57,7 @@ export default function ReviewView({
                       </button>
                       <button
                         onClick={() => onDelete(m.id)}
-                        className="flex items-center justify-center w-9 h-9 border border-primary/30 bg-[#1a0505]/50 text-primary hover:bg-[#1a0505]"
+                        className="flex items-center justify-center w-9 h-9 border border-primary/30 bg-surface-lowest text-primary hover:bg-surface-low"
                         title="Niewykonana — usuń"
                       >
                         <span className="material-symbols-outlined text-[16px]">close</span>

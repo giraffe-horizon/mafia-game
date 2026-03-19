@@ -17,61 +17,42 @@ export default function MafiaConsensusStatus({
 
   return (
     <div className="space-y-3">
-      {/* Show individual votes if any exist */}
       {mafiaWithTargets.length > 0 && (
-        <div className="p-3 bg-black/30 border border-slate-700 rounded-lg">
-          <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
+        <div className="p-3 bg-surface-lowest border border-red-900/40">
+          <p className="text-on-surface-dim text-xs font-display font-bold uppercase tracking-widest mb-2">
             Głosy mafii
           </p>
           <div className="flex flex-col gap-1">
             {mafiaWithTargets.map((action) => (
               <div key={action.nickname} className="flex items-center gap-2 text-xs">
-                <span className="text-red-400 font-medium">
+                <span className="text-stamp font-display font-bold">
                   {action.nickname}
                   {action.nickname === currentNickname ? " (Ty)" : ""}
                 </span>
-                <span className="material-symbols-outlined text-[12px] text-slate-500">
+                <span className="material-symbols-outlined text-[12px] text-on-surface-dim">
                   arrow_forward
                 </span>
-                <span className="text-white">{action.targetNickname}</span>
+                <span className="text-on-surface font-display">{action.targetNickname}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Status message */}
-      <div>
-        {mafiaWithTargets.length > 0 && targets.length > 1 && (
-          <div className="p-2 bg-red-900/30 border border-red-700/50 rounded-lg">
-            <p className="text-red-400 text-xs font-typewriter">
-              ⚠️ Mafia nie jest zgodna! Cel nie zostanie wyeliminowany.
-            </p>
-          </div>
+      {/* Consensus status */}
+      <div className="flex items-center gap-3 py-2 border-t border-surface-highest">
+        <span className="font-display text-xs text-on-surface-dim uppercase tracking-widest">
+          {votedCount}/{totalMafia} zagłosowało
+        </span>
+        {allMafiaVoted && targets.length === 1 && (
+          <span className="font-display font-black text-xs text-stamp uppercase tracking-widest">
+            — Konsensus!
+          </span>
         )}
-
-        {allMafiaVoted && targets.length === 1 && targets[0] && (
-          <div className="p-2 bg-green-900/30 border border-green-700/50 rounded-lg">
-            <p className="text-green-400 text-xs font-typewriter">
-              ✅ Mafia jest zgodna — cel:{" "}
-              {mafiaTeamActions.find((a) => a.targetPlayerId === targets[0])?.targetNickname ??
-                targets[0]}
-            </p>
-          </div>
-        )}
-
-        {!allMafiaVoted && (
-          <div className="p-2 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-            <p className="text-yellow-400 text-xs font-typewriter">
-              ⏳ Czekam na {totalMafia - votedCount} graczy... ({votedCount}/{totalMafia})
-            </p>
-          </div>
-        )}
-
-        {mafiaWithTargets.length === 0 && (
-          <div className="p-2 bg-slate-900/30 border border-slate-700/50 rounded-lg">
-            <p className="text-slate-400 text-xs font-typewriter">Nikt jeszcze nie głosował...</p>
-          </div>
+        {allMafiaVoted && targets.length > 1 && (
+          <span className="font-display font-black text-xs text-on-surface-dim uppercase tracking-widest">
+            — Brak konsensusu
+          </span>
         )}
       </div>
     </div>

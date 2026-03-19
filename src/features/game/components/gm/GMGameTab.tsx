@@ -145,7 +145,7 @@ export default function GMGameTab({
 
       {/* GM override */}
       {alivePlayers.length > 0 && (phase === "night" || phase === "voting") && (
-        <div className="border border-on-surface/10 p-3 flex flex-col gap-2">
+        <div className="border border-on-surface/10 p-3 flex flex-col gap-2 crt-surface">
           <span className="font-display font-black text-[10px] uppercase tracking-widest text-primary/60">
             Override gracza
           </span>
