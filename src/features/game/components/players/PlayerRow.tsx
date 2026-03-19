@@ -61,39 +61,72 @@ export default function PlayerRow({
     currentPlayerRole === "mafia" &&
     roleVisible === true;
 
+  // Role-based accent color for left bar
+  const accentColor =
+    roleVisible && player.role
+      ? player.role === "mafia"
+        ? "bg-stamp"
+        : player.role === "detective"
+          ? "bg-blue-400"
+          : player.role === "doctor"
+            ? "bg-stamp-green"
+            : "bg-surface-highest"
+      : isFinished && player.role
+        ? player.role === "mafia"
+          ? "bg-stamp"
+          : player.role === "detective"
+            ? "bg-blue-400"
+            : player.role === "doctor"
+              ? "bg-stamp-green"
+              : "bg-surface-highest"
+        : "bg-surface-highest";
+
   return (
     <div
-      className={`flex items-center gap-3 px-3 py-2.5 border-b border-surface-highest/40 last:border-0 transition-all ${!player.isAlive ? "opacity-40" : ""}`}
+      className={`flex items-center gap-3 pr-3 border-b border-surface-highest/40 last:border-0 transition-all ${!player.isAlive ? "opacity-40" : ""}`}
     >
+      {/* Left accent bar */}
+      <div className={`w-0.5 self-stretch flex-shrink-0 ${accentColor} opacity-60`} />
+
       {/* Avatar — Polaroid style */}
       <div
-        className={`w-8 h-8 flex-shrink-0 border overflow-hidden ${
-          player.isYou
-            ? "border-primary/60"
-            : player.isHost
-              ? "border-primary/30"
-              : "border-surface-highest"
-        } ${isChoosingCharacter || hasNicknameNoCharacter ? "animate-pulse" : ""}`}
+        className={`flex flex-col items-center gap-0.5 flex-shrink-0 py-2 ${isChoosingCharacter || hasNicknameNoCharacter ? "animate-pulse" : ""}`}
       >
-        {player.character && player.character.avatarUrl && !imgError ? (
-          <img
-            src={player.character.avatarUrl}
-            alt={player.character.namePl}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover"
-            onError={handleImgError}
-          />
-        ) : (
-          <div className="w-full h-full bg-surface-highest flex items-center justify-center">
-            <span className="material-symbols-outlined text-[14px] text-on-surface/30">
-              {isChoosingCharacter || hasNicknameNoCharacter
-                ? "hourglass_top"
-                : player.isHost
-                  ? "star"
-                  : "person"}
-            </span>
-          </div>
+        <div
+          className={`w-9 h-9 border-2 overflow-hidden ${
+            player.isYou
+              ? "border-paper shadow-[2px_2px_0_rgba(0,0,0,0.3)]"
+              : player.isHost
+                ? "border-paper/60 shadow-[2px_2px_0_rgba(0,0,0,0.2)]"
+                : "border-paper/40 shadow-[2px_2px_0_rgba(0,0,0,0.2)]"
+          }`}
+          style={{ background: "#d7c3b0" }}
+        >
+          {player.character && player.character.avatarUrl && !imgError ? (
+            <img
+              src={player.character.avatarUrl}
+              alt={player.character.namePl}
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-cover"
+              onError={handleImgError}
+            />
+          ) : (
+            <div className="w-full h-full bg-surface-highest flex items-center justify-center">
+              <span className="material-symbols-outlined text-[14px] text-on-surface/30">
+                {isChoosingCharacter || hasNicknameNoCharacter
+                  ? "hourglass_top"
+                  : player.isHost
+                    ? "star"
+                    : "person"}
+              </span>
+            </div>
+          )}
+        </div>
+        {player.character && (
+          <span className="font-display text-[8px] text-on-surface/30 uppercase tracking-wider max-w-[40px] truncate text-center">
+            {player.character.namePl}
+          </span>
         )}
       </div>
 
@@ -151,9 +184,9 @@ export default function PlayerRow({
                 </>
               )}
             </div>
-            {player.character && (
-              <span className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
-                {player.character.namePl}
+            {isLobby && !isChoosingCharacter && player.nickname && (
+              <span className="font-display text-[9px] text-stamp-green/60 uppercase tracking-widest">
+                STATUS: GOTOWY
               </span>
             )}
             {!player.isAlive && (
@@ -204,7 +237,7 @@ export default function PlayerRow({
       {isLobby && isHost && !player.isHost && onKick && (
         <button
           onClick={() => onKick(player.playerId)}
-          className="size-7 flex items-center justify-center text-on-surface/20 hover:text-primary-dark transition-colors"
+          className="size-7 flex items-center justify-center text-on-surface/20 hover:text-primary-dark transition-colors mr-2"
           title="Usuń gracza"
         >
           <span className="material-symbols-outlined text-[14px]">close</span>

@@ -107,7 +107,7 @@ export default function LobbyView({
                 Potrzeba minimum {minPlayers} graczy ({nonHostPlayers.length}/{minPlayers})
               </p>
             )}
-            <div className="p-4 bg-surface-low border border-surface-highest">
+            <div className="p-4 crt-surface">
               <SectionHeader className="text-on-surface-dim">Tryb gry</SectionHeader>
               <div className="flex gap-2">
                 {(["full", "simple"] as const).map((mode) => (
@@ -165,9 +165,15 @@ export default function LobbyView({
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
               {starting ? "Startuję..." : "Rozpocznij grę"}
             </button>
+            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/30 text-center">
+              AUTORYZACJA WYMAGANA
+            </p>
             <div className="mt-4 pt-4 border-t border-surface-highest">
               <LobbyTransferGm players={nonHostPlayers} onTransfer={onTransferGm} />
             </div>
+            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/20 text-center mt-2">
+              OP: MAFIA_HELPER // V.3.0.1
+            </p>
           </div>
         </>
       )}

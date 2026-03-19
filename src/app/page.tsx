@@ -1,4 +1,5 @@
 import HomeClient from "@/components/HomeClient";
+import { Stamp } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -15,31 +16,44 @@ export default function Home() {
       </div>
 
       <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
-        {/* Dossier hero */}
-        <div className="flex justify-center mb-8">
-          <div className="w-32 h-32 border-2 border-stamp/40 flex items-center justify-center bg-surface-low relative overflow-hidden">
-            <div className="absolute inset-0 bg-stamp/5" />
-            <span className="material-symbols-outlined text-[64px] text-stamp relative z-10">
-              local_police
-            </span>
+        {/* Dossier hero card */}
+        <div
+          className="flex flex-col items-center mb-8 p-6 border border-stamp/20 relative overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(30,40,38,0.6) 0%, rgba(40,28,26,0.6) 100%)",
+          }}
+        >
+          {/* Stamp overlay */}
+          <div className="absolute top-3 right-3">
+            <Stamp color="red" rotate={12} className="text-[10px]">
+              ŚCIŚLE TAJNE
+            </Stamp>
           </div>
-        </div>
 
-        {/* Dossier heading */}
-        <div className="mb-8 text-center">
-          <p className="font-display text-[10px] uppercase tracking-[0.3em] text-on-surface/40 mb-1">
-            AKTA TAJNE — OPERACJA:
-          </p>
-          <h1 className="font-display font-black text-[40px] leading-none text-stamp uppercase tracking-wider">
-            [REDACTED]
+          {/* Skull icon */}
+          <span className="material-symbols-outlined text-[72px] text-stamp mb-3 drop-shadow-[0_0_16px_rgba(255,180,172,0.4)]">
+            skull
+          </span>
+
+          {/* Title */}
+          <h1 className="font-display font-black text-[36px] leading-none text-stamp uppercase tracking-wider mb-1">
+            MAFIA
           </h1>
-          <p className="font-display text-xs uppercase tracking-widest text-on-surface/30 mt-2">
-            Klasyfikacja: ŚCIŚLE TAJNE
+
+          {/* Redacted op line */}
+          <p className="font-display text-[10px] uppercase tracking-[0.25em] text-on-surface/50">
+            OPERACJA:{" "}
+            <span className="bg-on-surface text-transparent select-none px-0.5">████████</span> 1954
           </p>
         </div>
 
         {/* Client interactive content */}
         <HomeClient />
+
+        {/* Classified footer */}
+        <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/20 text-center mt-6">
+          ODDZIAŁ KONTRWYWIADU // DOKUMENT NR X-ALPHA
+        </p>
       </div>
     </div>
   );

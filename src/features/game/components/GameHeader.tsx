@@ -1,11 +1,13 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
+import { Stamp } from "@/components/ui";
 
 interface GameHeaderProps {
   phase: string;
   round: number;
   isHost: boolean;
+  gameCode?: string;
   currentPlayer: {
     character?: {
       id: string;
@@ -23,6 +25,7 @@ export default function GameHeader({
   phase,
   round,
   isHost,
+  gameCode,
   currentPlayer,
   onShowSettings,
   onShowRanking,
@@ -33,7 +36,7 @@ export default function GameHeader({
 
   return (
     <div className="relative z-20 flex items-center justify-between px-4 py-2.5 border-b border-surface-highest bg-surface-low">
-      {/* Left: Back + Ranking */}
+      {/* Left: Back + Ranking + folder */}
       <div className="flex items-center gap-1">
         <Link
           href="/"
@@ -48,9 +51,10 @@ export default function GameHeader({
         >
           <span className="material-symbols-outlined text-[18px]">leaderboard</span>
         </button>
+        <span className="material-symbols-outlined text-[18px] text-on-surface/20">folder</span>
       </div>
 
-      {/* Center: Phase + Round */}
+      {/* Center: Phase + Round + Session code */}
       <div className="text-center">
         {isHost ? (
           <div className="flex items-center gap-1.5">
@@ -69,6 +73,11 @@ export default function GameHeader({
             </span>
           </div>
         )}
+        {gameCode && (
+          <p className="font-display text-[9px] text-on-surface/30 uppercase tracking-[0.15em]">
+            KOD: <span className="text-stamp/60">{gameCode}</span>
+          </p>
+        )}
         {round > 0 && (
           <p className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
             Runda {round}
@@ -76,8 +85,11 @@ export default function GameHeader({
         )}
       </div>
 
-      {/* Right: Settings + GM Panel */}
+      {/* Right: STATUS stamp + Settings + GM Panel */}
       <div className="flex items-center gap-1">
+        <Stamp color="red" rotate={-4} className="text-[7px] px-1 py-0 hidden sm:inline-block">
+          TAJNE
+        </Stamp>
         {isHost && onShowGmPanel && (
           <button
             onClick={onShowGmPanel}

@@ -33,10 +33,15 @@ export default function PlayersList({
   return (
     <div className="border-t border-surface-highest mt-4">
       {/* Header */}
-      <div className="px-4 py-2 flex items-center gap-2 border-b border-surface-highest/40">
-        <span className="material-symbols-outlined text-[14px] text-on-surface/30">group</span>
-        <span className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/30">
-          Lista obecności agentów ({nonHostPlayers.length})
+      <div className="px-4 py-2 flex items-center justify-between border-b border-surface-highest/40">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[14px] text-on-surface/30">group</span>
+          <span className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/30">
+            LISTA OBECNOŚCI AGENTÓW
+          </span>
+        </div>
+        <span className="font-display font-black text-[10px] text-stamp/60 border border-stamp/30 px-1.5 py-0.5">
+          {nonHostPlayers.length}
         </span>
       </div>
       {/* Rows */}
@@ -58,6 +63,18 @@ export default function PlayersList({
             }
           />
         ))}
+        {/* Empty slot — lobby only */}
+        {isLobby && (
+          <div className="flex items-center gap-3 px-3 py-2.5 border-b border-dashed border-surface-highest/40 opacity-40">
+            <div className="w-0.5 self-stretch flex-shrink-0 bg-surface-highest" />
+            <span className="material-symbols-outlined text-[18px] text-on-surface/30">
+              person_add
+            </span>
+            <span className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+              CZEKANIE NA AGENTÓW...
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

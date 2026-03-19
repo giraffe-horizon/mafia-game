@@ -105,7 +105,7 @@ function CodeInput({
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
           autoFocus={i === 0}
-          className="w-12 h-14 text-center text-xl font-bold font-display uppercase bg-surface-lowest border border-primary/30 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+          className="w-12 h-14 text-center text-xl font-bold font-display uppercase bg-surface-lowest border border-dashed border-primary/40 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
         />
       ))}
     </div>
@@ -174,23 +174,27 @@ export default function HomeClient() {
   return (
     <>
       {/* Inputs */}
-      <div className="flex flex-col gap-3 w-full mb-6">
-        {joinMode && (
-          <div className="flex flex-col w-full">
-            <p className="text-on-surface-dim text-sm font-display leading-normal pb-2 uppercase tracking-widest pl-1">
-              Kod sesji
-            </p>
-            <CodeInput
-              value={sessionCode}
-              onChange={setSessionCode}
-              onComplete={handleJoin}
-              length={6}
-            />
-          </div>
-        )}
-
-        {error && <p className="text-primary text-sm font-display pl-1 animate-pulse">{error}</p>}
-      </div>
+      {joinMode && (
+        <div className="flex flex-col gap-3 w-full mb-6 border border-dashed border-surface-highest p-4">
+          <p className="text-on-surface-dim text-xs font-display leading-normal uppercase tracking-widest">
+            KOD SESJI
+          </p>
+          <CodeInput
+            value={sessionCode}
+            onChange={setSessionCode}
+            onComplete={handleJoin}
+            length={6}
+          />
+          {error && (
+            <p className="text-primary text-sm font-display animate-pulse text-center">{error}</p>
+          )}
+        </div>
+      )}
+      {!joinMode && (
+        <div className="w-full mb-6">
+          {error && <p className="text-primary text-sm font-display pl-1 animate-pulse">{error}</p>}
+        </div>
+      )}
 
       {/* Action buttons */}
       <div className="flex flex-col gap-4 w-full mt-auto">

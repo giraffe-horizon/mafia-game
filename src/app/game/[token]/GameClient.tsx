@@ -138,6 +138,7 @@ export default function GameClient() {
         phase={game.phase}
         round={game.round}
         isHost={isHost}
+        gameCode={game.code}
         currentPlayer={currentPlayer}
         onShowSettings={() => setShowSettingsModal(true)}
         onShowRanking={() => setShowRanking(true)}

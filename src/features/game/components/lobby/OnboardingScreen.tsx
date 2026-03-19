@@ -86,10 +86,13 @@ export default function OnboardingScreen({
                 onKeyDown={(e) => e.key === "Enter" && onSubmit()}
               />
             </div>
+            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/30 mt-1">
+              WYPEŁNIĆ PISMEM DRUKOWANYM
+            </p>
           </FormField>
 
           {characters.length > 0 && (
-            <FormField label="TOŻSAMOŚĆ AGENTA:" className="[&>p]:pb-3">
+            <FormField label="DOSTĘPNE WIZERUNKI OPERACYJNE:" className="[&>p]:pb-3">
               <div className="max-h-[45vh] overflow-y-auto">
                 <CharacterPicker
                   characters={characters}
@@ -116,6 +119,10 @@ export default function OnboardingScreen({
         >
           {onboardingLoading ? "Dołączam..." : "Dołącz do gry"}
         </Button>
+
+        <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/20 text-center mt-4">
+          ZATWIERDZENIE PIECZĘCIĄ GŁÓWNĄ // V.3
+        </p>
       </div>
     </PageLayout>
   );

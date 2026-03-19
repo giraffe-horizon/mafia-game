@@ -27,12 +27,6 @@ export default function NightTab() {
   if (phase === "night") {
     return (
       <div className="flex-1 flex flex-col">
-        <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
-          <span className="material-symbols-outlined text-[16px] text-primary">bedtime</span>
-          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
-            Noc
-          </span>
-        </div>
         <NightContainer />
         <PlayersListContainer />
       </div>
