@@ -16,6 +16,7 @@ interface GameHeaderProps {
   };
   onShowSettings: () => void;
   onShowRanking: () => void;
+  onShowGmPanel?: () => void;
 }
 
 export default function GameHeader({
@@ -25,6 +26,7 @@ export default function GameHeader({
   currentPlayer,
   onShowSettings,
   onShowRanking,
+  onShowGmPanel,
 }: GameHeaderProps) {
   const [imgError, setImgError] = useState(false);
   const handleImgError = useCallback(() => setImgError(true), []);
@@ -74,45 +76,57 @@ export default function GameHeader({
         )}
       </div>
 
-      {/* Right: Settings */}
-      <div className="size-9 flex items-center justify-center">
-        {isHost ? (
+      {/* Right: Settings + GM Panel */}
+      <div className="flex items-center gap-1">
+        {isHost && onShowGmPanel && (
           <button
-            onClick={onShowSettings}
-            className="w-8 h-8 border border-primary/40 hover:border-primary bg-primary/10 flex items-center justify-center transition-colors"
+            onClick={onShowGmPanel}
+            className="w-8 h-8 border border-primary/60 hover:border-primary bg-primary/20 flex items-center justify-center transition-colors"
           >
-            <span className="material-symbols-outlined text-[16px] text-primary">
-              manage_accounts
-            </span>
-          </button>
-        ) : currentPlayer.character ? (
-          <button
-            onClick={onShowSettings}
-            className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 transition-colors overflow-hidden flex items-center justify-center"
-          >
-            {currentPlayer.character.avatarUrl && !imgError ? (
-              <img
-                src={currentPlayer.character.avatarUrl}
-                alt={currentPlayer.character.namePl}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover"
-                onError={handleImgError}
-              />
-            ) : (
-              <span className="font-display font-black text-xs text-on-surface/60">
-                {currentPlayer.character.namePl.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </button>
-        ) : (
-          <button
-            onClick={onShowSettings}
-            className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 transition-colors bg-surface-highest/20 flex items-center justify-center"
-          >
-            <span className="material-symbols-outlined text-[16px] text-on-surface/30">person</span>
+            <span className="material-symbols-outlined text-[16px] text-primary">star</span>
           </button>
         )}
+        <div className="size-9 flex items-center justify-center">
+          {isHost ? (
+            <button
+              onClick={onShowSettings}
+              className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 bg-surface-highest/20 flex items-center justify-center transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px] text-on-surface/40">
+                settings
+              </span>
+            </button>
+          ) : currentPlayer.character ? (
+            <button
+              onClick={onShowSettings}
+              className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 transition-colors overflow-hidden flex items-center justify-center"
+            >
+              {currentPlayer.character.avatarUrl && !imgError ? (
+                <img
+                  src={currentPlayer.character.avatarUrl}
+                  alt={currentPlayer.character.namePl}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover"
+                  onError={handleImgError}
+                />
+              ) : (
+                <span className="font-display font-black text-xs text-on-surface/60">
+                  {currentPlayer.character.namePl.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={onShowSettings}
+              className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 transition-colors bg-surface-highest/20 flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-[16px] text-on-surface/30">
+                person
+              </span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

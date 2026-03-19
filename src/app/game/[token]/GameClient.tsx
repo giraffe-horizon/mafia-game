@@ -42,6 +42,7 @@ export default function GameClient() {
   // UI state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
+  const [showGmPanel, setShowGmPanel] = useState(false);
 
   // Onboarding (character sync for settings modal)
   const { selectedCharacterId, setSelectedCharacterId, handleCharacterUpdate } = useOnboarding({
@@ -140,6 +141,7 @@ export default function GameClient() {
         currentPlayer={currentPlayer}
         onShowSettings={() => setShowSettingsModal(true)}
         onShowRanking={() => setShowRanking(true)}
+        onShowGmPanel={() => setShowGmPanel(true)}
       />
 
       {/* End screen overlay */}
@@ -150,8 +152,28 @@ export default function GameClient() {
         <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
           <TabsContainer />
 
-          {/* GM panel overlay — accessible from header */}
-          {isHost && <GMPanelContainer />}
+          {/* GM panel drawer overlay */}
+          {isHost && showGmPanel && (
+            <div className="absolute inset-0 z-30 flex flex-col bg-background">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-surface-highest bg-surface-low">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px] text-primary">star</span>
+                  <span className="font-display font-black text-xs uppercase tracking-widest text-primary">
+                    Panel Mistrza Gry
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowGmPanel(false)}
+                  className="size-8 flex items-center justify-center text-on-surface/40 hover:text-on-surface/70"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <GMPanelContainer />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
