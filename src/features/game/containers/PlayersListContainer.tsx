@@ -11,7 +11,11 @@ export default function PlayersListContainer() {
   const { isPlaying, isFinished, isLobby } = useCurrentPhase();
   const { roleVisible } = useRoleVisibility();
   const kickPlayer = useGameStore((s) => s.kickPlayer);
-  const investigatedPlayers = useGameStore((s) => s.state?.investigatedPlayers);
+  const investigatedPlayersRaw = useGameStore((s) => s.state?.investigatedPlayers);
+
+  // Detective sees investigation markers only when role is revealed
+  // (API already filters out current night's investigation during night phase)
+  const investigatedPlayers = roleVisible ? investigatedPlayersRaw : undefined;
 
   return (
     <PlayersList

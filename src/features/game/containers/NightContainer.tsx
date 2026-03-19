@@ -16,7 +16,7 @@ import NightView from "@/features/game/components/phases/NightView";
 
 export default function NightContainer() {
   const { isHost, currentPlayer, players } = usePlayerState();
-  const { roleVisible, setRoleVisible } = useRoleVisibility();
+  const { roleVisible, toggleRole } = useRoleVisibility();
   const actionTargets = useActionTargets(roleVisible);
 
   const myAction = useGameStore((s) => (s.changingDecision ? null : (s.state?.myAction ?? null)));
@@ -25,6 +25,9 @@ export default function NightContainer() {
   const submitAction = useGameStore((s) => s.submitAction);
   const setChangingDecision = useGameStore((s) => s.setChangingDecision);
   const mafiaTeamActions = useGameStore((s) => s.state?.mafiaTeamActions);
+  const doctorLastTargetId = useGameStore((s) => s.state?.doctorLastTargetId);
+  const investigatedPlayers = useGameStore((s) => s.state?.investigatedPlayers);
+  const investigatedPlayerIds = investigatedPlayers?.map((ip) => ip.playerId);
 
   if (!currentPlayer) return null;
 
@@ -33,7 +36,7 @@ export default function NightContainer() {
     role: currentPlayer.role || undefined,
   };
 
-  const viewState: NightViewState = { roleVisible, setRoleVisible };
+  const viewState: NightViewState = { roleVisible, toggleRole };
 
   const actionState: ActionState = {
     pending: actionPending,
@@ -55,6 +58,8 @@ export default function NightContainer() {
     myAction,
     actionState,
     mafiaState,
+    doctorLastTargetId,
+    investigatedPlayerIds,
   };
 
   return (

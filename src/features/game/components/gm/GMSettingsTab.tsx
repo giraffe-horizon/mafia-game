@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { PublicPlayer } from "@/db";
 import { SectionHeader } from "@/components/ui";
 import { autoMafiaCount } from "@/lib/constants";
@@ -9,33 +8,13 @@ interface GMSettingsTabProps {
   players: PublicPlayer[];
   mafiaCountSetting: number;
   onMafiaCountSettingChange: (n: number) => void;
-  onTransferGm: (playerId: string) => Promise<unknown> | void;
 }
 
 export default function GMSettingsTab({
   players,
   mafiaCountSetting,
   onMafiaCountSettingChange,
-  onTransferGm,
 }: GMSettingsTabProps) {
-  const [transferGmTarget, setTransferGmTarget] = useState("");
-  const [transferGmPending, setTransferGmPending] = useState(false);
-  const [transferGmError, setTransferGmError] = useState("");
-
-  async function handleTransferGm() {
-    if (!transferGmTarget) return;
-    setTransferGmPending(true);
-    setTransferGmError("");
-    try {
-      await onTransferGm(transferGmTarget);
-      setTransferGmTarget("");
-    } catch {
-      setTransferGmError("Błąd przekazania MG");
-    } finally {
-      setTransferGmPending(false);
-    }
-  }
-
   return (
     <div>
       <SectionHeader className="mb-1">Liczba mafii — następna runda</SectionHeader>
@@ -68,37 +47,6 @@ export default function GMSettingsTab({
         ))}
       </div>
       <p className="text-slate-600 text-xs mt-2">reszta cywile</p>
-
-      {/* GM Transfer Section */}
-      <div className="mt-6 pt-4 border-t border-slate-700">
-        <SectionHeader className="mb-3">Przekaż rolę MG</SectionHeader>
-        {transferGmError && (
-          <p className="text-red-400 text-xs font-typewriter mb-2">{transferGmError}</p>
-        )}
-        <div className="flex gap-3">
-          <select
-            value={transferGmTarget}
-            onChange={(e) => setTransferGmTarget(e.target.value)}
-            className="flex-1 h-10 rounded-lg bg-black/40 border border-slate-700 text-white text-sm px-3 font-typewriter"
-          >
-            <option value="">— Wybierz gracza —</option>
-            {players
-              .filter((p) => !p.isHost && p.isAlive)
-              .map((p) => (
-                <option key={p.playerId} value={p.playerId}>
-                  {p.nickname}
-                </option>
-              ))}
-          </select>
-          <button
-            onClick={handleTransferGm}
-            disabled={!transferGmTarget || transferGmPending}
-            className="px-4 h-10 rounded-lg bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary font-typewriter uppercase tracking-wider text-sm transition-all disabled:opacity-40"
-          >
-            {transferGmPending ? "Przekazuję..." : "Przekaż"}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

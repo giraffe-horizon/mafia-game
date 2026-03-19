@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import type { ActionType, GamePhase } from "@/db/types";
 import { useGameStore } from "@/features/game/store/gameStore";
@@ -22,14 +22,22 @@ export default function GMPanelContainer() {
   const phasePending = useGameStore((s) => s.phasePending);
   const advancePhase = useGameStore((s) => s.advancePhase);
   const submitGmAction = useGameStore((s) => s.submitGmAction);
-  const transferGameMaster = useGameStore((s) => s.transferGameMaster);
   const hostActions = useGameStore((s) => s.state?.hostActions);
   const phaseProgress = useGameStore((s) => s.state?.phaseProgress);
   const hostMissions = useGameStore((s) => s.state?.hostMissions);
   const refetch = useGameStore((s) => s.refetch);
 
+  const lobbySettings = useGameStore((s) => s.state?.lobbySettings);
+
   const [mgTab, setMgTab] = useState<"game" | "message" | "mission" | "settings">("game");
-  const [mafiaCountSetting, setMafiaCountSetting] = useState(0);
+  const [mafiaCountSetting, setMafiaCountSetting] = useState(lobbySettings?.mafiaCount ?? 0);
+
+  // Sync mafiaCountSetting when lobbySettings loads from server
+  useEffect(() => {
+    if (lobbySettings) {
+      setMafiaCountSetting(lobbySettings.mafiaCount);
+    }
+  }, [lobbySettings]);
 
   const {
     msgTarget,
@@ -115,7 +123,6 @@ export default function GMPanelContainer() {
       hostActions={hostActions}
       phaseProgress={phaseProgress}
       onGmAction={handleGmAction}
-      onTransferGm={(playerId: string) => transferGameMaster(playerId)}
       mafiaCountSetting={mafiaCountSetting}
       onMafiaCountSettingChange={setMafiaCountSetting}
     />

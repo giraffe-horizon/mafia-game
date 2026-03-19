@@ -202,27 +202,47 @@ export async function getGameState(
   if (playerRow.role === "detective" && gameRow.status === "playing") {
     const { results: investigations } = await db
       .prepare(
-        `SELECT ga.target_player_id, gp.nickname, gp.role
+        `SELECT ga.target_player_id, ga.round, gp.nickname, gp.role
          FROM game_actions ga
          JOIN game_players gp ON ga.target_player_id = gp.player_id
          WHERE ga.game_id = ? AND ga.player_id = ? AND ga.action_type = 'investigate'
          ORDER BY ga.created_at DESC`
       )
       .bind(gameRow.id, playerRow.player_id)
-      .all<{ target_player_id: string; nickname: string; role: string }>();
+      .all<{ target_player_id: string; round: number; nickname: string; role: string }>();
 
     if (investigations.length > 0) {
       const latest = investigations[0];
       detectiveResult = {
         targetNickname: latest.nickname,
         isMafia: latest.role === "mafia",
-        round: gameRow.round,
+        round: latest.round,
       };
 
-      investigatedPlayers = investigations.map((inv) => ({
+      // During night phase, only show investigations from previous rounds (not current)
+      const visibleInvestigations =
+        gameRow.phase === "night"
+          ? investigations.filter((inv) => inv.round < gameRow.round)
+          : investigations;
+
+      investigatedPlayers = visibleInvestigations.map((inv) => ({
         playerId: inv.target_player_id,
         isMafia: inv.role === "mafia",
       }));
+    }
+  }
+
+  // Get doctor's last protected target (for consecutive protection blocking)
+  let doctorLastTargetId: string | undefined;
+  if (playerRow.role === "doctor" && gameRow.status === "playing" && gameRow.round > 1) {
+    const lastProtect = await db
+      .prepare(
+        "SELECT target_player_id FROM game_actions WHERE game_id = ? AND player_id = ? AND action_type = 'protect' AND round = ? LIMIT 1"
+      )
+      .bind(gameRow.id, playerRow.player_id, gameRow.round - 1)
+      .first<{ target_player_id: string }>();
+    if (lastProtect) {
+      doctorLastTargetId = lastProtect.target_player_id;
     }
   }
 
@@ -382,6 +402,7 @@ export async function getGameState(
     })),
     investigatedPlayers,
     detectiveResult,
+    doctorLastTargetId,
     myAction,
     mafiaTeamActions,
     voteTally,

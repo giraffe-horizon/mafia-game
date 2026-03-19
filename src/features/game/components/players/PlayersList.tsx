@@ -46,9 +46,7 @@ export default function PlayersList({
             onKick={isLobby && isHost ? onKick : undefined}
             onRename={undefined}
             investigated={
-              roleVisible && investigatedMap?.has(p.playerId)
-                ? investigatedMap.get(p.playerId)!
-                : undefined
+              investigatedMap?.has(p.playerId) ? investigatedMap.get(p.playerId)! : undefined
             }
           />
         ))}

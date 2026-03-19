@@ -15,6 +15,8 @@ interface NightActionPanelProps {
   roleHidden?: boolean;
   actionState: ActionState;
   mafiaState: MafiaState;
+  doctorLastTargetId?: string;
+  investigatedPlayerIds?: string[];
 }
 
 export default function NightActionPanel({
@@ -24,6 +26,8 @@ export default function NightActionPanel({
   roleHidden = false,
   actionState,
   mafiaState,
+  doctorLastTargetId,
+  investigatedPlayerIds,
 }: NightActionPanelProps) {
   const { pending, error, onAction, onChangeDecision } = actionState;
   const { teamActions: mafiaTeamActions, currentNickname } = mafiaState;
@@ -117,17 +121,33 @@ export default function NightActionPanel({
       </SectionHeader>
       {error && <p className="text-red-400 text-xs font-typewriter mb-2 px-1">{error}</p>}
       <div className="flex flex-col gap-2">
-        {targets.map((p) => (
-          <button
-            key={p.playerId}
-            disabled={pending}
-            onClick={() => onAction(action.type, p.playerId)}
-            className="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-black/30 hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-[0.98] disabled:opacity-40 text-left"
-          >
-            <span className="material-symbols-outlined text-[18px] text-slate-400">person</span>
-            <span className="text-white text-sm">{p.nickname}</span>
-          </button>
-        ))}
+        {targets.map((p) => {
+          const isBlockedDoctor = role === "doctor" && p.playerId === doctorLastTargetId;
+          const isBlockedDetective =
+            role === "detective" && investigatedPlayerIds?.includes(p.playerId);
+          const isBlockedTarget = isBlockedDoctor || isBlockedDetective;
+          return (
+            <button
+              key={p.playerId}
+              disabled={pending || isBlockedTarget}
+              onClick={() => onAction(action.type, p.playerId)}
+              className="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-black/30 hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-[0.98] disabled:opacity-40 text-left"
+            >
+              <span className="material-symbols-outlined text-[18px] text-slate-400">person</span>
+              <span className="text-white text-sm">{p.nickname}</span>
+              {isBlockedDoctor && (
+                <span className="text-xs text-slate-500 font-typewriter ml-auto">
+                  chroniony ostatnio
+                </span>
+              )}
+              {isBlockedDetective && (
+                <span className="text-xs text-slate-500 font-typewriter ml-auto">
+                  już sprawdzony
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

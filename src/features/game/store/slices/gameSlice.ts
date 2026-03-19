@@ -96,6 +96,7 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
       rankingMeta: null,
       roundScores: [],
       error: "",
+      roleVisible: false,
       actionPending: false,
       actionError: "",
       phasePending: false,
@@ -183,7 +184,15 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
 
     try {
       const data = await _gameService.fetchState(_token);
-      set({ state: data, _backoffDelay: POLL_INTERVAL });
+      const prevRound = get().state?.game?.round;
+      const newRound = data.game?.round;
+      const roundChanged =
+        prevRound !== undefined && newRound !== undefined && prevRound !== newRound;
+      set({
+        state: data,
+        _backoffDelay: POLL_INTERVAL,
+        ...(roundChanged ? { roleVisible: false } : {}),
+      });
 
       const currentToasts = get().toasts;
       const newToasts = [...currentToasts];

@@ -9,6 +9,11 @@ export interface UiSlice {
   toasts: Toast[];
   dismissToast: (id: string) => void;
 
+  // Role visibility (persists across phase changes)
+  roleVisible: boolean;
+  setRoleVisible: (visible: boolean) => void;
+  toggleRole: () => void;
+
   // Loading states
   actionPending: boolean;
   actionError: string;
@@ -18,8 +23,9 @@ export interface UiSlice {
   setChangingDecision: (changing: boolean) => void;
 }
 
-export const createUiSlice: StateCreator<GameState, [], [], UiSlice> = (set) => ({
+export const createUiSlice: StateCreator<GameState, [], [], UiSlice> = (set, get) => ({
   toasts: [],
+  roleVisible: false,
   actionPending: false,
   actionError: "",
   phasePending: false,
@@ -31,6 +37,9 @@ export const createUiSlice: StateCreator<GameState, [], [], UiSlice> = (set) => 
       toasts: state.toasts.filter((t) => t.id !== id),
     }));
   },
+
+  setRoleVisible: (visible: boolean) => set({ roleVisible: visible }),
+  toggleRole: () => set({ roleVisible: !get().roleVisible }),
 
   setChangingDecision: (changing: boolean) => set({ changingDecision: changing }),
 });

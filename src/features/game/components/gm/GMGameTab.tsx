@@ -128,7 +128,9 @@ export default function GMGameTab({
                         ) : null;
                       })()}
                   </span>
-                  <span className="text-slate-400 text-xs font-typewriter">{action.role}</span>
+                  <span className="text-slate-400 text-xs font-typewriter">
+                    {ROLE_LABELS[action.role] ?? action.role}
+                  </span>
                   <span
                     className={`text-xs font-typewriter ${
                       action.done ? "text-green-400" : "text-yellow-400"
@@ -185,7 +187,11 @@ export default function GMGameTab({
                 ]}
                 className="mb-2 bg-black/40 border-slate-700"
               />
-              <Button onClick={handleSubmit} disabled={!selectedTarget && actionType !== "wait"}>
+              <Button
+                onClick={handleSubmit}
+                disabled={!selectedTarget && actionType !== "wait"}
+                className="w-full"
+              >
                 Zatwierdź
               </Button>
             </>
