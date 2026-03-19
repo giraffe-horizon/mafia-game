@@ -2,6 +2,7 @@
 
 import type { PublicPlayer } from "@/db";
 import { SectionHeader } from "@/components/ui";
+import ActionConfirmation from "@/app/game/[token]/_components/ActionConfirmation";
 
 export default function VotePanel({
   targets,
@@ -23,21 +24,11 @@ export default function VotePanel({
       targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ??
       myAction.targetPlayerId;
     return (
-      <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-green-900/40">
-        <p className="text-green-400 text-xs font-typewriter uppercase tracking-widest mb-1">
-          Oskarżasz:
-        </p>
-        <p className="text-slate-300 text-sm">
-          <span className="text-white font-medium">{targetName}</span>
-        </p>
-        <button
-          onClick={() => onChangeDecision()}
-          className="mt-3 w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-slate-200 font-typewriter uppercase tracking-wider text-xs transition-all"
-        >
-          <span className="material-symbols-outlined text-[14px]">edit</span>
-          Zmień głos
-        </button>
-      </div>
+      <ActionConfirmation
+        label="Oskarżasz:"
+        targetName={targetName ?? ""}
+        onChangeDecision={onChangeDecision}
+      />
     );
   }
 

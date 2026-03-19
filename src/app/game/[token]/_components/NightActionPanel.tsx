@@ -4,6 +4,7 @@ import type { PublicPlayer, GameStateResponse } from "@/db";
 import type { Role, ActionType } from "@/db/types";
 import { ACTION_CONFIRMED } from "@/lib/constants";
 import MafiaConsensusStatus from "@/app/game/[token]/_components/MafiaConsensusStatus";
+import ActionConfirmation from "@/app/game/[token]/_components/ActionConfirmation";
 import { Button, SectionHeader, InfoCard } from "@/components/ui";
 
 export interface ActionState {
@@ -94,28 +95,15 @@ export default function NightActionPanel({
       ? "Akcja wykonana"
       : (ACTION_CONFIRMED[myAction.actionType] ?? "Akcja wykonana");
     return (
-      <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-green-900/40">
-        <p className="text-green-400 text-xs font-typewriter uppercase tracking-widest mb-1">
-          {actionLabel}
-        </p>
-        {myAction.targetPlayerId && !roleHidden && (
-          <p className="text-slate-300 text-sm">
-            <span className="text-white font-medium">{targetName}</span>
-          </p>
-        )}
+      <ActionConfirmation
+        label={actionLabel}
+        targetName={myAction.targetPlayerId && !roleHidden ? (targetName ?? "") : ""}
+        onChangeDecision={onChangeDecision}
+      >
         {roleHidden && (
           <p className="text-slate-600 text-xs mt-1">Odkryj rolę by zobaczyć szczegóły</p>
         )}
-        <Button
-          onClick={() => onChangeDecision()}
-          variant="ghost"
-          size="sm"
-          icon="edit"
-          className="mt-3 w-full"
-        >
-          Zmień decyzję
-        </Button>
-      </div>
+      </ActionConfirmation>
     );
   }
 
