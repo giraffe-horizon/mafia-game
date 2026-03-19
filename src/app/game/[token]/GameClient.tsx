@@ -53,7 +53,6 @@ interface NightPhaseSectionProps {
   setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
   actionPending: boolean;
   actionError: string;
-  changingDecision: boolean;
   setChangingDecision: (v: boolean) => void;
   onAction: (type: ActionType, targetId: string) => void;
   mafiaTeamActions: GameStateResponse["mafiaTeamActions"];
@@ -69,7 +68,6 @@ function NightPhaseSection({
   setRoleVisible,
   actionPending,
   actionError,
-  changingDecision,
   setChangingDecision,
   onAction,
   mafiaTeamActions,
@@ -104,7 +102,7 @@ function NightPhaseSection({
 
   const actionData: NightActionData = {
     actionTargets,
-    myAction: changingDecision ? null : myAction,
+    myAction,
     actionState,
     mafiaState,
   };
@@ -164,7 +162,7 @@ function VotingPhaseSection({
 
   const voteState: VoteState = {
     players,
-    myAction: changingDecision ? null : myAction,
+    myAction,
     actionPending,
     actionError,
     changingDecision,
@@ -505,7 +503,6 @@ export default function GameClient() {
             setRoleVisible={setRoleVisible}
             actionPending={actionPending}
             actionError={actionError}
-            changingDecision={changingDecision}
             setChangingDecision={setChangingDecision}
             onAction={handleAction}
             mafiaTeamActions={state.mafiaTeamActions}
