@@ -1,3 +1,10 @@
+## [1.8.2](https://github.com/giraffe-horizon/mafia-game/compare/v1.8.1...v1.8.2) (2026-03-19)
+
+
+### Bug Fixes
+
+* 6 gameplay bugs — detective, role visibility, GM panel, doctor, transfer ([#27](https://github.com/giraffe-horizon/mafia-game/issues/27)) ([5da9f85](https://github.com/giraffe-horizon/mafia-game/commit/5da9f8543ef7f592796dd8490356097eb3511cff))
+
 ## [1.8.1](https://github.com/giraffe-horizon/mafia-game/compare/v1.8.0...v1.8.1) (2026-03-19)
 
 
