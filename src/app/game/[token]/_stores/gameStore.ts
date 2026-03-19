@@ -82,6 +82,10 @@ interface GameState {
 
   // State setters
   setChangingDecision: (changing: boolean) => void;
+
+  // Tab navigation
+  activeTab: "night" | "day" | "votes" | "logs";
+  setActiveTab: (tab: "night" | "day" | "votes" | "logs") => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -98,6 +102,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   phasePending: false,
   starting: false,
   changingDecision: false,
+
+  // Tab navigation
+  activeTab: "night" as const,
 
   // Internal state
   _gameService: null,
@@ -153,6 +160,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       phasePending: false,
       starting: false,
       changingDecision: false,
+      activeTab: "night" as const,
     });
 
     // Fetch characters
@@ -244,8 +252,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ _isFetching: true });
 
     try {
+      const prevPhase = get().state?.game?.phase;
       const data = await _gameService.fetchState(_token);
       set({ state: data, _backoffDelay: POLL_INTERVAL });
+
+      // Auto-switch tab when phase changes (including initial load)
+      const newPhase = data.game.phase;
+      if (prevPhase !== newPhase) {
+        if (newPhase === "night") set({ activeTab: "night" });
+        else if (newPhase === "day") set({ activeTab: "day" });
+        else if (newPhase === "voting") set({ activeTab: "votes" });
+        else if (newPhase === "lobby") set({ activeTab: "day" });
+      }
 
       // Handle new messages as toasts
       const currentToasts = get().toasts;
@@ -478,4 +496,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   setChangingDecision: (changing: boolean) => set({ changingDecision: changing }),
+
+  setActiveTab: (tab: "night" | "day" | "votes" | "logs") => set({ activeTab: tab }),
 }));
