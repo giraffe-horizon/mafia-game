@@ -1,11 +1,7 @@
-"use client";
-
-import { useEffect, useRef } from "react";
-import { useGameStore } from "@/features/game/store/gameStore";
 import type { GamePhase } from "@/db";
 import type { TransitionData, TransitionScreen } from "@/features/game/types";
 
-function buildTransition(
+export function buildTransition(
   prevPhase: GamePhase,
   newPhase: GamePhase,
   round: number,
@@ -153,36 +149,4 @@ function buildTransition(
   }
 
   return null;
-}
-
-export function useTransition(): void {
-  const phase = useGameStore((s) => s.state?.game.phase);
-  const round = useGameStore((s) => s.state?.game.round);
-  const winner = useGameStore((s) => s.state?.game.winner);
-  const lastPhaseResult = useGameStore((s) => s.state?.lastPhaseResult);
-  const showTransition = useGameStore((s) => s.showTransition);
-
-  const prevPhaseRef = useRef<GamePhase | undefined>(undefined);
-  const initializedRef = useRef(false);
-
-  useEffect(() => {
-    // Skip the very first render — don't show transition on page load
-    if (!phase) return;
-
-    if (!initializedRef.current) {
-      initializedRef.current = true;
-      prevPhaseRef.current = phase;
-      return;
-    }
-
-    const prevPhase = prevPhaseRef.current;
-    prevPhaseRef.current = phase;
-
-    if (!prevPhase || prevPhase === phase) return;
-
-    const transition = buildTransition(prevPhase, phase, round ?? 1, lastPhaseResult, winner);
-    if (transition) {
-      showTransition(transition);
-    }
-  }, [phase, round, winner, lastPhaseResult, showTransition]);
 }

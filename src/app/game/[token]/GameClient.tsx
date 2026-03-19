@@ -24,8 +24,6 @@ import MissionsList from "@/features/game/components/players/MissionsList";
 import SettingsModal from "@/features/game/components/modals/SettingsModal";
 import RankingModal from "@/features/game/components/modals/RankingModal";
 import { PageLayout } from "@/components/ui";
-import { useTransition } from "@/features/game/hooks/useTransition";
-
 // Stateless service — safe to create at module level
 const gameService: GameService = createHttpGameService();
 
@@ -45,9 +43,6 @@ export default function GameClient() {
   // Derived-state hooks
   const { phase, isLobby, isPlaying, isFinished, round } = useCurrentPhase();
   const { isHost } = usePlayerState();
-
-  // Phase transition screens
-  useTransition();
 
   // UI state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
