@@ -44,6 +44,149 @@ import { COPY_FEEDBACK_MS } from "@/lib/constants";
 const gameService: GameService = createHttpGameService();
 
 // ---------------------------------------------------------------------------
+// Extracted phase section components (were IIFE in JSX)
+// ---------------------------------------------------------------------------
+interface NightPhaseSectionProps {
+  isHost: boolean;
+  currentPlayer: { isAlive: boolean; role: string | null; nickname: string };
+  roleVisible: boolean;
+  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
+  actionPending: boolean;
+  actionError: string;
+  changingDecision: boolean;
+  setChangingDecision: (v: boolean) => void;
+  onAction: (type: ActionType, targetId: string) => void;
+  mafiaTeamActions: GameStateResponse["mafiaTeamActions"];
+  actionTargets: GameStateResponse["players"];
+  myAction: GameStateResponse["myAction"];
+  players: GameStateResponse["players"];
+}
+
+function NightPhaseSection({
+  isHost,
+  currentPlayer,
+  roleVisible,
+  setRoleVisible,
+  actionPending,
+  actionError,
+  changingDecision,
+  setChangingDecision,
+  onAction,
+  mafiaTeamActions,
+  actionTargets,
+  myAction,
+  players,
+}: NightPhaseSectionProps) {
+  const playerState: NightPlayerState = {
+    isAlive: currentPlayer.isAlive,
+    role: currentPlayer.role || undefined,
+  };
+
+  const viewState: NightViewState = {
+    roleVisible,
+    setRoleVisible,
+  };
+
+  const actionState: ActionState = {
+    pending: actionPending,
+    error: actionError,
+    onAction: (type, targetId) => {
+      setChangingDecision(false);
+      onAction(type, targetId);
+    },
+    onChangeDecision: () => setChangingDecision(true),
+  };
+
+  const mafiaState: MafiaState = {
+    teamActions: mafiaTeamActions,
+    currentNickname: currentPlayer.nickname,
+  };
+
+  const actionData: NightActionData = {
+    actionTargets,
+    myAction: changingDecision ? null : myAction,
+    actionState,
+    mafiaState,
+  };
+
+  return (
+    <NightView
+      isHost={isHost}
+      currentPlayer={playerState}
+      viewState={viewState}
+      actionData={actionData}
+      players={players}
+    />
+  );
+}
+
+interface VotingPhaseSectionProps {
+  isHost: boolean;
+  currentPlayer: { isAlive: boolean; role: string | null };
+  roleVisible: boolean;
+  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
+  phase: GamePhase;
+  players: GameStateResponse["players"];
+  myAction: GameStateResponse["myAction"];
+  actionPending: boolean;
+  actionError: string;
+  changingDecision: boolean;
+  setChangingDecision: (v: boolean) => void;
+  onVote: (targetId: string) => void;
+  voteTally: GameStateResponse["voteTally"];
+}
+
+function VotingPhaseSection({
+  isHost,
+  currentPlayer,
+  roleVisible,
+  setRoleVisible,
+  phase,
+  players,
+  myAction,
+  actionPending,
+  actionError,
+  changingDecision,
+  setChangingDecision,
+  onVote,
+  voteTally,
+}: VotingPhaseSectionProps) {
+  const currentPlayerState: VotingPlayerState = {
+    isAlive: currentPlayer.isAlive,
+    role: currentPlayer.role || undefined,
+  };
+
+  const viewState: VotingViewState = {
+    roleVisible,
+    setRoleVisible,
+    phase,
+  };
+
+  const voteState: VoteState = {
+    players,
+    myAction: changingDecision ? null : myAction,
+    actionPending,
+    actionError,
+    changingDecision,
+    setChangingDecision,
+    onVote: (targetId) => {
+      setChangingDecision(false);
+      onVote(targetId);
+    },
+    voteTally,
+  };
+
+  return (
+    <VotingView
+      isHost={isHost}
+      currentPlayer={currentPlayerState}
+      viewState={viewState}
+      voteState={voteState}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 export default function GameClient() {
@@ -189,16 +332,11 @@ export default function GameClient() {
 
   useEffect(() => {
     if (!showSettingsModal) return;
-    document.body.style.overflow = "hidden";
+    document.body.classList.add("overflow-hidden");
     return () => {
-      document.body.style.overflow = "";
+      document.body.classList.remove("overflow-hidden");
     };
   }, [showSettingsModal]);
-
-  // UI helper functions
-  const handleOnboardingSetup = () => handleSetup();
-  const handleCharacterUpdateWrapper = () => handleCharacterUpdate(setShowSettingsModal);
-  const handleStartWrapper = () => handleStart(gameMode, mafiaCount);
 
   function copyCode() {
     if (!state) return;
@@ -297,7 +435,7 @@ export default function GameClient() {
         formData={formData}
         characterSelection={characterSelection}
         loadingState={loadingState}
-        onSubmit={handleOnboardingSetup}
+        onSubmit={handleSetup}
       />
     );
   }
@@ -352,58 +490,30 @@ export default function GameClient() {
             mafiaCount={mafiaCount}
             setMafiaCount={setMafiaCount}
             starting={starting}
-            onStart={handleStartWrapper}
+            onStart={() => handleStart(gameMode, mafiaCount)}
             onTransferGm={handleTransferGm}
             round={game.round}
           />
         )}
 
         {/* ── NIGHT ── */}
-        {isPlaying &&
-          phase === "night" &&
-          (() => {
-            const playerState: NightPlayerState = {
-              isAlive: currentPlayer.isAlive,
-              role: currentPlayer.role || undefined,
-            };
-
-            const viewState: NightViewState = {
-              roleVisible,
-              setRoleVisible,
-            };
-
-            const actionState: ActionState = {
-              pending: actionPending,
-              error: actionError,
-              onAction: (type, targetId) => {
-                setChangingDecision(false);
-                handleAction(type, targetId);
-              },
-              onChangeDecision: () => setChangingDecision(true),
-            };
-
-            const mafiaState: MafiaState = {
-              teamActions: state.mafiaTeamActions,
-              currentNickname: currentPlayer.nickname,
-            };
-
-            const actionData: NightActionData = {
-              actionTargets,
-              myAction,
-              actionState,
-              mafiaState,
-            };
-
-            return (
-              <NightView
-                isHost={isHost}
-                currentPlayer={playerState}
-                viewState={viewState}
-                actionData={actionData}
-                players={players}
-              />
-            );
-          })()}
+        {isPlaying && phase === "night" && (
+          <NightPhaseSection
+            isHost={isHost}
+            currentPlayer={currentPlayer}
+            roleVisible={roleVisible}
+            setRoleVisible={setRoleVisible}
+            actionPending={actionPending}
+            actionError={actionError}
+            changingDecision={changingDecision}
+            setChangingDecision={setChangingDecision}
+            onAction={handleAction}
+            mafiaTeamActions={state.mafiaTeamActions}
+            actionTargets={actionTargets}
+            myAction={myAction}
+            players={players}
+          />
+        )}
 
         {/* ── DAY ── */}
         {isPlaying && phase === "day" && (
@@ -411,43 +521,23 @@ export default function GameClient() {
         )}
 
         {/* ── VOTING ── */}
-        {isPlaying &&
-          phase === "voting" &&
-          (() => {
-            const currentPlayerState: VotingPlayerState = {
-              isAlive: currentPlayer.isAlive,
-              role: currentPlayer.role || undefined,
-            };
-
-            const viewState: VotingViewState = {
-              roleVisible,
-              setRoleVisible,
-              phase,
-            };
-
-            const voteState: VoteState = {
-              players,
-              myAction,
-              actionPending,
-              actionError,
-              changingDecision,
-              setChangingDecision,
-              onVote: (targetId) => {
-                setChangingDecision(false);
-                handleAction("vote", targetId);
-              },
-              voteTally: state.voteTally,
-            };
-
-            return (
-              <VotingView
-                isHost={isHost}
-                currentPlayer={currentPlayerState}
-                viewState={viewState}
-                voteState={voteState}
-              />
-            );
-          })()}
+        {isPlaying && phase === "voting" && (
+          <VotingPhaseSection
+            isHost={isHost}
+            currentPlayer={currentPlayer}
+            roleVisible={roleVisible}
+            setRoleVisible={setRoleVisible}
+            phase={phase}
+            players={players}
+            myAction={myAction}
+            actionPending={actionPending}
+            actionError={actionError}
+            changingDecision={changingDecision}
+            setChangingDecision={setChangingDecision}
+            onVote={(targetId) => handleAction("vote", targetId)}
+            voteTally={state.voteTally}
+          />
+        )}
 
         {/* ── Missions (non-host) ── */}
         {!isHost && <MissionsList missions={missions} showPoints={state.showPoints} />}
@@ -518,7 +608,7 @@ export default function GameClient() {
           onCharacterSelect: setSelectedCharacterId,
         }}
         modalActions={{
-          onSave: handleCharacterUpdateWrapper,
+          onSave: () => handleCharacterUpdate(setShowSettingsModal),
           onLeaveGame: () => {
             setShowSettingsModal(false);
             handleLeave();
