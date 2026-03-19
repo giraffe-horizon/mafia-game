@@ -28,7 +28,9 @@ export default function NightTab() {
       <div className="flex-1 flex flex-col">
         <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
           <span className="material-symbols-outlined text-[16px] text-primary">bedtime</span>
-          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">Noc</span>
+          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
+            Noc
+          </span>
         </div>
         <NightContainer />
       </div>
@@ -56,17 +58,23 @@ export default function NightTab() {
               <p className="font-display font-black text-2xl text-primary uppercase tracking-widest text-center">
                 {lastNightSummary.killedNickname}
               </p>
-              <Stamp variant="classified">Eliminacja</Stamp>
+              <Stamp color="red" rotate={-3}>
+                Eliminacja
+              </Stamp>
             </>
           ) : (
             <>
-              <span className="material-symbols-outlined text-[56px] text-on-surface/20">shield_moon</span>
+              <span className="material-symbols-outlined text-[56px] text-on-surface/20">
+                shield_moon
+              </span>
               <p className="font-display font-black text-lg text-on-surface uppercase tracking-wide text-center">
                 {lastNightSummary.savedByDoctor
                   ? "Lekarz uratował ofiarę!"
                   : "Tej nocy nikt nie zginął"}
               </p>
-              <Stamp variant="approved">Bez ofiar</Stamp>
+              <Stamp color="green" rotate={2}>
+                Bez ofiar
+              </Stamp>
             </>
           )}
         </div>
