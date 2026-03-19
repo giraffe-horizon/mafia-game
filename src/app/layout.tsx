@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import packageJson from "../../package.json";
 import { Be_Vietnam_Pro, Special_Elite } from "next/font/google";
+import { getClientConfig, ClientConfigProvider } from "@/config";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin"],
@@ -23,7 +24,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const clientConfig = await getClientConfig();
+
   return (
     <html lang="pl" className={`dark ${beVietnamPro.variable} ${specialElite.variable}`}>
       <head>
@@ -33,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col items-center justify-center m-0 p-0 antialiased overflow-x-hidden selection:bg-primary/30">
-        {children}
+        <ClientConfigProvider config={clientConfig}>{children}</ClientConfigProvider>
       </body>
     </html>
   );

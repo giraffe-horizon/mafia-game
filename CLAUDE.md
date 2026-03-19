@@ -36,6 +36,11 @@ src/
 │   └── ranking/               # Legacy page (ranking is now a modal)
 ├── components/
 │   └── ui/                    # Reusable primitives (Button, Card, Badge, Modal, etc.)
+├── config/
+│   ├── server.ts              # ServerConfig — async, server-only (never import in client components)
+│   ├── client.ts              # ClientConfig — async, called in layout.tsx, passed via React Context
+│   ├── ConfigContext.tsx       # ClientConfigProvider + useClientConfig() hook
+│   └── index.ts               # Barrel re-export
 ├── db/
 │   ├── queries/               # 8 domain modules (game, player, actions, phase, etc.)
 │   ├── types.ts               # All DB + API types
@@ -66,6 +71,13 @@ src/
 - `<img>` with `loading="lazy" decoding="async"` — `next/image` doesn't work on Cloudflare Workers
 - Error boundaries: `error.tsx` at root + per-route
 - Loading states: `loading.tsx` per-route
+
+### Config System
+- Both `getServerConfig()` and `getClientConfig()` are **async** (Cloudflare Workers compatibility)
+- `getServerConfig()` — server-only, use in API routes and server components
+- `getClientConfig()` — called in `layout.tsx` (server component), result passed to `ClientConfigProvider`
+- Client components access config via `useClientConfig()` hook — never call `getClientConfig()` directly in client code
+- Flow: `layout.tsx` → `await getClientConfig()` → `<ClientConfigProvider config={...}>` → `useClientConfig()`
 
 ### State Management
 - **Game state** → Zustand store (polling, toasts, actions, loading states)

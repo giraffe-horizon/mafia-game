@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/app/api/lib/db";
+import { getServerConfig } from "@/config/server";
 import {
   createGame,
   joinGame,
@@ -52,7 +53,7 @@ const NICKNAMES = [
 ];
 
 export async function POST(req: NextRequest) {
-  if (process.env.NODE_ENV === "production") {
+  if (!(await getServerConfig()).enableDevTools) {
     return NextResponse.json(null, { status: 404 });
   }
 
