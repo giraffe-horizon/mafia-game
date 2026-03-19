@@ -13,8 +13,8 @@ export default function PlayersListContainer() {
   const kickPlayer = useGameStore((s) => s.kickPlayer);
   const investigatedPlayersRaw = useGameStore((s) => s.state?.investigatedPlayers);
 
-  // Detective sees investigation results only after the night phase ends
-  const investigatedPlayers = phase !== "night" ? investigatedPlayersRaw : undefined;
+  // Detective sees investigation results only after night phase AND when role is revealed
+  const investigatedPlayers = phase !== "night" && roleVisible ? investigatedPlayersRaw : undefined;
 
   return (
     <PlayersList
