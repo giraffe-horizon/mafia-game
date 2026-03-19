@@ -4,19 +4,149 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary: #da0b0b;
+  /* ── V2 Design System: "Analog Intelligence Dossier" ── */
+
+  /* Surface stack: Desk → Folder → Document */
+  --color-background: #131313;
+  --color-surface-low: #1c1b1b;
+  --color-surface-lowest: #0e0e0e;
+  --color-surface-highest: #353534;
+
+  /* Paper / Stamp palette */
+  --color-paper: #d7c3b0;
+  --color-stamp: #ffb4ac;
+  --color-on-surface: #e8e0d8;
+  --color-on-paper: #1a1a1a;
+  --color-accent-green: #2a3a2a;
+
+  /* Semantic aliases */
+  --color-primary: #ffb4ac;
+  --color-primary-dark: #e8938a;
+
+  /* Legacy tokens (backward compat) */
   --color-background-light: #f8f5f5;
-  --color-background-dark: #1a0c0c;
-  --font-display: "Be Vietnam Pro", sans-serif;
-  --font-typewriter: "Special Elite", monospace;
-  --radius: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-full: 9999px;
+  --color-background-dark: #131313;
+
+  /* Typography: Space Grotesk replaces all fonts in v2 */
+  --font-display: "Space Grotesk", sans-serif;
+  --font-typewriter: "Space Grotesk", monospace;
+  --font-body: "Space Grotesk", sans-serif;
+
+  /* No rounded corners — analog paper has sharp edges */
+  --radius: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-full: 0;
 }
 
 @layer base {
   body {
     min-height: max(844px, 100dvh);
+    background-color: #131313;
+    color: #e8e0d8;
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  /* Step animations instead of smooth — mechanical typewriter feel */
+  * {
+    transition-timing-function: steps(1);
+  }
+
+  /* Exceptions: opacity and color transitions can be instant step */
+  button,
+  input,
+  textarea,
+  select {
+    transition-timing-function: steps(1);
+  }
+}
+
+@layer utilities {
+  /* Grain texture overlay — simulates aged paper/desk surface */
+  .grain {
+    position: relative;
+  }
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Rubber stamp — rotated rectangular label */
+  .stamp {
+    display: inline-block;
+    border: 2px solid currentColor;
+    padding: 0.2em 0.5em;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+    transform: rotate(-2deg);
+    line-height: 1.2;
+  }
+
+  .stamp-green {
+    color: #4a8c4a;
+    border-color: #4a8c4a;
+    transform: rotate(3deg);
+  }
+
+  .stamp-red {
+    color: #ffb4ac;
+    border-color: #ffb4ac;
+    transform: rotate(-2deg);
+  }
+
+  .stamp-black {
+    color: #1a1a1a;
+    border-color: #1a1a1a;
+    transform: rotate(1.5deg);
+  }
+
+  /* Redacted block — solid overlay for hidden data */
+  .redacted {
+    background-color: #1a1a1a;
+    color: transparent !important;
+    user-select: none;
+    border-radius: 0;
+  }
+
+  /* Paper card surface */
+  .paper-card {
+    background-color: #d7c3b0;
+    color: #1a1a1a;
+  }
+
+  /* Tape detail — corner tape strip effect */
+  .tape-corner {
+    position: relative;
+  }
+  .tape-corner::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 12px;
+    width: 32px;
+    height: 12px;
+    background-color: rgba(215, 195, 176, 0.5);
+    transform: rotate(-1deg);
+    z-index: 1;
+  }
+
+  /* CRT accent surface (lobby/GM panel) */
+  .crt-surface {
+    background-color: #2a3a2a;
+    color: #a8c8a8;
+  }
+
+  /* ALL CAPS with tracking — typewriter heading style */
+  .heading-stamp {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
   }
 }

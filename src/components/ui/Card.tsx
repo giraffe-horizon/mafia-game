@@ -6,18 +6,22 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
+// "Dossier Sheet" card style — no dividers, no rounded corners
+// default = paper (pergamin) surface
+// highlighted = paper with stamp accent border
+// danger = dark folder surface with stamp outline
 const cardVariants = {
-  default: "bg-black/40 border border-slate-700",
-  highlighted: "bg-black/60 border border-primary/20 hover:border-primary/40",
-  danger: "bg-black/40 border border-red-900/40",
+  default: "bg-paper text-on-paper",
+  highlighted: "bg-paper text-on-paper border-l-4 border-stamp",
+  danger: "bg-surface-low text-on-surface border-l-4 border-stamp/70",
 };
 
 export default function Card({ variant = "default", children, className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        // Base styles
-        "rounded-xl p-4",
+        // Base: no border-radius, generous padding (document margins)
+        "p-4",
         // Variant styles
         cardVariants[variant],
         className

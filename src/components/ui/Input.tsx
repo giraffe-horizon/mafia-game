@@ -9,17 +9,19 @@ interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   icon?: string; // material symbols icon name
 }
 
+// "Form" input style — no background, single bottom border
+// Focus: bottom border shifts to primary (stamp red)
 export function Input({ icon, className, ...props }: InputProps) {
   if (icon) {
     return (
       <div className="relative">
-        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface/50">
           <span className="material-symbols-outlined text-[20px]">{icon}</span>
         </span>
         <input
           className={cn(
-            // Base styles
-            "flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/30 bg-black/40 backdrop-blur-sm h-10 font-medium leading-normal transition-all placeholder:text-slate-600",
+            // No background, single bottom border
+            "flex w-full bg-transparent text-on-surface border-0 border-b border-on-surface/40 focus:border-stamp focus:outline-none h-10 font-display font-medium leading-normal placeholder:text-on-surface/30",
             // With icon padding
             "pl-10 pr-3",
             className
@@ -33,8 +35,8 @@ export function Input({ icon, className, ...props }: InputProps) {
   return (
     <input
       className={cn(
-        // Base styles
-        "flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-slate-600 bg-slate-800 h-10 px-3 font-medium leading-normal transition-all placeholder:text-slate-600",
+        // No background, single bottom border
+        "flex w-full bg-transparent text-on-surface border-0 border-b border-on-surface/40 focus:border-stamp focus:outline-none h-10 px-0 font-display font-medium leading-normal placeholder:text-on-surface/30",
         className
       )}
       {...props}
@@ -46,13 +48,13 @@ export function TextArea({ icon, className, ...props }: TextAreaProps) {
   if (icon) {
     return (
       <div className="relative">
-        <span className="absolute top-3 left-0 flex items-center pl-3 text-slate-400">
+        <span className="absolute top-3 left-0 flex items-center pl-3 text-on-surface/50">
           <span className="material-symbols-outlined text-[20px]">{icon}</span>
         </span>
         <textarea
           className={cn(
-            // Base styles
-            "flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/30 bg-black/40 backdrop-blur-sm p-3 font-medium leading-normal transition-all placeholder:text-slate-600 resize-none",
+            // No background, border only at bottom; for textarea use full border for readability
+            "flex w-full bg-surface-low text-on-surface border border-on-surface/20 focus:border-stamp focus:outline-none p-3 font-display font-medium leading-normal placeholder:text-on-surface/30 resize-none",
             // With icon padding
             "pl-10",
             className
@@ -66,8 +68,8 @@ export function TextArea({ icon, className, ...props }: TextAreaProps) {
   return (
     <textarea
       className={cn(
-        // Base styles
-        "flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-slate-600 bg-slate-800 p-3 font-medium leading-normal transition-all placeholder:text-slate-600 resize-none",
+        // No background, border only for multi-line
+        "flex w-full bg-surface-low text-on-surface border border-on-surface/20 focus:border-stamp focus:outline-none p-3 font-display font-medium leading-normal placeholder:text-on-surface/30 resize-none",
         className
       )}
       {...props}

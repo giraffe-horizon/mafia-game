@@ -6,22 +6,23 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
 }
 
+// Stamp-style badge: rectangular border, no rounded corners, ALL CAPS
 const badgeVariants = {
-  mafia: "text-red-400 border-red-900/50 bg-red-950/30",
-  detective: "text-blue-400 border-blue-900/50 bg-blue-950/30",
-  doctor: "text-green-400 border-green-900/50 bg-green-950/30",
-  civilian: "text-slate-400 border-slate-700 bg-slate-900/30",
-  success: "text-green-400 border-green-900/50 bg-green-950/30",
-  warning: "text-yellow-400 border-yellow-900/50 bg-yellow-950/30",
-  danger: "text-red-400 border-red-900/50 bg-red-950/30",
+  mafia: "text-stamp border-stamp/80 bg-transparent",
+  detective: "text-blue-300 border-blue-400/60 bg-transparent",
+  doctor: "text-green-300 border-green-400/60 bg-transparent",
+  civilian: "text-on-surface/70 border-on-surface/40 bg-transparent",
+  success: "text-green-300 border-green-400/60 bg-transparent",
+  warning: "text-yellow-300 border-yellow-400/60 bg-transparent",
+  danger: "text-stamp border-stamp/80 bg-transparent",
 };
 
 export default function Badge({ variant = "civilian", children, className, ...props }: BadgeProps) {
   return (
     <span
       className={cn(
-        // Base styles
-        "text-xs font-typewriter font-bold uppercase px-2 py-1 rounded border",
+        // Rectangular stamp style — no border-radius
+        "text-xs font-display font-bold uppercase tracking-wider px-2 py-0.5 border",
         // Variant styles
         badgeVariants[variant],
         className

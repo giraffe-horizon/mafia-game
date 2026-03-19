@@ -29,3 +29,5 @@ export type { FormFieldProps } from "./FormField";
 export type { ActionBarProps } from "./ActionBar";
 export type { StatusItemProps } from "./StatusItem";
 export { default as RoleHidden } from "./RoleHidden";
+export { default as Stamp } from "./Stamp";
+export type { StampProps } from "./Stamp";
