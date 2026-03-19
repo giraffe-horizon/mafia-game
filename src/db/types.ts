@@ -197,4 +197,29 @@ export interface GameStateResponse {
   };
   // Whether to show points/missions to players (only during review/finished)
   showPoints: boolean;
+  // History of votes from previous rounds (for GŁOSY tab)
+  voteHistory?: {
+    round: number;
+    results: {
+      nickname: string;
+      playerId: string;
+      votes: number;
+      eliminated: boolean;
+    }[];
+  }[];
+  // Summary of last night's events (for NOC tab during day/voting)
+  lastNightSummary?: {
+    round: number;
+    killedNickname: string | null; // null = nobody died
+    savedByDoctor: boolean;
+  };
+  // System event messages grouped per round (for LOGI tab)
+  gameLog?: {
+    round: number;
+    events: {
+      type: string;
+      description: string;
+      timestamp: string;
+    }[];
+  }[];
 }

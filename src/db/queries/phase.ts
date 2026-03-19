@@ -238,7 +238,7 @@ export async function resolveNight(
   const messagePromises = allPlayers.map((player) =>
     db
       .prepare(
-        "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)"
+        "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at, event_type, round) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)"
       )
       .bind(
         crypto.randomUUID(),
@@ -246,7 +246,9 @@ export async function resolveNight(
         hostPlayer.player_id,
         player.player_id,
         nightMsg,
-        now()
+        now(),
+        "night_result",
+        gameRow.round
       )
       .run()
   );
@@ -300,7 +302,7 @@ export async function resolveVoting(
     const messagePromises = allPlayers.map((player) =>
       db
         .prepare(
-          "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)"
+          "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at, event_type, round) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)"
         )
         .bind(
           crypto.randomUUID(),
@@ -308,7 +310,9 @@ export async function resolveVoting(
           hostPlayer.player_id,
           player.player_id,
           eliminationMsg,
-          now()
+          now(),
+          "vote_result",
+          gameRow.round
         )
         .run()
     );

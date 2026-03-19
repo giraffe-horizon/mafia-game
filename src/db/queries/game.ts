@@ -326,6 +326,114 @@ export async function getGameState(
 
   const showPoints = gameRow.phase === "review" || gameRow.status === "finished";
 
+  // --- Faza 0 new fields ---
+
+  // voteHistory: tallied votes from all voting phases, grouped by round
+  const { results: voteRows } = await db
+    .prepare(
+      `SELECT ga.round, ga.target_player_id, gp.nickname, COUNT(*) as votes
+       FROM game_actions ga
+       JOIN game_players gp ON ga.target_player_id = gp.player_id AND gp.game_id = ga.game_id
+       WHERE ga.game_id = ? AND ga.action_type = 'vote' AND ga.phase = 'voting'
+       GROUP BY ga.round, ga.target_player_id
+       ORDER BY ga.round ASC, votes DESC`
+    )
+    .bind(playerRow.game_id)
+    .all<{ round: number; target_player_id: string; nickname: string; votes: number }>();
+
+  const voteMap = new Map<
+    number,
+    { nickname: string; playerId: string; votes: number; eliminated: boolean }[]
+  >();
+  for (const row of voteRows) {
+    if (!voteMap.has(row.round)) voteMap.set(row.round, []);
+    voteMap.get(row.round)!.push({
+      nickname: row.nickname,
+      playerId: row.target_player_id,
+      votes: row.votes,
+      eliminated: false,
+    });
+  }
+  // Mark eliminated player: clear winner (not tied) gets eliminated: true
+  for (const results of voteMap.values()) {
+    if (results.length === 1 || (results.length > 1 && results[0].votes > results[1].votes)) {
+      results[0].eliminated = true;
+    }
+  }
+  const voteHistory = Array.from(voteMap.entries())
+    .map(([round, results]) => ({ round, results }))
+    .sort((a, b) => a.round - b.round);
+
+  // lastNightSummary: who died (or was saved) in the most recently completed night
+  let lastNightSummary:
+    | { round: number; killedNickname: string | null; savedByDoctor: boolean }
+    | undefined;
+  const lastNightRound = gameRow.phase === "night" ? gameRow.round - 1 : gameRow.round;
+  if (lastNightRound > 0 && gameRow.status === "playing") {
+    const { results: nightKills } = await db
+      .prepare(
+        "SELECT target_player_id FROM game_actions WHERE game_id = ? AND round = ? AND phase = 'night' AND action_type = 'kill'"
+      )
+      .bind(playerRow.game_id, lastNightRound)
+      .all<{ target_player_id: string }>();
+
+    if (nightKills.length === 0) {
+      lastNightSummary = { round: lastNightRound, killedNickname: null, savedByDoctor: false };
+    } else {
+      // Determine consensus kill target (most common target)
+      const killCounts = new Map<string, number>();
+      for (const k of nightKills) {
+        killCounts.set(k.target_player_id, (killCounts.get(k.target_player_id) ?? 0) + 1);
+      }
+      const killTarget = [...killCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+
+      const protection = await db
+        .prepare(
+          "SELECT COUNT(*) as count FROM game_actions WHERE game_id = ? AND round = ? AND action_type = 'protect' AND target_player_id = ?"
+        )
+        .bind(playerRow.game_id, lastNightRound, killTarget)
+        .first<{ count: number }>();
+
+      const wasProtected = (protection?.count ?? 0) > 0;
+      if (wasProtected) {
+        lastNightSummary = { round: lastNightRound, killedNickname: null, savedByDoctor: true };
+      } else {
+        const victim = await db
+          .prepare("SELECT nickname FROM game_players WHERE game_id = ? AND player_id = ?")
+          .bind(playerRow.game_id, killTarget)
+          .first<{ nickname: string }>();
+        lastNightSummary = {
+          round: lastNightRound,
+          killedNickname: victim?.nickname ?? null,
+          savedByDoctor: false,
+        };
+      }
+    }
+  }
+
+  // gameLog: system event messages (night_result, vote_result) grouped by round
+  const { results: eventMessages } = await db
+    .prepare(
+      `SELECT content, created_at, event_type, round
+       FROM messages
+       WHERE game_id = ? AND to_player_id = ? AND event_type IS NOT NULL
+       ORDER BY round ASC, created_at ASC`
+    )
+    .bind(playerRow.game_id, playerRow.player_id)
+    .all<{ content: string; created_at: string; event_type: string; round: number | null }>();
+
+  const gameLogMap = new Map<number, { type: string; description: string; timestamp: string }[]>();
+  for (const msg of eventMessages) {
+    const r = msg.round ?? 0;
+    if (!gameLogMap.has(r)) gameLogMap.set(r, []);
+    gameLogMap
+      .get(r)!
+      .push({ type: msg.event_type, description: msg.content, timestamp: msg.created_at });
+  }
+  const gameLog = Array.from(gameLogMap.entries())
+    .map(([round, events]) => ({ round, events }))
+    .sort((a, b) => a.round - b.round);
+
   // Parse lobby settings from config
   let lobbySettings: { mode: "full" | "simple"; mafiaCount: number } | undefined;
   try {
@@ -390,6 +498,9 @@ export async function getGameState(
     phaseProgress,
     lobbySettings,
     showPoints,
+    voteHistory,
+    lastNightSummary,
+    gameLog,
   };
 }
 
