@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useGameStore } from "@/features/game/store/gameStore";
 import { usePlayerState } from "@/features/game/hooks/usePlayerState";
 import LobbyView from "@/features/game/components/lobby/LobbyView";
+import PlayersListContainer from "@/features/game/containers/PlayersListContainer";
 import { COPY_FEEDBACK_MS } from "@/lib/constants";
 
 export default function LobbyContainer() {
@@ -36,21 +37,24 @@ export default function LobbyContainer() {
   }
 
   return (
-    <LobbyView
-      isHost={isHost}
-      gameCode={state.game.code}
-      joinUrl={joinUrl}
-      copied={copied}
-      copyCode={copyCode}
-      setCopied={setCopied}
-      nonHostPlayers={nonHostPlayers}
-      gameMode={gameMode}
-      setGameMode={setGameMode}
-      mafiaCount={mafiaCount}
-      setMafiaCount={setMafiaCount}
-      starting={starting}
-      onStart={() => startGame(gameMode, mafiaCount)}
-      onTransferGm={(playerId: string) => transferGameMaster(playerId)}
-    />
+    <>
+      <LobbyView
+        isHost={isHost}
+        gameCode={state.game.code}
+        joinUrl={joinUrl}
+        copied={copied}
+        copyCode={copyCode}
+        setCopied={setCopied}
+        nonHostPlayers={nonHostPlayers}
+        gameMode={gameMode}
+        setGameMode={setGameMode}
+        mafiaCount={mafiaCount}
+        setMafiaCount={setMafiaCount}
+        starting={starting}
+        onStart={() => startGame(gameMode, mafiaCount)}
+        onTransferGm={(playerId: string) => transferGameMaster(playerId)}
+      />
+      <PlayersListContainer />
+    </>
   );
 }

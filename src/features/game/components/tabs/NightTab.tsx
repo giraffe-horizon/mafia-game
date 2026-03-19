@@ -4,6 +4,7 @@ import { useGameStore } from "@/features/game/store/gameStore";
 import { usePlayerState } from "@/features/game/hooks/usePlayerState";
 import { useCurrentPhase } from "@/features/game/hooks/useCurrentPhase";
 import NightContainer from "@/features/game/containers/NightContainer";
+import PlayersListContainer from "@/features/game/containers/PlayersListContainer";
 import DeadSpectatorView from "@/features/game/components/shared/DeadSpectatorView";
 import { Stamp } from "@/components/ui";
 
@@ -33,6 +34,7 @@ export default function NightTab() {
           </span>
         </div>
         <NightContainer />
+        <PlayersListContainer />
       </div>
     );
   }
