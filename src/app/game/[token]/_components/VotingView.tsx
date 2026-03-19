@@ -1,41 +1,15 @@
-import type { PublicPlayer } from "@/db/types";
 import { SectionHeader } from "@/components/ui";
+import type {
+  VotingPlayerState as PlayerState,
+  VotingViewState,
+  VoteState,
+} from "@/app/game/[token]/_types";
 import DeadSpectatorView from "@/app/game/[token]/_components/DeadSpectatorView";
 import VotePanel from "@/app/game/[token]/_components/VotePanel";
 import RoleCard from "@/app/game/[token]/_components/RoleCard";
 import PhaseIndicator from "@/app/game/[token]/_components/PhaseIndicator";
 
-interface VoteTally {
-  votedCount: number;
-  totalVoters: number;
-  results: Array<{
-    playerId: string;
-    nickname: string;
-    votes: number;
-  }>;
-}
-
-export interface PlayerState {
-  isAlive: boolean;
-  role?: string;
-}
-
-export interface VotingViewState {
-  roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
-  phase: string;
-}
-
-export interface VoteState {
-  players: PublicPlayer[];
-  myAction: { actionType: string; targetPlayerId: string | null } | null;
-  actionPending: boolean;
-  actionError: string;
-  changingDecision: boolean;
-  setChangingDecision: (changing: boolean) => void;
-  onVote: (targetId: string) => void;
-  voteTally?: VoteTally;
-}
+export type { PlayerState, VotingViewState, VoteState };
 
 interface VotingViewProps {
   isHost: boolean;

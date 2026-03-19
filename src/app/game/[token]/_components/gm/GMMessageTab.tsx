@@ -1,5 +1,5 @@
 import type { PublicPlayer } from "@/db";
-import type { MessageFormProps } from "@/app/game/[token]/types";
+import type { MessageFormProps } from "@/app/game/[token]/_types";
 import { Button } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import { TextArea } from "@/components/ui/Input";

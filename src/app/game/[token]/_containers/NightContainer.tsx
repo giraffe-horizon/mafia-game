@@ -1,17 +1,18 @@
 "use client";
 
 import type { ActionType } from "@/db/types";
+import type {
+  NightPlayerState,
+  NightViewState,
+  NightActionData,
+  ActionState,
+  MafiaState,
+} from "@/app/game/[token]/_types";
 import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 import { usePlayerState } from "@/app/game/[token]/_hooks/usePlayerState";
 import { useRoleVisibility } from "@/app/game/[token]/_hooks/useRoleVisibility";
 import { useActionTargets } from "@/app/game/[token]/_hooks/useActionTargets";
 import NightView from "@/app/game/[token]/_components/NightView";
-import type {
-  PlayerState,
-  NightViewState,
-  NightActionData,
-} from "@/app/game/[token]/_components/NightView";
-import type { ActionState, MafiaState } from "@/app/game/[token]/_components/NightActionPanel";
 
 export default function NightContainer() {
   const { isHost, currentPlayer, players } = usePlayerState();
@@ -27,7 +28,7 @@ export default function NightContainer() {
 
   if (!currentPlayer) return null;
 
-  const playerState: PlayerState = {
+  const playerState: NightPlayerState = {
     isAlive: currentPlayer.isAlive,
     role: currentPlayer.role || undefined,
   };

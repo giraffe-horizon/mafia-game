@@ -10,7 +10,7 @@ import { useMessageForm } from "@/app/game/[token]/_hooks/useMessageForm";
 import { useMissionForm } from "@/app/game/[token]/_hooks/useMissionForm";
 import { createHttpGameService } from "@/app/game/[token]/_services/gameService";
 import GMPanel from "@/app/game/[token]/_components/gm/GMPanel";
-import type { MessageFormProps, MissionFormProps } from "@/app/game/[token]/types";
+import type { MessageFormProps, MissionFormProps } from "@/app/game/[token]/_types";
 
 const gameService = createHttpGameService();
 

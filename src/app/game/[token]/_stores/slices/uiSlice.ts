@@ -1,10 +1,8 @@
 import type { StateCreator } from "zustand";
 import type { GameState } from "@/app/game/[token]/_stores/gameStore";
+import type { Toast } from "@/app/game/[token]/_types";
 
-export interface Toast {
-  id: string;
-  content: string;
-}
+export type { Toast };
 
 export interface UiSlice {
   // Toasts

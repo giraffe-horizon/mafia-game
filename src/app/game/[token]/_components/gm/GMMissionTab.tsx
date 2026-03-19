@@ -1,15 +1,7 @@
 import { MISSION_PRESETS, CATEGORY_LABELS } from "@/lib/missions-presets";
 import type { PublicPlayer } from "@/db";
-import type { MissionFormProps } from "@/app/game/[token]/types";
+import type { MissionFormProps, HostMission } from "@/app/game/[token]/_types";
 import { SectionHeader } from "@/components/ui";
-
-interface HostMission {
-  id: string;
-  playerNickname: string;
-  description: string;
-  points: number;
-  isCompleted: boolean;
-}
 
 interface GMMissionTabProps extends MissionFormProps {
   players: PublicPlayer[];

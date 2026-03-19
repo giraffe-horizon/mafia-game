@@ -1,27 +1,14 @@
 import type { PublicPlayer, Role } from "@/db/types";
-import NightActionPanel, {
-  type ActionState,
-  type MafiaState,
-} from "@/app/game/[token]/_components/NightActionPanel";
+import type {
+  NightPlayerState as PlayerState,
+  NightViewState,
+  NightActionData,
+} from "@/app/game/[token]/_types";
+import NightActionPanel from "@/app/game/[token]/_components/NightActionPanel";
 import DeadSpectatorView from "@/app/game/[token]/_components/DeadSpectatorView";
 import RoleCard from "@/app/game/[token]/_components/RoleCard";
 
-export interface PlayerState {
-  isAlive: boolean;
-  role?: string;
-}
-
-export interface NightViewState {
-  roleVisible: boolean;
-  setRoleVisible: (visible: boolean | ((prev: boolean) => boolean)) => void;
-}
-
-export interface NightActionData {
-  actionTargets: PublicPlayer[];
-  myAction: { actionType: string; targetPlayerId: string | null } | null;
-  actionState: ActionState;
-  mafiaState: MafiaState;
-}
+export type { PlayerState, NightViewState, NightActionData };
 
 interface NightViewProps {
   isHost: boolean;

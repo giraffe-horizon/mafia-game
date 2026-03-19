@@ -1,23 +1,12 @@
 "use client";
 
-import type { PublicPlayer, GameStateResponse } from "@/db";
+import type { PublicPlayer } from "@/db";
 import type { Role, ActionType } from "@/db/types";
+import type { ActionState, MafiaState } from "@/app/game/[token]/_types";
 import { ACTION_CONFIRMED } from "@/lib/constants";
 import MafiaConsensusStatus from "@/app/game/[token]/_components/MafiaConsensusStatus";
 import ActionConfirmation from "@/app/game/[token]/_components/ActionConfirmation";
 import { Button, SectionHeader, InfoCard } from "@/components/ui";
-
-export interface ActionState {
-  pending: boolean;
-  error: string;
-  onAction: (type: ActionType, targetId: string) => void;
-  onChangeDecision: () => void;
-}
-
-export interface MafiaState {
-  teamActions?: GameStateResponse["mafiaTeamActions"];
-  currentNickname?: string;
-}
 
 interface NightActionPanelProps {
   role: Role | null;

@@ -1,10 +1,4 @@
-interface HostMission {
-  id: string;
-  playerNickname: string;
-  description: string;
-  points: number;
-  isCompleted: boolean;
-}
+import type { HostMission } from "@/app/game/[token]/_types";
 
 interface ReviewViewProps {
   isHost: boolean;

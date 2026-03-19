@@ -2,7 +2,7 @@
 
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { GamePhase, ActionType } from "@/db/types";
-import type { MessageFormProps, MissionFormProps } from "@/app/game/[token]/types";
+import type { MessageFormProps, MissionFormProps } from "@/app/game/[token]/_types";
 import GMGameTab from "@/app/game/[token]/_components/gm/GMGameTab";
 import GMMessageTab from "@/app/game/[token]/_components/gm/GMMessageTab";
 import GMMissionTab from "@/app/game/[token]/_components/gm/GMMissionTab";

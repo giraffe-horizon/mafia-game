@@ -1,15 +1,11 @@
 "use client";
 
+import type { VotingPlayerState, VotingViewState, VoteState } from "@/app/game/[token]/_types";
 import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 import { usePlayerState } from "@/app/game/[token]/_hooks/usePlayerState";
 import { useRoleVisibility } from "@/app/game/[token]/_hooks/useRoleVisibility";
 import { useCurrentPhase } from "@/app/game/[token]/_hooks/useCurrentPhase";
 import VotingView from "@/app/game/[token]/_components/VotingView";
-import type {
-  PlayerState,
-  VotingViewState,
-  VoteState,
-} from "@/app/game/[token]/_components/VotingView";
 
 export default function VotingContainer() {
   const { isHost, currentPlayer, players } = usePlayerState();
@@ -26,7 +22,7 @@ export default function VotingContainer() {
 
   if (!currentPlayer || !phase) return null;
 
-  const currentPlayerState: PlayerState = {
+  const currentPlayerState: VotingPlayerState = {
     isAlive: currentPlayer.isAlive,
     role: currentPlayer.role || undefined,
   };
