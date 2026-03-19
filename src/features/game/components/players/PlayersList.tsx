@@ -1,6 +1,5 @@
 import type { PublicPlayer } from "@/db";
 import PlayerRow from "@/features/game/components/players/PlayerRow";
-import { SectionHeader } from "@/components/ui";
 
 interface PlayersListProps {
   players: PublicPlayer[];
@@ -29,10 +28,19 @@ export default function PlayersList({
     ? new Map(investigatedPlayers.map((ip) => [ip.playerId, ip.isMafia]))
     : null;
 
+  const nonHostPlayers = players.filter((p) => !p.isHost);
+
   return (
-    <div className="mx-5 mt-5">
-      <SectionHeader className="mb-3 pl-1">Gracze ({players.length})</SectionHeader>
-      <div className="flex flex-col gap-2">
+    <div className="border-t border-surface-highest mt-4">
+      {/* Header */}
+      <div className="px-4 py-2 flex items-center gap-2 border-b border-surface-highest/40">
+        <span className="material-symbols-outlined text-[14px] text-on-surface/30">group</span>
+        <span className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/30">
+          Lista obecności agentów ({nonHostPlayers.length})
+        </span>
+      </div>
+      {/* Rows */}
+      <div className="flex flex-col">
         {players.map((p) => (
           <PlayerRow
             key={p.playerId}

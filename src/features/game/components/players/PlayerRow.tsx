@@ -50,12 +50,9 @@ export default function PlayerRow({
     setIsEditing(false);
   };
 
-  // Player states for choosing character
   const isChoosingCharacter = !player.nickname && !player.character;
   const hasNicknameNoCharacter = player.nickname && !player.character;
-
   const showRoleBadge = isHost && isGamePlaying && player.role != null && !isChoosingCharacter;
-
   const isMafiaTeammate =
     !isHost &&
     !player.isYou &&
@@ -66,122 +63,121 @@ export default function PlayerRow({
 
   return (
     <div
-      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${player.isYou ? "border-emerald-500/50 bg-emerald-500/5" : "border-slate-800 bg-black/20"} ${!player.isAlive ? "opacity-40" : ""}`}
+      className={`flex items-center gap-3 px-3 py-2.5 border-b border-surface-highest/40 last:border-0 transition-all ${!player.isAlive ? "opacity-40" : ""}`}
     >
+      {/* Avatar — Polaroid style */}
       <div
-        className={`w-9 h-9 rounded-full flex items-center justify-center border ${
-          player.isHost ? "border-primary/50 bg-primary/10" : "border-slate-700 bg-slate-800"
+        className={`w-8 h-8 flex-shrink-0 border overflow-hidden ${
+          player.isYou
+            ? "border-primary/60"
+            : player.isHost
+              ? "border-primary/30"
+              : "border-surface-highest"
         } ${isChoosingCharacter || hasNicknameNoCharacter ? "animate-pulse" : ""}`}
       >
-        {player.character ? (
-          <>
-            {player.character.avatarUrl && !imgError ? (
-              <img
-                src={player.character.avatarUrl}
-                alt={player.character.namePl}
-                loading="lazy"
-                decoding="async"
-                className="w-9 h-9 rounded-full object-cover"
-                onError={handleImgError}
-              />
-            ) : (
-              <div className="w-9 h-9 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-sm">
-                {player.character.namePl.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </>
+        {player.character && player.character.avatarUrl && !imgError ? (
+          <img
+            src={player.character.avatarUrl}
+            alt={player.character.namePl}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+            onError={handleImgError}
+          />
         ) : (
-          <span className="material-symbols-outlined text-[18px] text-slate-400">
-            {isChoosingCharacter || hasNicknameNoCharacter
-              ? "hourglass_top"
-              : player.isHost
-                ? "manage_accounts"
-                : "person"}
-          </span>
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          {isEditing && isLobby && player.isYou ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={editNickname}
-                onChange={(e) => setEditNickname(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSaveRename();
-                  if (e.key === "Escape") handleCancelEdit();
-                }}
-                className="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white max-w-[120px]"
-                placeholder="Nazwa gracza"
-                maxLength={MAX_NICKNAME_LENGTH}
-                autoFocus
-              />
-              <button
-                onClick={handleSaveRename}
-                className="text-green-400 hover:text-green-300 transition-colors"
-                title="Zapisz"
-              >
-                <span className="material-symbols-outlined text-[16px]">check</span>
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="text-slate-400 hover:text-slate-300 transition-colors"
-                title="Anuluj"
-              >
-                <span className="material-symbols-outlined text-[16px]">close</span>
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  {isChoosingCharacter ? (
-                    <span className="text-sm font-medium text-slate-400 italic animate-pulse">
-                      Wybiera postać...
-                    </span>
-                  ) : (
-                    <>
-                      <span className="text-sm font-medium text-white truncate">
-                        {player.nickname}
-                      </span>
-                      {player.isYou && (
-                        <span className="text-xs text-emerald-400/70 font-typewriter">(Ty)</span>
-                      )}
-                    </>
-                  )}
-                </div>
-                {player.character && (
-                  <span className="text-[11px] text-slate-500 font-typewriter">
-                    {player.character.namePl}
-                  </span>
-                )}
-              </div>
-            </>
-          )}
-          {isMafiaTeammate && (
-            <span
-              className="material-symbols-outlined text-[14px] text-red-400"
-              title="Członek mafii"
-            >
-              group
+          <div className="w-full h-full bg-surface-highest flex items-center justify-center">
+            <span className="material-symbols-outlined text-[14px] text-on-surface/30">
+              {isChoosingCharacter || hasNicknameNoCharacter
+                ? "hourglass_top"
+                : player.isHost
+                  ? "star"
+                  : "person"}
             </span>
-          )}
-        </div>
-        {!player.isAlive && (
-          <span className="text-xs text-slate-600 font-typewriter uppercase">Wyeliminowany</span>
+          </div>
         )}
       </div>
+
+      {/* Name + character */}
+      <div className="flex-1 min-w-0">
+        {isEditing && isLobby && player.isYou ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={editNickname}
+              onChange={(e) => setEditNickname(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveRename();
+                if (e.key === "Escape") handleCancelEdit();
+              }}
+              className="bg-transparent border-b border-primary text-on-surface text-sm font-display max-w-[120px] focus:outline-none"
+              placeholder="Nazwa gracza"
+              maxLength={MAX_NICKNAME_LENGTH}
+              autoFocus
+            />
+            <button onClick={handleSaveRename} className="text-primary hover:opacity-70">
+              <span className="material-symbols-outlined text-[14px]">check</span>
+            </button>
+            <button onClick={handleCancelEdit} className="text-on-surface/30 hover:opacity-70">
+              <span className="material-symbols-outlined text-[14px]">close</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              {isChoosingCharacter ? (
+                <span className="font-display text-xs text-on-surface/30 uppercase tracking-widest animate-pulse">
+                  Wybiera postać...
+                </span>
+              ) : (
+                <>
+                  <span
+                    className={`font-display font-black text-sm uppercase tracking-wide truncate ${player.isYou ? "text-on-surface" : "text-on-surface/70"}`}
+                  >
+                    {player.nickname}
+                  </span>
+                  {player.isYou && (
+                    <span className="font-display text-[9px] text-primary uppercase tracking-widest">
+                      (Ty)
+                    </span>
+                  )}
+                  {isMafiaTeammate && (
+                    <span
+                      className="material-symbols-outlined text-[12px] text-primary-dark"
+                      title="Mafia"
+                    >
+                      group
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+            {player.character && (
+              <span className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+                {player.character.namePl}
+              </span>
+            )}
+            {!player.isAlive && (
+              <span className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+                Wyeliminowany
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Investigation result */}
       {investigated === true && (
-        <span className="material-symbols-outlined text-[18px] text-red-400" title="Mafia">
+        <span className="material-symbols-outlined text-[16px] text-primary-dark" title="Mafia">
           close
         </span>
       )}
       {investigated === false && (
-        <span className="material-symbols-outlined text-[18px] text-green-400" title="Niewinny">
+        <span className="material-symbols-outlined text-[16px] text-green-400" title="Niewinny">
           check
         </span>
       )}
+
+      {/* Role badge (GM or finished) */}
       {showRoleBadge && player.role && (
         <Badge variant={player.role as "mafia" | "detective" | "doctor" | "civilian"}>
           {ROLE_LABELS[player.role]}
@@ -192,13 +188,26 @@ export default function PlayerRow({
           {ROLE_LABELS[player.role]}
         </Badge>
       )}
+
+      {/* Rename button for own player in lobby */}
+      {isLobby && player.isYou && !isEditing && !isHost && (
+        <button
+          onClick={() => setIsEditing(true)}
+          className="size-7 flex items-center justify-center text-on-surface/20 hover:text-on-surface/50 transition-colors"
+          title="Zmień pseudonim"
+        >
+          <span className="material-symbols-outlined text-[14px]">edit</span>
+        </button>
+      )}
+
+      {/* Kick button (host only, in lobby) */}
       {isLobby && isHost && !player.isHost && onKick && (
         <button
           onClick={() => onKick(player.playerId)}
-          className="size-8 flex items-center justify-center rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-950/30 transition-all"
+          className="size-7 flex items-center justify-center text-on-surface/20 hover:text-primary-dark transition-colors"
           title="Usuń gracza"
         >
-          <span className="material-symbols-outlined text-[16px]">close</span>
+          <span className="material-symbols-outlined text-[14px]">close</span>
         </button>
       )}
     </div>

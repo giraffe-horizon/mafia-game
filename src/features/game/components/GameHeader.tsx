@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { PHASE_LABELS } from "@/lib/constants";
+import { PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
 
 interface GameHeaderProps {
   phase: string;
@@ -30,31 +30,56 @@ export default function GameHeader({
   const handleImgError = useCallback(() => setImgError(true), []);
 
   return (
-    <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-800">
+    <div className="relative z-20 flex items-center justify-between px-4 py-2.5 border-b border-surface-highest bg-surface-low">
+      {/* Left: Back + Ranking */}
       <div className="flex items-center gap-1">
         <Link
           href="/"
-          className="size-9 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
+          className="size-9 flex items-center justify-center text-on-surface/30 hover:text-on-surface/60 transition-colors"
         >
-          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
         </Link>
         <button
           onClick={onShowRanking}
-          className="size-9 flex items-center justify-center text-slate-500 hover:text-amber-400 transition-colors"
+          className="size-9 flex items-center justify-center text-on-surface/30 hover:text-on-surface/60 transition-colors"
           title="Ranking sesji"
         >
           <span className="material-symbols-outlined text-[18px]">leaderboard</span>
         </button>
       </div>
+
+      {/* Center: Phase + Round */}
       <div className="text-center">
-        <h2 className="font-typewriter text-white text-sm font-semibold">{PHASE_LABELS[phase]}</h2>
-        {round > 0 && <p className="text-slate-500 text-xs font-typewriter">Runda {round}</p>}
+        {isHost ? (
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[14px] text-primary">star</span>
+            <span className="font-display font-black text-xs uppercase tracking-widest text-primary">
+              Mistrz Gry
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[14px] text-on-surface/40">
+              {PHASE_ICONS[phase] ?? "radio_button_unchecked"}
+            </span>
+            <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
+              {PHASE_LABELS[phase] ?? phase}
+            </span>
+          </div>
+        )}
+        {round > 0 && (
+          <p className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+            Runda {round}
+          </p>
+        )}
       </div>
+
+      {/* Right: Settings */}
       <div className="size-9 flex items-center justify-center">
         {isHost ? (
           <button
             onClick={onShowSettings}
-            className="w-8 h-8 rounded-full border-2 border-primary/50 hover:border-primary transition-colors bg-primary/10 flex items-center justify-center"
+            className="w-8 h-8 border border-primary/40 hover:border-primary bg-primary/10 flex items-center justify-center transition-colors"
           >
             <span className="material-symbols-outlined text-[16px] text-primary">
               manage_accounts
@@ -63,7 +88,7 @@ export default function GameHeader({
         ) : currentPlayer.character ? (
           <button
             onClick={onShowSettings}
-            className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors overflow-hidden flex items-center justify-center"
+            className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 transition-colors overflow-hidden flex items-center justify-center"
           >
             {currentPlayer.character.avatarUrl && !imgError ? (
               <img
@@ -75,17 +100,17 @@ export default function GameHeader({
                 onError={handleImgError}
               />
             ) : (
-              <div className="w-full h-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
+              <span className="font-display font-black text-xs text-on-surface/60">
                 {currentPlayer.character.namePl.charAt(0).toUpperCase()}
-              </div>
+              </span>
             )}
           </button>
         ) : (
           <button
             onClick={onShowSettings}
-            className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors bg-slate-800 flex items-center justify-center"
+            className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 transition-colors bg-surface-highest/20 flex items-center justify-center"
           >
-            <span className="material-symbols-outlined text-[16px] text-slate-400">person</span>
+            <span className="material-symbols-outlined text-[16px] text-on-surface/30">person</span>
           </button>
         )}
       </div>
