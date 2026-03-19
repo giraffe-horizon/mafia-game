@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { Role, ActionType, GamePhase } from "@/db/types";
-import { SectionHeader } from "@/components/ui";
+import { SectionHeader } from "@/components/ui"; // used for action progress
 
 const ACTION_ROLE_MAP: Record<Role, ActionType> = {
   mafia: "kill",
@@ -138,76 +138,95 @@ export default function GMGameTab({
 
       {/* GM override */}
       {alivePlayers.length > 0 && (phase === "night" || phase === "voting") && (
-        <div className="border border-on-surface/12 bg-surface-low p-3">
-          <SectionHeader className="mb-2 text-on-surface/50">Override akcji gracza</SectionHeader>
-          <select
-            value={selectedPlayer}
-            onChange={(e) => {
-              setSelectedPlayer(e.target.value);
-              setSelectedTarget("");
-            }}
-            className="w-full h-10 bg-background border border-on-surface/20 text-on-surface text-sm px-3 mb-2 font-display focus:outline-none focus:border-stamp"
-          >
-            <option value="">— Wybierz gracza —</option>
-            {alivePlayers.map((p) => (
-              <option key={p.playerId} value={p.playerId}>
-                {p.nickname} ({ROLE_LABELS[p.role ?? "civilian"] ?? "?"})
-                {actedPlayerIds.has(p.playerId) ? " ✓" : " ⏳"}
-              </option>
-            ))}
-          </select>
-          {selectedPlayer && (
-            <>
-              <select
-                value={selectedTarget}
-                onChange={(e) => setSelectedTarget(e.target.value)}
-                className="w-full h-10 bg-background border border-on-surface/20 text-on-surface text-sm px-3 mb-2 font-display focus:outline-none focus:border-stamp"
-              >
-                <option value="">— Wybierz cel —</option>
-                {alivePlayers
-                  .filter((p) => p.playerId !== selectedPlayer)
-                  .map((p) => (
-                    <option key={p.playerId} value={p.playerId}>
-                      {p.nickname}
-                    </option>
-                  ))}
-              </select>
-              <button
-                onClick={handleSubmit}
-                disabled={!selectedTarget && actionType !== "wait"}
-                className="w-full h-10 bg-stamp text-on-paper font-display font-bold uppercase tracking-widest text-xs border border-stamp hover:bg-stamp/90 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Zatwierdź override
-              </button>
-            </>
-          )}
+        <div className="border border-on-surface/12 bg-surface-low">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-on-surface/8">
+            <span className="material-symbols-outlined text-[14px] text-on-surface/30">
+              admin_panel_settings
+            </span>
+            <p className="font-display font-bold uppercase tracking-widest text-[10px] text-on-surface/30">
+              Override akcji gracza
+            </p>
+          </div>
+          <div className="p-3">
+            <select
+              value={selectedPlayer}
+              onChange={(e) => {
+                setSelectedPlayer(e.target.value);
+                setSelectedTarget("");
+              }}
+              className="w-full h-10 bg-background border border-on-surface/20 text-on-surface text-sm px-3 mb-2 font-display focus:outline-none focus:border-stamp"
+            >
+              <option value="">— Wybierz gracza —</option>
+              {alivePlayers.map((p) => (
+                <option key={p.playerId} value={p.playerId}>
+                  {p.nickname} ({ROLE_LABELS[p.role ?? "civilian"] ?? "?"})
+                  {actedPlayerIds.has(p.playerId) ? " ✓" : " ⏳"}
+                </option>
+              ))}
+            </select>
+            {selectedPlayer && (
+              <>
+                <select
+                  value={selectedTarget}
+                  onChange={(e) => setSelectedTarget(e.target.value)}
+                  className="w-full h-10 bg-background border border-on-surface/20 text-on-surface text-sm px-3 mb-2 font-display focus:outline-none focus:border-stamp"
+                >
+                  <option value="">— Wybierz cel —</option>
+                  {alivePlayers
+                    .filter((p) => p.playerId !== selectedPlayer)
+                    .map((p) => (
+                      <option key={p.playerId} value={p.playerId}>
+                        {p.nickname}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  onClick={handleSubmit}
+                  disabled={!selectedTarget && actionType !== "wait"}
+                  className="w-full h-10 bg-stamp text-on-paper font-display font-bold uppercase tracking-widest text-xs border border-stamp hover:bg-stamp/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Zatwierdź override
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Phase advance button */}
+      {/* Phase advance button — classified action stamp */}
       {nextPhase ? (
-        <button
-          onClick={() => onPhase(nextPhase.phase)}
-          disabled={!canAdvancePhase}
-          className={`flex w-full items-center justify-center gap-2 h-12 font-display font-bold uppercase tracking-widest text-sm border-2 ${
-            !canAdvancePhase
-              ? "border-on-surface/15 text-on-surface/25 cursor-not-allowed"
-              : "border-stamp bg-stamp text-on-paper hover:bg-stamp/90"
-          }`}
-        >
-          <span className="material-symbols-outlined text-[18px]">
-            {phase === "night" ? "wb_sunny" : phase === "day" ? "how_to_vote" : "bedtime"}
-          </span>
-          {phasePending
-            ? "Czekaj..."
-            : phase === "night"
-              ? "Zacznij dzień"
-              : phase === "day"
-                ? "Zacznij głosowanie"
-                : phase === "voting"
-                  ? "Zacznij noc"
-                  : nextPhase.label}
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => onPhase(nextPhase.phase)}
+            disabled={!canAdvancePhase}
+            className={`flex w-full items-center justify-center gap-2 h-14 font-display font-bold uppercase tracking-widest text-sm border-2 ${
+              !canAdvancePhase
+                ? "border-on-surface/15 text-on-surface/25 cursor-not-allowed"
+                : "border-stamp bg-stamp text-on-paper hover:bg-stamp/90"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              {phase === "night" ? "wb_sunny" : phase === "day" ? "how_to_vote" : "bedtime"}
+            </span>
+            {phasePending
+              ? "Czekaj..."
+              : phase === "night"
+                ? "Zacznij dzień"
+                : phase === "day"
+                  ? "Zacznij głosowanie"
+                  : phase === "voting"
+                    ? "Zacznij noc"
+                    : nextPhase.label}
+          </button>
+          {canAdvancePhase && !phasePending && (
+            <span
+              className="absolute -top-2 -right-2 stamp stamp-red text-[8px] py-0 px-1 pointer-events-none"
+              style={{ transform: "rotate(3deg)" }}
+            >
+              WYKONAJ
+            </span>
+          )}
+        </div>
       ) : (
         <p className="text-on-surface/30 text-xs font-display text-center uppercase tracking-wider">
           Brak dostępnych przejść

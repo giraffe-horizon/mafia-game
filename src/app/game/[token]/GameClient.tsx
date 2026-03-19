@@ -404,14 +404,17 @@ export default function GameClient() {
 
       {/* GM Panel overlay */}
       {isHost && showGMPanel && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background/95">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-on-surface/10">
-            <p className="font-display font-bold uppercase tracking-widest text-sm text-on-surface">
-              Panel Mistrza Gry
-            </p>
+        <div className="fixed inset-0 z-50 flex flex-col bg-background">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-on-surface/10 bg-surface-low">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-stamp">stars</span>
+              <p className="font-display font-bold uppercase tracking-widest text-[11px] text-stamp">
+                Mistrz Gry
+              </p>
+            </div>
             <button
               onClick={() => setShowGMPanel(false)}
-              className="size-9 flex items-center justify-center text-on-surface/50 hover:text-on-surface"
+              className="size-9 flex items-center justify-center text-on-surface/40 hover:text-on-surface"
             >
               <span className="material-symbols-outlined text-[20px]">close</span>
             </button>
