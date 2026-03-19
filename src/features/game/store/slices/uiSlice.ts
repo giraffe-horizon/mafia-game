@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { GameState } from "@/features/game/store/gameStore";
-import type { Toast } from "@/features/game/types";
+import type { Toast, TransitionData } from "@/features/game/types";
 
 export type { Toast };
 
@@ -21,6 +21,11 @@ export interface UiSlice {
   starting: boolean;
   changingDecision: boolean;
   setChangingDecision: (changing: boolean) => void;
+
+  // Transition screens
+  transition: TransitionData | null;
+  showTransition: (data: TransitionData) => void;
+  clearTransition: () => void;
 }
 
 export const createUiSlice: StateCreator<GameState, [], [], UiSlice> = (set, get) => ({
@@ -31,6 +36,7 @@ export const createUiSlice: StateCreator<GameState, [], [], UiSlice> = (set, get
   phasePending: false,
   starting: false,
   changingDecision: false,
+  transition: null,
 
   dismissToast: (id: string) => {
     set((state) => ({
@@ -42,4 +48,7 @@ export const createUiSlice: StateCreator<GameState, [], [], UiSlice> = (set, get
   toggleRole: () => set({ roleVisible: !get().roleVisible }),
 
   setChangingDecision: (changing: boolean) => set({ changingDecision: changing }),
+
+  showTransition: (data: TransitionData) => set({ transition: data }),
+  clearTransition: () => set({ transition: null }),
 });

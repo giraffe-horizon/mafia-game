@@ -18,11 +18,13 @@ import EndContainer from "@/features/game/containers/EndContainer";
 import GMPanelContainer from "@/features/game/containers/GMPanelContainer";
 import PlayersListContainer from "@/features/game/containers/PlayersListContainer";
 import ToastOverlay from "@/features/game/components/shared/ToastOverlay";
+import TransitionOverlay from "@/features/game/components/shared/TransitionOverlay";
 import GameHeader from "@/features/game/components/GameHeader";
 import MissionsList from "@/features/game/components/players/MissionsList";
 import SettingsModal from "@/features/game/components/modals/SettingsModal";
 import RankingModal from "@/features/game/components/modals/RankingModal";
 import { PageLayout } from "@/components/ui";
+import { useTransition } from "@/features/game/hooks/useTransition";
 
 // Stateless service — safe to create at module level
 const gameService: GameService = createHttpGameService();
@@ -43,6 +45,9 @@ export default function GameClient() {
   // Derived-state hooks
   const { phase, isLobby, isPlaying, isFinished, round } = useCurrentPhase();
   const { isHost } = usePlayerState();
+
+  // Phase transition screens
+  useTransition();
 
   // UI state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -134,6 +139,7 @@ export default function GameClient() {
   return (
     <PageLayout>
       <ToastOverlay />
+      <TransitionOverlay />
 
       <GameHeader
         phase={game.phase}

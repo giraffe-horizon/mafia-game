@@ -346,6 +346,94 @@ export async function getGameState(
 
   const showPoints = gameRow.phase === "review" || gameRow.status === "finished";
 
+  // Compute lastPhaseResult for transition screens
+  let lastPhaseResult:
+    | {
+        type: "kill" | "no_kill" | "eliminate" | "no_eliminate";
+        playerId?: string;
+        nickname?: string;
+        role?: string;
+      }
+    | undefined;
+
+  if (gameRow.status === "playing" || gameRow.status === "finished") {
+    const phase = gameRow.phase as GamePhase;
+
+    if (phase === "day" || phase === "voting" || phase === "review" || phase === "ended") {
+      // After night: check if someone was killed via kill actions in the current round
+      const nightKillVictim = await db
+        .prepare(
+          `SELECT gp.player_id, gp.nickname, gp.role
+           FROM game_players gp
+           WHERE gp.game_id = ? AND gp.is_alive = 0 AND gp.is_host = 0
+           AND gp.player_id IN (
+             SELECT DISTINCT ga.target_player_id FROM game_actions ga
+             WHERE ga.game_id = ? AND ga.round = ? AND ga.phase = 'night' AND ga.action_type = 'kill'
+           )
+           LIMIT 1`
+        )
+        .bind(gameRow.id, gameRow.id, gameRow.round)
+        .first<{ player_id: string; nickname: string; role: string }>();
+
+      if (nightKillVictim) {
+        lastPhaseResult = {
+          type: "kill",
+          playerId: nightKillVictim.player_id,
+          nickname: nightKillVictim.nickname,
+          role: nightKillVictim.role,
+        };
+      } else if (phase === "day") {
+        lastPhaseResult = { type: "no_kill" };
+      }
+    }
+
+    // After voting: check if someone was eliminated
+    if (phase === "night" && gameRow.round > 1) {
+      // We just entered a new night round after voting
+      const prevRound = gameRow.round - 1;
+      const voteEliminated = await db
+        .prepare(
+          `SELECT gp.player_id, gp.nickname, gp.role
+           FROM game_players gp
+           WHERE gp.game_id = ? AND gp.is_alive = 0 AND gp.is_host = 0
+           AND gp.player_id IN (
+             SELECT target_player_id FROM (
+               SELECT target_player_id, COUNT(*) as votes
+               FROM game_actions
+               WHERE game_id = ? AND round = ? AND phase = 'voting' AND action_type = 'vote'
+               GROUP BY target_player_id
+               ORDER BY votes DESC
+               LIMIT 1
+             )
+           )
+           LIMIT 1`
+        )
+        .bind(gameRow.id, gameRow.id, prevRound)
+        .first<{ player_id: string; nickname: string; role: string }>();
+
+      if (voteEliminated) {
+        lastPhaseResult = {
+          type: "eliminate",
+          playerId: voteEliminated.player_id,
+          nickname: voteEliminated.nickname,
+          role: voteEliminated.role,
+        };
+      } else {
+        lastPhaseResult = { type: "no_eliminate" };
+      }
+    }
+
+    // Game ended: include winner info (lastPhaseResult stays from above if set)
+    if (phase === "ended" || phase === "review") {
+      if (gameRow.winner) {
+        // Keep any existing result but ensure we have it
+        if (!lastPhaseResult) {
+          lastPhaseResult = { type: "no_eliminate" };
+        }
+      }
+    }
+  }
+
   // Parse lobby settings from config
   let lobbySettings: { mode: "full" | "simple"; mafiaCount: number } | undefined;
   try {
@@ -411,6 +499,7 @@ export async function getGameState(
     phaseProgress,
     lobbySettings,
     showPoints,
+    lastPhaseResult,
   };
 }
 

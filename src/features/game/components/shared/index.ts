@@ -5,3 +5,4 @@ export { default as DeadSpectatorView } from "./DeadSpectatorView";
 export { default as MafiaConsensusStatus } from "./MafiaConsensusStatus";
 export { default as ScoringTable } from "./ScoringTable";
 export { default as ToastOverlay } from "./ToastOverlay";
+export { default as TransitionOverlay } from "./TransitionOverlay";
