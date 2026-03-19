@@ -22,13 +22,17 @@ export default function LogsTab() {
           </p>
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <span className="font-display text-xs text-on-surface/40 uppercase tracking-widest w-24">Kod sesji:</span>
+              <span className="font-display text-xs text-on-surface/40 uppercase tracking-widest w-24">
+                Kod sesji:
+              </span>
               <span className="font-display font-black text-sm text-primary tracking-[0.3em]">
                 {state.game.code}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-display text-xs text-on-surface/40 uppercase tracking-widest w-24">Status:</span>
+              <span className="font-display text-xs text-on-surface/40 uppercase tracking-widest w-24">
+                Status:
+              </span>
               <span className="font-display text-xs text-on-surface/60 uppercase tracking-widest">
                 Lobby
               </span>
@@ -45,7 +49,9 @@ export default function LogsTab() {
       <div className="flex-1 flex flex-col">
         <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
           <span className="material-symbols-outlined text-[16px] text-primary">assignment</span>
-          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">Przegląd misji</span>
+          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
+            Przegląd misji
+          </span>
         </div>
         <ReviewContainer />
       </div>
@@ -56,7 +62,9 @@ export default function LogsTab() {
     <div className="flex-1 flex flex-col">
       <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
         <span className="material-symbols-outlined text-[16px] text-primary">assignment</span>
-        <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">Logi</span>
+        <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
+          Logi
+        </span>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -76,10 +84,7 @@ export default function LogsTab() {
               .slice()
               .reverse()
               .map((msg) => (
-                <div
-                  key={msg.id}
-                  className="border border-surface-highest p-3 relative"
-                >
+                <div key={msg.id} className="border border-surface-highest p-3 relative">
                   <div className="absolute -top-1.5 left-3">
                     <span className="font-display font-black text-[9px] uppercase tracking-widest text-on-surface/30 bg-surface-low px-1">
                       Depesza
@@ -112,10 +117,7 @@ export default function LogsTab() {
                 </div>
                 <div className="p-3 flex flex-col gap-2">
                   {roundData.events.map((event, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-2 text-sm"
-                    >
+                    <div key={i} className="flex items-start gap-2 text-sm">
                       <span className="material-symbols-outlined text-[14px] text-on-surface/40 mt-0.5">
                         {event.type === "night_result" ? "bedtime" : "how_to_vote"}
                       </span>
@@ -133,7 +135,9 @@ export default function LogsTab() {
           state?.messages.filter((m) => !m.eventType).length === 0 &&
           isHost && (
             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8">
-              <span className="material-symbols-outlined text-[48px] text-on-surface/20">assignment</span>
+              <span className="material-symbols-outlined text-[48px] text-on-surface/20">
+                assignment
+              </span>
               <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center">
                 Brak logów
               </p>

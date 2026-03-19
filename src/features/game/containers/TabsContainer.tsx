@@ -32,9 +32,7 @@ export default function TabsContainer() {
       <TabBar
         tabs={[...TABS]}
         activeTab={activeTab}
-        onTabChange={(id) =>
-          setActiveTab(id as "night" | "day" | "votes" | "logs")
-        }
+        onTabChange={(id) => setActiveTab(id as "night" | "day" | "votes" | "logs")}
       />
     </div>
   );

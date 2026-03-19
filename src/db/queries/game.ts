@@ -493,10 +493,7 @@ export async function getGameState(
 
   // Last night summary (for NOC tab during day/voting)
   let lastNightSummary: GameStateResponse["lastNightSummary"] = undefined;
-  if (
-    gameRow.status === "playing" &&
-    (gameRow.phase === "day" || gameRow.phase === "voting")
-  ) {
+  if (gameRow.status === "playing" && (gameRow.phase === "day" || gameRow.phase === "voting")) {
     const nightResultMsg = await db
       .prepare(
         "SELECT content FROM messages WHERE game_id = ? AND to_player_id = ? AND event_type = 'night_result' AND round = ? LIMIT 1"
@@ -541,7 +538,7 @@ export async function getGameState(
         .map(([round, msgs]) => ({
           round,
           events: msgs.map((m) => ({
-            type: m.event_type as 'night_result' | 'vote_result' | 'game_start' | 'game_end',
+            type: m.event_type as "night_result" | "vote_result" | "game_start" | "game_end",
             description: m.content,
             timestamp: m.created_at,
           })),

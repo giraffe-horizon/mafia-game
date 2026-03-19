@@ -21,7 +21,9 @@ export default function DayTab() {
       <div className="flex-1 flex flex-col">
         <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
           <span className="material-symbols-outlined text-[16px] text-on-surface/40">wb_sunny</span>
-          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/40">Dzień</span>
+          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/40">
+            Dzień
+          </span>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8">
           <span className="material-symbols-outlined text-[48px] text-on-surface/20">bedtime</span>
@@ -39,7 +41,9 @@ export default function DayTab() {
     <div className="flex-1 flex flex-col">
       <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
         <span className="material-symbols-outlined text-[16px] text-primary">wb_sunny</span>
-        <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">Dzień</span>
+        <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
+          Dzień
+        </span>
       </div>
       <DayContainer />
       <PlayersListContainer />

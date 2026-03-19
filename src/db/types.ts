@@ -228,7 +228,7 @@ export interface GameStateResponse {
   gameLog?: {
     round: number;
     events: {
-      type: 'night_result' | 'vote_result' | 'game_start' | 'game_end';
+      type: "night_result" | "vote_result" | "game_start" | "game_end";
       description: string;
       timestamp: string;
     }[];
