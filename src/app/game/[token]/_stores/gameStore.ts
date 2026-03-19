@@ -7,6 +7,7 @@ import type {
   LeaveResult,
   StartGameOpts,
 } from "@/app/game/[token]/_services/gameService";
+import { getErrorMessage } from "@/lib/errors";
 
 // Polling constants
 const POLL_INTERVAL = 2000;
@@ -193,7 +194,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       .fetchCharacters()
       .then((characters) => set({ characters }))
       .catch((error) => {
-        const msg = error instanceof Error ? error.message : String(error);
+        const msg = getErrorMessage(error, String(error));
         console.error("Failed to fetch characters:", msg);
         set({ error: `Nie udało się pobrać postaci: ${msg}` });
       });
@@ -335,7 +336,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return result;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
+      const errorMsg = getErrorMessage(error);
       set({ actionError: errorMsg });
       return { success: false, error: errorMsg };
     } finally {
@@ -357,7 +358,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return result;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Błąd zmiany fazy";
+      const errorMsg = getErrorMessage(error, "Błąd zmiany fazy");
       set({ error: errorMsg });
       return { success: false, error: errorMsg };
     } finally {
@@ -382,7 +383,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return result;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
+      const errorMsg = getErrorMessage(error);
       set({ error: errorMsg });
       return { success: false, error: errorMsg };
     } finally {
@@ -401,7 +402,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return result;
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Błąd połączenia" };
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 
@@ -414,7 +415,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const result = await _gameService.leaveGame(_token);
       return result;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
+      const errorMsg = getErrorMessage(error);
       set({ error: errorMsg });
       return { success: false, gameEnded: false, error: errorMsg };
     }
@@ -437,7 +438,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return result;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
+      const errorMsg = getErrorMessage(error);
       set({ error: errorMsg });
       return { success: false, error: errorMsg };
     }
@@ -454,7 +455,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return result;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
+      const errorMsg = getErrorMessage(error);
       return { success: false, error: errorMsg };
     }
   },
@@ -482,7 +483,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return result;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
+      const errorMsg = getErrorMessage(error);
       set({ actionError: errorMsg });
       return { success: false, error: errorMsg };
     }
@@ -499,7 +500,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       return result;
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Błąd połączenia";
+      const errorMsg = getErrorMessage(error);
       return { success: false, error: errorMsg };
     }
   },

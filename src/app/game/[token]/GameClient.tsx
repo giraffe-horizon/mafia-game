@@ -35,6 +35,10 @@ import type { MessageFormProps, MissionFormProps } from "@/app/game/[token]/type
 import { useOnboarding } from "@/app/game/[token]/_hooks/useOnboarding";
 import { useMessageForm } from "@/app/game/[token]/_hooks/useMessageForm";
 import { useMissionForm } from "@/app/game/[token]/_hooks/useMissionForm";
+import { useCurrentPhase } from "@/app/game/[token]/_hooks/useCurrentPhase";
+import { useRoleVisibility } from "@/app/game/[token]/_hooks/useRoleVisibility";
+import { useActionTargets } from "@/app/game/[token]/_hooks/useActionTargets";
+import { usePlayerState } from "@/app/game/[token]/_hooks/usePlayerState";
 import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 import { createHttpGameService, type GameService } from "@/app/game/[token]/_services/gameService";
 import { PageLayout } from "@/components/ui";
@@ -250,8 +254,19 @@ export default function GameClient() {
     handleDeleteMission,
   } = useMissionForm({ token, refetch, gameService });
 
+  // Derived-state hooks
+  const {
+    phase: currentPhaseValue,
+    isLobby,
+    isPlaying,
+    isFinished,
+    round: currentRound,
+  } = useCurrentPhase();
+  const { roleVisible, setRoleVisible } = useRoleVisibility();
+  const { isHost, nonHostPlayers } = usePlayerState();
+  const actionTargets = useActionTargets(roleVisible);
+
   // UI state (remains in component)
-  const [roleVisible, setRoleVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mafiaCount, setMafiaCount] = useState(0);
   const [gameMode, setGameMode] = useState<"full" | "simple">("full");
@@ -271,16 +286,9 @@ export default function GameClient() {
   }, [token, initialize]);
 
   // Reset changingDecision when phase changes (must be before conditional returns!)
-  const currentPhase = state?.game?.phase;
-  const currentRound = state?.game?.round;
   useEffect(() => {
     setChangingDecision(false);
-  }, [currentPhase, currentRound, setChangingDecision]);
-
-  // Reset role visibility only when a new round starts (rematch)
-  useEffect(() => {
-    setRoleVisible(false);
-  }, [currentRound]);
+  }, [currentPhaseValue, currentRound, setChangingDecision]);
 
   const handleAction = async (actionType: ActionType, targetPlayerId: string) => {
     await submitAction(actionType, targetPlayerId);
@@ -444,20 +452,8 @@ export default function GameClient() {
   }
 
   const { game, currentPlayer, players, missions } = state;
-  const isHost = currentPlayer.isHost;
-  const isLobby = game.status === "lobby";
-  const isPlaying = game.status === "playing";
-  const isFinished = game.status === "finished";
   const phase = game.phase;
   const myAction = changingDecision ? null : state.myAction;
-  const actionTargets = players.filter(
-    (p) =>
-      p.isAlive &&
-      !p.isYou &&
-      !p.isHost &&
-      !(roleVisible && currentPlayer.role === "mafia" && p.role === "mafia")
-  );
-  const nonHostPlayers = players.filter((p) => !p.isHost);
   const joinUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/?code=${game.code}`;
 
   // ---------------------------------------------------------------------------

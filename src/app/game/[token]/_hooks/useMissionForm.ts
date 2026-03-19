@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { GameService } from "@/app/game/[token]/_services/gameService";
+import { getErrorMessage } from "@/lib/errors";
 
 interface UseMissionFormParams {
   token: string;
@@ -52,7 +53,7 @@ export function useMissionForm({
       setMsnPreset("custom");
       await refetch();
     } catch (error) {
-      setMsnError(error instanceof Error ? error.message : "Błąd połączenia");
+      setMsnError(getErrorMessage(error));
     } finally {
       setMsnPending(false);
     }
@@ -63,7 +64,7 @@ export function useMissionForm({
       await gameService.completeMission(token, missionId);
       await refetch();
     } catch (error) {
-      setMsnError(error instanceof Error ? error.message : "Błąd ukończenia misji");
+      setMsnError(getErrorMessage(error, "Błąd ukończenia misji"));
     }
   };
 
@@ -72,7 +73,7 @@ export function useMissionForm({
       await gameService.deleteMission(token, missionId);
       await refetch();
     } catch (error) {
-      setMsnError(error instanceof Error ? error.message : "Błąd usuwania misji");
+      setMsnError(getErrorMessage(error, "Błąd usuwania misji"));
     }
   };
 

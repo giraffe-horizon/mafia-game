@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { GameService } from "@/app/game/[token]/_services/gameService";
+import { getErrorMessage } from "@/lib/errors";
 
 interface UseOnboardingParams {
   token: string;
@@ -44,7 +45,7 @@ export function useOnboarding({
       await gameService.setupPlayer(token, onboardingNickname.trim(), selectedCharacterId);
       await refetch();
     } catch (error) {
-      setOnboardingError(error instanceof Error ? error.message : "Błąd połączenia");
+      setOnboardingError(getErrorMessage(error));
     } finally {
       setOnboardingLoading(false);
     }
@@ -57,7 +58,7 @@ export function useOnboarding({
       setShowSettingsModal(false);
       await refetch();
     } catch (error) {
-      setOnboardingError(error instanceof Error ? error.message : "Błąd aktualizacji postaci");
+      setOnboardingError(getErrorMessage(error, "Błąd aktualizacji postaci"));
     }
   };
 

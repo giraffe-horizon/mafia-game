@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { GameService } from "@/app/game/[token]/_services/gameService";
+import { getErrorMessage } from "@/lib/errors";
 
 interface UseMessageFormParams {
   token: string;
@@ -37,7 +38,7 @@ export function useMessageForm({
       setMsgContent("");
       await refetch();
     } catch (error) {
-      setMsgError(error instanceof Error ? error.message : "Błąd połączenia");
+      setMsgError(getErrorMessage(error));
     } finally {
       setMsgPending(false);
     }
