@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { Role, ActionType, GamePhase } from "@/db/types";
-import { SectionHeader, Button } from "@/components/ui";
+import { Button } from "@/components/ui";
 import Select from "@/components/ui/Select";
 
 const ACTION_ROLE_MAP: Record<Role, ActionType> = {
@@ -55,32 +55,33 @@ export default function GMGameTab({
     setSelectedTarget("");
   }
 
-  // GM can advance phase when all actions are done AND mafia is unanimous (for night phase)
   const canAdvancePhase =
     (phaseProgress?.allDone ?? true) && (phaseProgress?.mafiaUnanimous ?? true) && !phasePending;
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       {/* Hint Box */}
       {phaseProgress && (
-        <div className="mb-4 p-3 bg-slate-800 rounded-lg border-l-4 border-primary">
-          <p className="text-sm text-slate-300">{phaseProgress.hint}</p>
+        <div className="border-l-2 border-primary pl-3 py-1">
+          <p className="font-display text-xs text-on-surface/70">{phaseProgress.hint}</p>
         </div>
       )}
 
-      {/* Progress Bar */}
+      {/* Progress */}
       {phaseProgress && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <SectionHeader className="mb-0">Postęp akcji</SectionHeader>
-            <span className="text-xs text-slate-400">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <span className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/40">
+              Postęp akcji
+            </span>
+            <span className="font-display text-[10px] text-on-surface/40">
               {phaseProgress.requiredActions.filter((a) => a.done).length}/
               {phaseProgress.requiredActions.length}
             </span>
           </div>
-          <div className="w-full bg-slate-800 rounded-full h-2">
+          <div className="w-full bg-surface-highest h-1">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-1"
               style={{
                 width: `${
                   phaseProgress.requiredActions.length === 0
@@ -95,70 +96,59 @@ export default function GMGameTab({
         </div>
       )}
 
-      {/* Lista graczy ze statusem */}
+      {/* Player status list */}
       {phaseProgress && phaseProgress.requiredActions.length > 0 && (
-        <div className="mb-4">
-          <SectionHeader>Status graczy</SectionHeader>
-          <div className="flex flex-col gap-1">
-            {[...phaseProgress.requiredActions]
-              .sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
-              .map((action) => (
-                <div
-                  key={action.playerId}
-                  className="flex items-center gap-3 p-2 rounded-lg bg-black/20"
+        <div className="flex flex-col gap-0.5">
+          {[...phaseProgress.requiredActions]
+            .sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1))
+            .map((action) => (
+              <div
+                key={action.playerId}
+                className="flex items-center gap-2 py-1.5 border-b border-on-surface/5"
+              >
+                <span
+                  className={`material-symbols-outlined text-[14px] ${
+                    action.done ? "text-green-400" : "text-amber-400"
+                  }`}
                 >
-                  <span
-                    className={`material-symbols-outlined text-[16px] ${
-                      action.done ? "text-green-500" : "text-yellow-500"
-                    }`}
-                  >
-                    {action.done ? "check_circle" : "schedule"}
-                  </span>
-                  <span className="text-white text-xs font-medium flex-1">
-                    {action.nickname}
-                    {/* Show mafia voting target if available */}
-                    {action.role === "mafia" &&
-                      hostActions &&
-                      (() => {
-                        const mafiaAction = hostActions.find(
-                          (ha) => ha.playerId === action.playerId && ha.actionType === "kill"
-                        );
-                        return mafiaAction?.targetNickname ? (
-                          <span className="text-red-300 ml-2">→ {mafiaAction.targetNickname}</span>
-                        ) : null;
-                      })()}
-                  </span>
-                  <span className="text-slate-400 text-xs font-typewriter">
-                    {ROLE_LABELS[action.role] ?? action.role}
-                  </span>
-                  <span
-                    className={`text-xs font-typewriter ${
-                      action.done ? "text-green-400" : "text-yellow-400"
-                    }`}
-                  >
-                    {action.done ? "✅ Gotowe" : "⏳ Oczekuje"}
-                  </span>
-                </div>
-              ))}
-          </div>
+                  {action.done ? "check_circle" : "schedule"}
+                </span>
+                <span className="font-display text-xs text-on-surface flex-1 uppercase tracking-wide">
+                  {action.nickname}
+                  {action.role === "mafia" &&
+                    hostActions &&
+                    (() => {
+                      const mafiaAction = hostActions.find(
+                        (ha) => ha.playerId === action.playerId && ha.actionType === "kill"
+                      );
+                      return mafiaAction?.targetNickname ? (
+                        <span className="text-primary ml-1">→ {mafiaAction.targetNickname}</span>
+                      ) : null;
+                    })()}
+                </span>
+                <span className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest">
+                  {ROLE_LABELS[action.role] ?? action.role}
+                </span>
+              </div>
+            ))}
         </div>
       )}
 
-      {/* Mafia consensus status */}
+      {/* Mafia consensus warning */}
       {phase === "night" && phaseProgress && !phaseProgress.mafiaUnanimous && (
-        <div className="mb-4 p-2 rounded-lg bg-red-950/20 border border-red-900/30">
-          <span className="text-red-400 text-xs font-typewriter">
-            ⚠️ Mafia nie jest zgodna — przejście do dnia zablokowane
+        <div className="border border-primary/30 bg-[#1a0505] px-3 py-2">
+          <span className="font-display text-xs text-primary uppercase tracking-widest">
+            Mafia nie jest zgodna
           </span>
         </div>
       )}
 
-      {/* GM override sekcja */}
+      {/* GM override */}
       {alivePlayers.length > 0 && (phase === "night" || phase === "voting") && (
-        <div className="mt-3 p-4 rounded-xl bg-primary/5 border border-primary/20 mb-4">
-          <SectionHeader className="text-primary/70 mb-3">
-            Zmień akcję gracza (override GM)
-          </SectionHeader>
+        <div className="border border-on-surface/10 p-3 flex flex-col gap-2">
+          <span className="font-display font-black text-[10px] uppercase tracking-widest text-primary/60">
+            Override gracza
+          </span>
           <Select
             value={selectedPlayer}
             onChange={(value) => {
@@ -172,7 +162,6 @@ export default function GMGameTab({
                 label: `${p.nickname} (${ROLE_LABELS[p.role ?? "civilian"] ?? "?"})${actedPlayerIds.has(p.playerId) ? " ✓" : " ⏳"}`,
               })),
             ]}
-            className="mb-2 bg-black/40 border-slate-700"
           />
           {selectedPlayer && (
             <>
@@ -185,7 +174,6 @@ export default function GMGameTab({
                     .filter((p) => p.playerId !== selectedPlayer)
                     .map((p) => ({ value: p.playerId, label: p.nickname })),
                 ]}
-                className="mb-2 bg-black/40 border-slate-700"
               />
               <Button
                 onClick={handleSubmit}
@@ -199,7 +187,7 @@ export default function GMGameTab({
         </div>
       )}
 
-      {/* Przycisk przejścia fazy */}
+      {/* Phase advance button */}
       {nextPhase ? (
         <Button
           onClick={() => onPhase(nextPhase.phase)}
@@ -220,13 +208,13 @@ export default function GMGameTab({
                   : nextPhase.label}
         </Button>
       ) : (
-        <p className="text-slate-500 text-sm font-typewriter text-center">
+        <p className="font-display text-on-surface/30 text-xs text-center uppercase tracking-widest">
           Brak dostępnych przejść
         </p>
       )}
 
       {!canAdvancePhase && phaseProgress && (
-        <p className="text-slate-500 text-xs font-typewriter text-center mt-2">
+        <p className="font-display text-on-surface/30 text-[10px] text-center uppercase tracking-widest">
           Czekaj na:{" "}
           {phaseProgress.requiredActions
             .filter((a) => !a.done)
