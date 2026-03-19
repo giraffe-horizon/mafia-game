@@ -1,7 +1,6 @@
 "use client";
 
 import type { PublicPlayer } from "@/db";
-import { SectionHeader } from "@/components/ui";
 
 export default function VotePanel({
   targets,
@@ -18,47 +17,67 @@ export default function VotePanel({
   onVote: (targetId: string) => void;
   onChangeDecision: () => void;
 }) {
+  // ── Already voted ──────────────────────────────────────────────────────────
   if (myAction) {
     const targetName =
       targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ??
       myAction.targetPlayerId;
+
     return (
-      <div className="mx-5 mt-4 p-4 rounded-xl bg-black/40 border border-green-900/40">
-        <p className="text-green-400 text-xs font-typewriter uppercase tracking-widest mb-1">
-          Oskarżasz:
-        </p>
-        <p className="text-slate-300 text-sm">
-          <span className="text-white font-medium">{targetName}</span>
-        </p>
-        <button
-          onClick={() => onChangeDecision()}
-          className="mt-3 w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-400 hover:text-slate-200 font-typewriter uppercase tracking-wider text-xs transition-all"
-        >
-          <span className="material-symbols-outlined text-[14px]">edit</span>
-          Zmień głos
-        </button>
+      <div className="mx-5 mt-4 border border-stamp/25 bg-stamp/5">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-stamp/15">
+          <p className="font-display font-bold uppercase tracking-widest text-[10px] text-stamp/70">
+            Twój głos
+          </p>
+          <span className="stamp stamp-red text-[9px] py-0 px-1.5">OSKARŻONY</span>
+        </div>
+        <div className="px-4 py-3">
+          <p className="font-display font-bold text-on-surface text-xl uppercase tracking-wider">
+            {targetName}
+          </p>
+        </div>
+        <div className="px-4 pb-3">
+          <button
+            onClick={() => onChangeDecision()}
+            className="flex items-center gap-2 text-on-surface/40 hover:text-on-surface/70 font-display uppercase tracking-widest text-[10px]"
+          >
+            <span className="material-symbols-outlined text-[14px]">edit</span>
+            Zmień głos
+          </button>
+        </div>
       </div>
     );
   }
 
+  // ── Choose target ──────────────────────────────────────────────────────────
   const alivePlayers = targets.filter((p) => p.isAlive);
 
   return (
-    <div className="mx-5 mt-4">
-      <SectionHeader icon="how_to_vote" className="text-slate-400 mb-3 pl-1">
-        Kogo oskarżasz?
-      </SectionHeader>
-      {error && <p className="text-red-400 text-xs font-typewriter mb-2 px-1">{error}</p>}
-      <div className="flex flex-col gap-2">
+    <div className="mx-5 mt-4 border border-on-surface/12 bg-surface-low">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-on-surface/8">
+        <span className="material-symbols-outlined text-[16px] text-on-surface/40">
+          how_to_vote
+        </span>
+        <p className="font-display font-bold uppercase tracking-widest text-[10px] text-on-surface/40">
+          Kogo oskarżasz?
+        </p>
+      </div>
+      {error && <p className="text-stamp text-xs font-display px-4 pt-3">{error}</p>}
+      <div className="flex flex-col">
         {alivePlayers.map((p) => (
           <button
             key={p.playerId}
             disabled={pending}
             onClick={() => onVote(p.playerId)}
-            className="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-black/30 hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-[0.98] disabled:opacity-40 text-left"
+            className="flex items-center gap-3 px-4 py-3 border-b border-on-surface/6 last:border-0 hover:bg-stamp/5 hover:border-stamp/20 disabled:opacity-40 text-left group"
           >
-            <span className="material-symbols-outlined text-[18px] text-slate-400">person</span>
-            <span className="text-white text-sm">{p.nickname}</span>
+            <span className="material-symbols-outlined text-[14px] text-on-surface/25 group-hover:text-stamp/50">
+              person
+            </span>
+            <span className="font-display text-on-surface text-sm flex-1">{p.nickname}</span>
+            <span className="stamp stamp-red text-[8px] py-0 px-1 opacity-0 group-hover:opacity-100">
+              OSKARŻ
+            </span>
           </button>
         ))}
       </div>

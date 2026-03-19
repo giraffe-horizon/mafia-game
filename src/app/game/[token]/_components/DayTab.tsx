@@ -257,11 +257,19 @@ export default function DayTab({
 
       {/* Day discussion info */}
       {!isHost && currentPlayer.isAlive && (
-        <InfoCard
-          icon="wb_sunny"
-          title="Dzień — dyskutujcie i szukajcie mafii"
-          className="mx-5 mt-4"
-        />
+        <div className="mx-5 mt-4 border border-amber-800/25 bg-amber-950/10 p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="material-symbols-outlined text-[16px] text-amber-400/60">
+              wb_sunny
+            </span>
+            <p className="font-display font-bold uppercase tracking-widest text-[10px] text-amber-400/60">
+              Czas na dyskusję
+            </p>
+          </div>
+          <p className="font-display text-on-surface/50 text-xs">
+            Dyskutujcie i szukajcie mafii wśród graczy.
+          </p>
+        </div>
       )}
 
       {/* Dead spectator */}
