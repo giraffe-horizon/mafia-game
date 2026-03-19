@@ -106,6 +106,13 @@ export type GamePhase = "lobby" | "night" | "day" | "voting" | "review" | "ended
 export type Role = "mafia" | "detective" | "doctor" | "civilian";
 export type ActionType = "kill" | "investigate" | "protect" | "vote" | "wait";
 
+export interface RankingEntry {
+  playerId: string;
+  nickname: string;
+  totalScore: number;
+  roundsPlayed: number;
+}
+
 export interface PublicPlayer {
   playerId: string;
   nickname: string;

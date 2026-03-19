@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { SectionHeader, StatusItem, Button, Card } from "@/components/ui";
+import { positionColor } from "@/lib/constants";
 import { useGameStore } from "../_stores/gameStore";
 
 export default function EndScreen(_props: Record<string, never> = {}) {
@@ -62,15 +63,6 @@ export default function EndScreen(_props: Record<string, never> = {}) {
           }, {})
         )
       : [];
-
-  const positionColor = (i: number) =>
-    i === 0
-      ? "text-amber-400"
-      : i === 1
-        ? "text-slate-300"
-        : i === 2
-          ? "text-orange-400"
-          : "text-slate-500";
 
   return (
     <div className="mx-5 mt-5">

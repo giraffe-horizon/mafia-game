@@ -38,6 +38,7 @@ import { useMissionForm } from "./_hooks/useMissionForm";
 import { useGameStore } from "./_stores/gameStore";
 import { createHttpGameService, type GameService } from "./_services/gameService";
 import { PageLayout } from "@/components/ui";
+import { COPY_FEEDBACK_MS } from "@/lib/constants";
 
 // Stateless service — safe to create at module level
 const gameService: GameService = createHttpGameService();
@@ -203,7 +204,7 @@ export default function GameClient() {
     if (!state) return;
     navigator.clipboard.writeText(state.game.code);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
   }
 
   // ---------------------------------------------------------------------------

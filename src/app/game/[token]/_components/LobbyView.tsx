@@ -5,6 +5,13 @@ import QRCode from "react-qr-code";
 import type { PublicPlayer } from "@/db";
 import LobbyTransferGm from "./LobbyTransferGm";
 import { SectionHeader, InfoCard } from "@/components/ui";
+import {
+  positionColor,
+  autoMafiaCount,
+  MIN_PLAYERS_FULL,
+  MIN_PLAYERS_SIMPLE,
+  COPY_FEEDBACK_MS,
+} from "@/lib/constants";
 import { useGameStore } from "../_stores/gameStore";
 
 interface LobbyViewProps {
@@ -46,20 +53,12 @@ export default function LobbyView({
   const fetchRanking = useGameStore((s) => s.fetchRanking);
 
   const hasPlayedRounds = round > 0;
+  const minPlayers = gameMode === "full" ? MIN_PLAYERS_FULL : MIN_PLAYERS_SIMPLE;
 
   useEffect(() => {
     if (!hasPlayedRounds) return;
     fetchRanking();
   }, [hasPlayedRounds, fetchRanking]);
-
-  const positionColor = (i: number) =>
-    i === 0
-      ? "text-amber-400"
-      : i === 1
-        ? "text-slate-300"
-        : i === 2
-          ? "text-orange-400"
-          : "text-slate-500";
 
   return (
     <>
@@ -147,7 +146,7 @@ export default function LobbyView({
                       .catch(() => {})
                   : (navigator.clipboard.writeText(joinUrl),
                     setCopied(true),
-                    setTimeout(() => setCopied(false), 2000))
+                    setTimeout(() => setCopied(false), COPY_FEEDBACK_MS))
               }
               className="w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white text-sm font-typewriter uppercase tracking-wider transition-all"
             >
@@ -169,10 +168,9 @@ export default function LobbyView({
 
           {/* Start button section */}
           <div className="mx-5 mt-6 flex flex-col gap-3">
-            {nonHostPlayers.length < (gameMode === "simple" ? 3 : 5) && (
+            {nonHostPlayers.length < minPlayers && (
               <p className="text-slate-500 text-sm font-typewriter text-center">
-                Potrzeba minimum {gameMode === "simple" ? 3 : 5} graczy ({nonHostPlayers.length}/
-                {gameMode === "simple" ? 3 : 5})
+                Potrzeba minimum {minPlayers} graczy ({nonHostPlayers.length}/{minPlayers})
               </p>
             )}
             <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
@@ -191,13 +189,13 @@ export default function LobbyView({
                       {mode === "full" ? "Mafia + Policjant + Lekarz" : "Mafia vs Cywile"}
                     </span>
                     <span className="block text-xs opacity-40">
-                      min. {mode === "full" ? 5 : 3} graczy
+                      min. {mode === "full" ? MIN_PLAYERS_FULL : MIN_PLAYERS_SIMPLE} graczy
                     </span>
                   </button>
                 ))}
               </div>
             </div>
-            {nonHostPlayers.length >= (gameMode === "simple" ? 3 : 5) && (
+            {nonHostPlayers.length >= minPlayers && (
               <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
                 <SectionHeader className="text-slate-400">Liczba mafii</SectionHeader>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -205,15 +203,7 @@ export default function LobbyView({
                     onClick={() => setMafiaCount(0)}
                     className={`px-3 py-2 rounded-lg text-sm font-typewriter uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-primary/20 border-primary/50 text-primary" : "border-slate-700 text-slate-400 hover:border-slate-500"}`}
                   >
-                    Auto (
-                    {nonHostPlayers.length <= 5
-                      ? 1
-                      : nonHostPlayers.length <= 8
-                        ? 2
-                        : nonHostPlayers.length <= 11
-                          ? 3
-                          : 4}
-                    )
+                    Auto ({autoMafiaCount(nonHostPlayers.length)})
                   </button>
                   {Array.from(
                     { length: Math.max(1, nonHostPlayers.length - 3) },
@@ -235,7 +225,7 @@ export default function LobbyView({
             )}
             <button
               onClick={onStart}
-              disabled={starting || nonHostPlayers.length < (gameMode === "simple" ? 3 : 5)}
+              disabled={starting || nonHostPlayers.length < minPlayers}
               className="flex w-full items-center justify-center rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-typewriter uppercase tracking-wider"
             >
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>

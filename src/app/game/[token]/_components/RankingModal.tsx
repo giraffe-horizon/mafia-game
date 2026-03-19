@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Modal from "@/components/ui/Modal";
+import { RANKING_POLL_MS } from "@/lib/constants";
 import { useGameStore } from "../_stores/gameStore";
 
 interface RankingModalProps {
@@ -25,7 +26,7 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
     if (!isOpen || !token) return;
 
     fetchRanking();
-    intervalRef.current = setInterval(fetchRanking, 5000);
+    intervalRef.current = setInterval(fetchRanking, RANKING_POLL_MS);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
