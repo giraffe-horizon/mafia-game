@@ -3,6 +3,7 @@ import type { GameStateResponse } from "@/db";
 import type { GameService } from "@/features/game/service";
 import type { GameState } from "@/features/game/store/gameStore";
 import { getErrorMessage } from "@/lib/errors";
+import { buildTransition } from "@/features/game/store/buildTransition";
 
 // Polling constants
 const POLL_INTERVAL = 2000;
@@ -184,6 +185,24 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
 
     try {
       const data = await _gameService.fetchState(_token);
+      const prevPhase = get().state?.game?.phase;
+      const newPhase = data.game?.phase;
+      const phaseChanged = prevPhase != null && newPhase != null && prevPhase !== newPhase;
+
+      // Set transition BEFORE updating state so the overlay blocks the view
+      if (phaseChanged) {
+        const transition = buildTransition(
+          prevPhase,
+          newPhase,
+          data.game.round,
+          data.lastPhaseResult,
+          data.game.winner
+        );
+        if (transition) {
+          set({ transition });
+        }
+      }
+
       const prevRound = get().state?.game?.round;
       const newRound = data.game?.round;
       const roundChanged =
@@ -194,27 +213,36 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
         ...(roundChanged ? { roleVisible: false } : {}),
       });
 
-      const currentToasts = get().toasts;
-      const newToasts = [...currentToasts];
+      // Suppress toasts during phase transitions — the transition screens
+      // already convey kill/vote results
+      if (!phaseChanged) {
+        const currentToasts = get().toasts;
+        const newToasts = [...currentToasts];
 
-      for (const msg of data.messages) {
-        if (!_shownMessageIds.has(msg.id)) {
-          _shownMessageIds.add(msg.id);
-          const newToast = { id: msg.id, content: msg.content };
-          newToasts.push(newToast);
+        for (const msg of data.messages) {
+          if (!_shownMessageIds.has(msg.id)) {
+            _shownMessageIds.add(msg.id);
+            const newToast = { id: msg.id, content: msg.content };
+            newToasts.push(newToast);
 
-          const timeoutId = setTimeout(() => {
-            get()._toastTimeouts.delete(msg.id);
-            set((state) => ({
-              toasts: state.toasts.filter((t) => t.id !== msg.id),
-            }));
-          }, TOAST_DURATION);
-          get()._toastTimeouts.set(msg.id, timeoutId);
+            const timeoutId = setTimeout(() => {
+              get()._toastTimeouts.delete(msg.id);
+              set((state) => ({
+                toasts: state.toasts.filter((t) => t.id !== msg.id),
+              }));
+            }, TOAST_DURATION);
+            get()._toastTimeouts.set(msg.id, timeoutId);
+          }
         }
-      }
 
-      if (newToasts.length > currentToasts.length) {
-        set({ toasts: newToasts });
+        if (newToasts.length > currentToasts.length) {
+          set({ toasts: newToasts });
+        }
+      } else {
+        // Mark messages as shown so they don't appear as toasts later
+        for (const msg of data.messages) {
+          _shownMessageIds.add(msg.id);
+        }
       }
     } catch (error) {
       if (error instanceof Error && error.message.includes("404")) {

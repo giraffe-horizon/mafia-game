@@ -199,4 +199,11 @@ export interface GameStateResponse {
   };
   // Whether to show points/missions to players (only during review/finished)
   showPoints: boolean;
+  // Last phase result for transition screens
+  lastPhaseResult?: {
+    type: "kill" | "no_kill" | "eliminate" | "no_eliminate";
+    playerId?: string;
+    nickname?: string;
+    role?: string;
+  };
 }

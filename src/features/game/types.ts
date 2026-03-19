@@ -96,6 +96,30 @@ export interface Toast {
 }
 
 // ---------------------------------------------------------------------------
+// Transition types
+// ---------------------------------------------------------------------------
+
+export type TransitionType =
+  | "game_start"
+  | "night_to_day"
+  | "day_to_voting"
+  | "voting_to_night"
+  | "voting_ended"
+  | "game_ended";
+
+export interface TransitionScreen {
+  icon: string;
+  title: string;
+  subtitle?: string;
+  durationMs: number;
+}
+
+export interface TransitionData {
+  type: TransitionType;
+  screens: TransitionScreen[];
+}
+
+// ---------------------------------------------------------------------------
 // Form props (grouped props interfaces to reduce prop drilling)
 // ---------------------------------------------------------------------------
 
