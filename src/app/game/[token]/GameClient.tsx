@@ -277,6 +277,11 @@ export default function GameClient() {
     setChangingDecision(false);
   }, [currentPhase, currentRound, setChangingDecision]);
 
+  // Reset role visibility only when a new round starts (rematch)
+  useEffect(() => {
+    setRoleVisible(false);
+  }, [currentRound]);
+
   const handleAction = async (actionType: ActionType, targetPlayerId: string) => {
     await submitAction(actionType, targetPlayerId);
   };
@@ -490,7 +495,6 @@ export default function GameClient() {
             starting={starting}
             onStart={() => handleStart(gameMode, mafiaCount)}
             onTransferGm={handleTransferGm}
-            round={game.round}
           />
         )}
 

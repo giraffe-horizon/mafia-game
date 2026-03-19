@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
 import QRCode from "react-qr-code";
 import type { PublicPlayer } from "@/db";
 import LobbyTransferGm from "@/app/game/[token]/_components/LobbyTransferGm";
 import { SectionHeader, InfoCard } from "@/components/ui";
 import {
-  positionColor,
   autoMafiaCount,
   MIN_PLAYERS_FULL,
   MIN_PLAYERS_SIMPLE,
   COPY_FEEDBACK_MS,
 } from "@/lib/constants";
-import { useGameStore } from "@/app/game/[token]/_stores/gameStore";
 
 interface LobbyViewProps {
   isHost: boolean;
@@ -29,7 +26,6 @@ interface LobbyViewProps {
   starting: boolean;
   onStart: () => void;
   onTransferGm: (playerId: string) => void;
-  round: number;
 }
 
 export default function LobbyView({
@@ -47,73 +43,11 @@ export default function LobbyView({
   starting,
   onStart,
   onTransferGm,
-  round,
 }: LobbyViewProps) {
-  const ranking = useGameStore((s) => s.ranking);
-  const fetchRanking = useGameStore((s) => s.fetchRanking);
-
-  const hasPlayedRounds = round > 0;
   const minPlayers = gameMode === "full" ? MIN_PLAYERS_FULL : MIN_PLAYERS_SIMPLE;
-
-  useEffect(() => {
-    if (!hasPlayedRounds) return;
-    fetchRanking();
-  }, [hasPlayedRounds, fetchRanking]);
 
   return (
     <>
-      {/* Session ranking from previous rounds */}
-      {hasPlayedRounds && ranking.length > 0 && (
-        <div className="mx-5 mt-5">
-          <SectionHeader className="mb-3">Ranking sesji</SectionHeader>
-          <div className="flex flex-col gap-2">
-            {ranking.map((r, i) => (
-              <div
-                key={r.playerId}
-                className={`flex items-center gap-3 p-3 rounded-lg border ${
-                  i === 0
-                    ? "border-amber-700/50 bg-amber-950/20"
-                    : i === 1
-                      ? "border-slate-600/50 bg-slate-900/20"
-                      : i === 2
-                        ? "border-orange-900/50 bg-orange-950/10"
-                        : "border-slate-800 bg-black/20"
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm font-typewriter border ${
-                    i === 0
-                      ? "bg-amber-500/20 border-amber-600/50"
-                      : i === 1
-                        ? "bg-slate-500/20 border-slate-600/50"
-                        : i === 2
-                          ? "bg-orange-500/20 border-orange-600/50"
-                          : "bg-slate-800 border-slate-700"
-                  } ${positionColor(i)}`}
-                >
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-white text-sm font-medium truncate block">
-                    {r.nickname}
-                  </span>
-                  <span className="text-slate-600 text-xs font-typewriter">
-                    {r.roundsPlayed}{" "}
-                    {r.roundsPlayed === 1 ? "runda" : r.roundsPlayed < 5 ? "rundy" : "rund"}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className={`text-lg font-bold font-typewriter ${positionColor(i)}`}>
-                    {r.totalScore}
-                  </span>
-                  <p className="text-slate-600 text-xs">pkt</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Host lobby view */}
       {isHost && (
         <>
