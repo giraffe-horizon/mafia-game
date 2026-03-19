@@ -14,26 +14,36 @@ export default function MafiaConsensusStatus({
   const allMafiaVoted = mafiaWithTargets.length === mafiaTeamActions.length;
   const totalMafia = mafiaTeamActions.length;
   const votedCount = mafiaWithTargets.length;
+  const isUnanimous = allMafiaVoted && targets.length === 1;
 
   return (
-    <div className="space-y-3">
-      {/* Show individual votes if any exist */}
+    <div className="flex flex-col gap-2">
+      {/* Individual votes as dossier entries */}
       {mafiaWithTargets.length > 0 && (
-        <div className="p-3 bg-black/30 border border-slate-700 rounded-lg">
-          <p className="text-slate-400 text-xs font-typewriter uppercase tracking-widest mb-2">
-            Głosy mafii
+        <div className="border border-on-surface/12 bg-background">
+          <p className="px-3 py-2 font-display font-bold uppercase tracking-widest text-[9px] text-on-surface/30 border-b border-on-surface/8">
+            Głosy operacyjne
           </p>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col">
             {mafiaWithTargets.map((action) => (
-              <div key={action.nickname} className="flex items-center gap-2 text-xs">
-                <span className="text-red-400 font-medium">
+              <div
+                key={action.nickname}
+                className="flex items-center gap-2 px-3 py-2 border-b border-on-surface/6 last:border-0"
+              >
+                <span
+                  className={`font-display text-xs font-bold ${
+                    action.nickname === currentNickname ? "text-stamp" : "text-on-surface/60"
+                  }`}
+                >
                   {action.nickname}
                   {action.nickname === currentNickname ? " (Ty)" : ""}
                 </span>
-                <span className="material-symbols-outlined text-[12px] text-slate-500">
+                <span className="material-symbols-outlined text-[10px] text-on-surface/25 mx-1">
                   arrow_forward
                 </span>
-                <span className="text-white">{action.targetNickname}</span>
+                <span className="font-display text-on-surface text-xs">
+                  {action.targetNickname}
+                </span>
               </div>
             ))}
           </div>
@@ -41,37 +51,25 @@ export default function MafiaConsensusStatus({
       )}
 
       {/* Status message */}
-      <div>
-        {mafiaWithTargets.length > 0 && targets.length > 1 && (
-          <div className="p-2 bg-red-900/30 border border-red-700/50 rounded-lg">
-            <p className="text-red-400 text-xs font-typewriter">
-              ⚠️ Mafia nie jest zgodna! Cel nie zostanie wyeliminowany.
-            </p>
-          </div>
-        )}
-
-        {allMafiaVoted && targets.length === 1 && targets[0] && (
-          <div className="p-2 bg-green-900/30 border border-green-700/50 rounded-lg">
-            <p className="text-green-400 text-xs font-typewriter">
-              ✅ Mafia jest zgodna — cel:{" "}
-              {mafiaTeamActions.find((a) => a.targetPlayerId === targets[0])?.targetNickname ??
-                targets[0]}
-            </p>
-          </div>
-        )}
-
-        {!allMafiaVoted && (
-          <div className="p-2 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-            <p className="text-yellow-400 text-xs font-typewriter">
-              ⏳ Czekam na {totalMafia - votedCount} graczy... ({votedCount}/{totalMafia})
-            </p>
-          </div>
-        )}
-
-        {mafiaWithTargets.length === 0 && (
-          <div className="p-2 bg-slate-900/30 border border-slate-700/50 rounded-lg">
-            <p className="text-slate-400 text-xs font-typewriter">Nikt jeszcze nie głosował...</p>
-          </div>
+      <div
+        className="border-l-2 pl-3 py-1 flex items-center gap-2 justify-between"
+        style={{
+          borderColor: isUnanimous ? "#4a8c4a" : !allMafiaVoted ? "#ffb4ac" : "#e07060",
+        }}
+      >
+        <p className="font-display text-xs text-on-surface/50">
+          {isUnanimous && targets[0]
+            ? `Cel: ${mafiaTeamActions.find((a) => a.targetPlayerId === targets[0])?.targetNickname ?? targets[0]}`
+            : !allMafiaVoted
+              ? `Czekam na ${totalMafia - votedCount} z ${totalMafia} graczy`
+              : "Mafia nie jest zgodna"}
+        </p>
+        {isUnanimous ? (
+          <span className="stamp stamp-green text-[8px] py-0 px-1">ZGODNA</span>
+        ) : (
+          <span className="stamp stamp-red text-[8px] py-0 px-1">
+            {allMafiaVoted ? "NIEZGODNA" : `${votedCount}/${totalMafia}`}
+          </span>
         )}
       </div>
     </div>
