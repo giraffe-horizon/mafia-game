@@ -30,9 +30,9 @@ export default function ScoringTable({ roundScores, ranking, totalRounds }: Scor
         Punktacja {totalRounds > 1 ? `— runda ${totalRounds}` : ""}
       </SectionHeader>
       <Card className="overflow-hidden">
-        <table className="w-full text-sm font-typewriter">
+        <table className="w-full text-sm font-display">
           <thead>
-            <tr className="border-b border-slate-800 text-slate-500 text-xs uppercase tracking-wider">
+            <tr className="border-b border-surface-highest text-on-surface/40 text-xs uppercase tracking-wider">
               <th className="text-left py-2 px-3">#</th>
               <th className="text-left py-2 px-1">Gracz</th>
               <th className="text-center py-2 px-1">📋</th>
@@ -52,18 +52,18 @@ export default function ScoringTable({ roundScores, ranking, totalRounds }: Scor
               .map((s, i) => (
                 <tr
                   key={s.playerId}
-                  className={`border-b border-slate-800/50 ${i === 0 ? "bg-amber-950/10" : ""}`}
+                  className={`border-b border-surface-highest/50 ${i === 0 ? "bg-primary/5" : ""}`}
                 >
                   <td className={`py-2 px-3 font-bold ${positionColor(i)}`}>{i + 1}</td>
-                  <td className="py-2 px-1 text-white">{s.nickname}</td>
-                  <td className="text-center py-2 px-1 text-slate-400">
+                  <td className="py-2 px-1 text-on-surface">{s.nickname}</td>
+                  <td className="text-center py-2 px-1 text-on-surface/50">
                     {s.missionPoints > 0 ? `+${s.missionPoints}` : "—"}
                   </td>
-                  <td className="text-center py-2 px-1 text-slate-400">
+                  <td className="text-center py-2 px-1 text-on-surface/50">
                     {s.survived ? "+1" : "—"}
                   </td>
-                  <td className="text-center py-2 px-1 text-slate-400">{s.won ? "+3" : "—"}</td>
-                  <td className="text-center py-2 px-1 text-slate-500">{s.totalScore}</td>
+                  <td className="text-center py-2 px-1 text-on-surface/50">{s.won ? "+3" : "—"}</td>
+                  <td className="text-center py-2 px-1 text-on-surface/40">{s.totalScore}</td>
                   <td className={`text-right py-2 px-3 font-bold text-lg ${positionColor(i)}`}>
                     {s.cumulativeScore}
                   </td>
@@ -72,7 +72,7 @@ export default function ScoringTable({ roundScores, ranking, totalRounds }: Scor
           </tbody>
         </table>
       </Card>
-      <div className="mt-2 flex gap-3 text-xs text-slate-600 font-typewriter px-1">
+      <div className="mt-2 flex gap-3 text-xs text-on-surface/30 font-display px-1">
         <span>📋 Misje</span>
         <span>💀 Przeżycie (+1)</span>
         <span>⭐ Wygrana (+3)</span>

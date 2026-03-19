@@ -4,7 +4,7 @@ import packageJson from "../../package.json";
 
 export function AppVersion() {
   return (
-    <span className="text-slate-700 text-[10px] font-typewriter tracking-widest">
+    <span className="text-on-surface/20 text-[10px] font-display tracking-widest">
       v{packageJson.version}
     </span>
   );

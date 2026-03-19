@@ -40,7 +40,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
 
   const winnerLabel = game.winner === "mafia" ? "MAFIA WYGRYWA" : "MIASTO WYGRYWA";
   const winnerIcon = game.winner === "mafia" ? "masks" : "groups";
-  const winnerColor = game.winner === "mafia" ? "text-primary-dark" : "text-green-400";
+  const winnerColor = game.winner === "mafia" ? "text-primary" : "text-stamp-green";
   const stampVariant: "classified" | "approved" =
     game.winner === "mafia" ? "classified" : "approved";
 
@@ -58,7 +58,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
         </Stamp>
         {!isHost && (
           <p
-            className={`font-display font-black text-sm uppercase tracking-widest ${isWinner ? "text-green-400" : "text-on-surface/40"}`}
+            className={`font-display font-black text-sm uppercase tracking-widest ${isWinner ? "text-stamp-green" : "text-on-surface/40"}`}
           >
             {isWinner ? "Wygrałeś!" : "Przegrałeś"}
           </p>
