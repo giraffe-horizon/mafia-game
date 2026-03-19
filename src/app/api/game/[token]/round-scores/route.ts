@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withApiHandler } from "@/app/api/lib/handler";
+import { withApiHandler } from "@/lib/api/handler";
 import { getRoundScores } from "@/db";
 
 export const GET = withApiHandler(async (_req, { db, token }) => {

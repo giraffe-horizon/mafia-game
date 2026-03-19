@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withApiHandlerNoToken } from "@/app/api/lib/handler";
-import { createGameSchema } from "@/app/api/lib/schemas";
+import { withApiHandlerNoToken } from "@/lib/api/handler";
+import { createGameSchema } from "@/lib/api/schemas";
 import { createGame } from "@/db";
 
 export const POST = withApiHandlerNoToken(async (req: NextRequest, { db }) => {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withApiHandler } from "@/app/api/lib/handler";
-import { kickPlayerSchema } from "@/app/api/lib/schemas";
+import { withApiHandler } from "@/lib/api/handler";
+import { kickPlayerSchema } from "@/lib/api/schemas";
 import { kickPlayer } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {

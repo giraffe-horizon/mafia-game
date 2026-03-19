@@ -58,3 +58,22 @@ describe("autoMafiaCount", () => {
     expect(autoMafiaCount(20)).toBe(4);
   });
 });
+
+// errors.ts tests
+import { getErrorMessage } from "@/lib/errors";
+
+describe("getErrorMessage", () => {
+  it("extracts message from Error instance", () => {
+    expect(getErrorMessage(new Error("test error"))).toBe("test error");
+  });
+
+  it("returns fallback for non-Error values", () => {
+    expect(getErrorMessage("string")).toBe("Błąd połączenia");
+    expect(getErrorMessage(null)).toBe("Błąd połączenia");
+    expect(getErrorMessage(42)).toBe("Błąd połączenia");
+  });
+
+  it("uses custom fallback", () => {
+    expect(getErrorMessage("nope", "custom")).toBe("custom");
+  });
+});

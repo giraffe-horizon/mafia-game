@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withApiHandler } from "@/app/api/lib/handler";
-import { rematchSchema } from "@/app/api/lib/schemas";
+import { withApiHandler } from "@/lib/api/handler";
+import { rematchSchema } from "@/lib/api/schemas";
 import { rematch } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {

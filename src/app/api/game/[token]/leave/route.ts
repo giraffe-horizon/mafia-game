@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withApiHandler } from "@/app/api/lib/handler";
+import { withApiHandler } from "@/lib/api/handler";
 import { leaveGame } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {

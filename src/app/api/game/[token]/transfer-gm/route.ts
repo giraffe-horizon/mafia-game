@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withApiHandler } from "@/app/api/lib/handler";
-import { transferGmSchema } from "@/app/api/lib/schemas";
+import { withApiHandler } from "@/lib/api/handler";
+import { transferGmSchema } from "@/lib/api/schemas";
 import { transferGm } from "@/db";
 
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
