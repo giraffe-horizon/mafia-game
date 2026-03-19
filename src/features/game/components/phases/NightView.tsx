@@ -26,7 +26,14 @@ export default function NightView({
   players,
 }: NightViewProps) {
   const { roleVisible, toggleRole } = viewState;
-  const { actionTargets, myAction, actionState, mafiaState, doctorLastTargetId } = actionData;
+  const {
+    actionTargets,
+    myAction,
+    actionState,
+    mafiaState,
+    doctorLastTargetId,
+    investigatedPlayerIds,
+  } = actionData;
   return (
     <>
       {/* Role card for non-host players */}
@@ -44,6 +51,7 @@ export default function NightView({
           actionState={actionState}
           mafiaState={mafiaState}
           doctorLastTargetId={doctorLastTargetId}
+          investigatedPlayerIds={investigatedPlayerIds}
         />
       )}
 

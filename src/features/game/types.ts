@@ -35,6 +35,7 @@ export interface NightActionData {
   actionState: ActionState;
   mafiaState: MafiaState;
   doctorLastTargetId?: string;
+  investigatedPlayerIds?: string[];
 }
 
 // ---------------------------------------------------------------------------

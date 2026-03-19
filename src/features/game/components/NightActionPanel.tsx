@@ -16,6 +16,7 @@ interface NightActionPanelProps {
   actionState: ActionState;
   mafiaState: MafiaState;
   doctorLastTargetId?: string;
+  investigatedPlayerIds?: string[];
 }
 
 export default function NightActionPanel({
@@ -26,6 +27,7 @@ export default function NightActionPanel({
   actionState,
   mafiaState,
   doctorLastTargetId,
+  investigatedPlayerIds,
 }: NightActionPanelProps) {
   const { pending, error, onAction, onChangeDecision } = actionState;
   const { teamActions: mafiaTeamActions, currentNickname } = mafiaState;
@@ -120,7 +122,10 @@ export default function NightActionPanel({
       {error && <p className="text-red-400 text-xs font-typewriter mb-2 px-1">{error}</p>}
       <div className="flex flex-col gap-2">
         {targets.map((p) => {
-          const isBlockedTarget = role === "doctor" && p.playerId === doctorLastTargetId;
+          const isBlockedDoctor = role === "doctor" && p.playerId === doctorLastTargetId;
+          const isBlockedDetective =
+            role === "detective" && investigatedPlayerIds?.includes(p.playerId);
+          const isBlockedTarget = isBlockedDoctor || isBlockedDetective;
           return (
             <button
               key={p.playerId}
@@ -130,9 +135,14 @@ export default function NightActionPanel({
             >
               <span className="material-symbols-outlined text-[18px] text-slate-400">person</span>
               <span className="text-white text-sm">{p.nickname}</span>
-              {isBlockedTarget && (
+              {isBlockedDoctor && (
                 <span className="text-xs text-slate-500 font-typewriter ml-auto">
                   chroniony ostatnio
+                </span>
+              )}
+              {isBlockedDetective && (
+                <span className="text-xs text-slate-500 font-typewriter ml-auto">
+                  już sprawdzony
                 </span>
               )}
             </button>
