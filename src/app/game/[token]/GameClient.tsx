@@ -353,7 +353,6 @@ export default function GameClient() {
             starting={starting}
             onStart={handleStartWrapper}
             onTransferGm={handleTransferGm}
-            token={token}
             round={game.round}
           />
         )}

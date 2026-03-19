@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import QRCode from "react-qr-code";
 import type { PublicPlayer } from "@/db";
 import LobbyTransferGm from "./LobbyTransferGm";
 import { SectionHeader, InfoCard } from "@/components/ui";
-import * as apiClient from "@/lib/api-client";
-
-interface RankingEntry {
-  playerId: string;
-  nickname: string;
-  totalScore: number;
-  roundsPlayed: number;
-}
+import { useGameStore } from "../_stores/gameStore";
 
 interface LobbyViewProps {
   isHost: boolean;
@@ -29,7 +22,6 @@ interface LobbyViewProps {
   starting: boolean;
   onStart: () => void;
   onTransferGm: (playerId: string) => void;
-  token: string;
   round: number;
 }
 
@@ -48,34 +40,17 @@ export default function LobbyView({
   starting,
   onStart,
   onTransferGm,
-  token,
   round,
 }: LobbyViewProps) {
-  const [ranking, setRanking] = useState<RankingEntry[]>([]);
+  const ranking = useGameStore((s) => s.ranking);
+  const fetchRanking = useGameStore((s) => s.fetchRanking);
 
   const hasPlayedRounds = round > 0;
 
   useEffect(() => {
-    if (!hasPlayedRounds || !token) return;
-
-    async function fetchData() {
-      try {
-        const data = await apiClient.fetchRanking(token);
-        setRanking(
-          data.ranking.map((r) => ({
-            playerId: r.playerId,
-            nickname: r.nickname,
-            totalScore: r.totalScore,
-            roundsPlayed: r.roundsPlayed,
-          }))
-        );
-      } catch {
-        // Ranking is optional in lobby
-      }
-    }
-
-    fetchData();
-  }, [hasPlayedRounds, token]);
+    if (!hasPlayedRounds) return;
+    fetchRanking();
+  }, [hasPlayedRounds, fetchRanking]);
 
   const positionColor = (i: number) =>
     i === 0

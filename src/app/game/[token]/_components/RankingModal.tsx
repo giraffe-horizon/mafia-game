@@ -1,21 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import * as apiClient from "@/lib/api-client";
+import { useEffect, useRef } from "react";
 import Modal from "@/components/ui/Modal";
-
-interface RankingEntry {
-  playerId: string;
-  nickname: string;
-  role: string | null;
-  isAlive: boolean;
-  missionPoints: number;
-  missionsDone: number;
-  missionsTotal: number;
-  survived: boolean;
-  won: boolean;
-  totalScore: number;
-}
+import { useGameStore } from "../_stores/gameStore";
 
 interface RankingModalProps {
   isOpen: boolean;
@@ -24,37 +11,25 @@ interface RankingModalProps {
 }
 
 export default function RankingModal({ isOpen, onClose, token }: RankingModalProps) {
-  const [ranking, setRanking] = useState<RankingEntry[]>([]);
-  const [gameStatus, setGameStatus] = useState("");
-  const [winner, setWinner] = useState<string | null>(null);
-  const [round, setRound] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const ranking = useGameStore((s) => s.ranking);
+  const rankingMeta = useGameStore((s) => s.rankingMeta);
+  const fetchRanking = useGameStore((s) => s.fetchRanking);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const gameStatus = rankingMeta?.gameStatus ?? "";
+  const winner = rankingMeta?.winner ?? null;
+  const round = rankingMeta?.round ?? 0;
+  const loading = isOpen && ranking.length === 0 && !rankingMeta;
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !token) return;
 
-    setLoading(true);
-    setError("");
-
-    async function fetchData() {
-      try {
-        const data = await apiClient.fetchRanking(token);
-        setRanking(data.ranking);
-        setGameStatus(data.gameStatus);
-        setWinner(data.winner);
-        setRound(data.round);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Błąd połączenia");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
-  }, [isOpen, token]);
+    fetchRanking();
+    intervalRef.current = setInterval(fetchRanking, 5000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isOpen, token, fetchRanking]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full max-h-[85vh] flex flex-col">
@@ -91,18 +66,11 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
           </div>
         )}
 
-        {error && (
-          <div className="flex flex-col items-center justify-center py-8">
-            <span className="material-symbols-outlined text-[48px] text-primary mb-4">error</span>
-            <p className="text-slate-300 font-typewriter text-sm text-center">{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && ranking.length === 0 && (
+        {!loading && ranking.length === 0 && (
           <p className="text-slate-500 font-typewriter text-sm text-center py-8">Brak danych</p>
         )}
 
-        {!loading && !error && ranking.length > 0 && (
+        {!loading && ranking.length > 0 && (
           <>
             {/* Winner banner */}
             {winner && gameStatus === "finished" && (

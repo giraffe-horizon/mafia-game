@@ -3,71 +3,30 @@
 import { useState, useEffect } from "react";
 import { SectionHeader, StatusItem, Button, Card } from "@/components/ui";
 import { useGameStore } from "../_stores/gameStore";
-import * as apiClient from "@/lib/api-client";
-
-interface RoundScore {
-  playerId: string;
-  nickname: string;
-  missionPoints: number;
-  survived: boolean;
-  won: boolean;
-  totalScore: number;
-}
-
-interface RankingEntry {
-  playerId: string;
-  nickname: string;
-  totalScore: number;
-  roundsPlayed: number;
-}
 
 export default function EndScreen(_props: Record<string, never> = {}) {
   const state = useGameStore((s) => s.state);
   const rematchGame = useGameStore((s) => s.rematchGame);
+  const roundScores = useGameStore((s) => s.roundScores);
+  const ranking = useGameStore((s) => s.ranking);
+  const rankingMeta = useGameStore((s) => s.rankingMeta);
+  const fetchRanking = useGameStore((s) => s.fetchRanking);
+  const fetchRoundScores = useGameStore((s) => s.fetchRoundScores);
   const [rematchPending, setRematchPending] = useState(false);
-  const [roundScores, setRoundScores] = useState<RoundScore[]>([]);
-  const [ranking, setRanking] = useState<RankingEntry[]>([]);
-  const [totalRounds, setTotalRounds] = useState(0);
 
   const token = state?.currentPlayer.token;
 
   useEffect(() => {
     if (!token) return;
-
-    async function fetchScoring() {
-      try {
-        const [scoresData, rankingData] = await Promise.all([
-          apiClient.fetchRoundScores(token!),
-          apiClient.fetchRanking(token!),
-        ]);
-
-        if (scoresData.scores) {
-          setRoundScores(scoresData.scores);
-        }
-
-        if (rankingData.ranking) {
-          setRanking(
-            rankingData.ranking.map((r) => ({
-              playerId: r.playerId,
-              nickname: r.nickname,
-              totalScore: r.totalScore,
-              roundsPlayed: r.roundsPlayed,
-            }))
-          );
-          setTotalRounds(rankingData.round);
-        }
-      } catch {
-        // Scores are optional — don't break the end screen
-      }
-    }
-
-    fetchScoring();
-  }, [token]);
+    fetchRanking();
+    fetchRoundScores();
+  }, [token, fetchRanking, fetchRoundScores]);
 
   if (!state) return null;
 
   const { game, currentPlayer, hostMissions } = state;
   const isHost = currentPlayer.isHost;
+  const totalRounds = rankingMeta?.round ?? 0;
 
   const handleRematch = async () => {
     setRematchPending(true);
@@ -236,8 +195,6 @@ export default function EndScreen(_props: Record<string, never> = {}) {
           </div>
         </div>
       )}
-
-      {/* Player roles — removed, already shown in PlayersList below */}
     </div>
   );
 }
