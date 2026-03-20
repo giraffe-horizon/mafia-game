@@ -160,7 +160,8 @@ export async function getGameState(
         if (gameRow.status !== "playing") return null;
         if (p.token === token) return p.role as Role | null; // own role
         if (isHost) return p.role as Role | null; // GM sees all
-        if (p.is_alive === 0) return p.role as Role | null; // dead players revealed
+        if (playerRow.is_alive === 0) return p.role as Role | null; // dead players see all roles
+        if (p.is_alive === 0) return p.role as Role | null; // dead players' roles revealed to everyone
         if (playerRow.role === "mafia" && p.role === "mafia") return p.role as Role | null; // mafia sees teammates
         return null;
       })(),

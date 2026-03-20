@@ -162,6 +162,8 @@ export class MockD1Database implements D1Database {
     this.storage.set("messages", new Map());
     this.storage.set("game_actions", new Map());
     this.storage.set("missions", new Map());
+    this.storage.set("round_results", new Map());
+    this.storage.set("player_round_scores", new Map());
   }
 
   prepare(query: string): D1PreparedStatement {
@@ -205,6 +207,8 @@ export class MockD1Database implements D1Database {
     this.storage.set("messages", new Map());
     this.storage.set("game_actions", new Map());
     this.storage.set("missions", new Map());
+    this.storage.set("round_results", new Map());
+    this.storage.set("player_round_scores", new Map());
   }
 
   // Helper to seed test data
