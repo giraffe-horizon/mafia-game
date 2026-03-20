@@ -24,7 +24,7 @@ export function TabBar({ tabs, activeTab, onTabChange, className }: TabBarProps)
         className
       )}
       style={{
-        backgroundColor: "#1C1C1C",
+        backgroundColor: "rgba(28, 28, 28, 0.95)",
         borderTop: "1px solid #333333",
       }}
     >

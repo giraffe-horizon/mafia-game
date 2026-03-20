@@ -38,7 +38,7 @@ export default function GameHeader({
   return (
     <div
       className="relative z-20 flex items-center justify-between px-4 py-2.5 border-b border-surface-highest"
-      style={{ backgroundColor: "#1C1C1C" }}
+      style={{ backgroundColor: "rgba(28, 28, 28, 0.95)" }}
     >
       {/* Left: Back + Ranking + folder icon */}
       <div className="flex items-center gap-1">
