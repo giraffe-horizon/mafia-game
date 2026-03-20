@@ -26,7 +26,7 @@ export default function NightTab() {
 
   if (phase === "night") {
     return (
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-gradient-to-b from-background via-background to-red-950/10">
         <NightContainer />
         <PlayersListContainer />
       </div>

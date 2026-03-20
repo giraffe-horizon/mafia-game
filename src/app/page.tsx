@@ -17,21 +17,25 @@ export default function Home() {
 
       <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
         {/* Dossier hero card */}
-        <div className="paper-card flex flex-col items-center mb-8 p-6 border border-stamp/20 relative overflow-hidden">
+        <div className="paper-card flex flex-col items-center mb-8 p-6 border-2 border-stamp/30 relative overflow-hidden bg-gradient-to-br from-paper via-paper to-paper-dim shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
           {/* Stamp overlay */}
-          <div className="absolute top-3 right-3">
-            <Stamp color="red" rotate={12} className="text-[10px]">
+          <div className="absolute top-2 right-2">
+            <Stamp
+              color="red"
+              rotate={12}
+              className="text-[12px] px-3 py-1 border-[3px] opacity-95"
+            >
               ŚCIŚLE TAJNE
             </Stamp>
           </div>
 
           {/* Skull icon */}
-          <span className="material-symbols-outlined text-[72px] text-stamp mb-3 drop-shadow-[0_0_16px_rgba(255,180,172,0.4)]">
+          <span className="material-symbols-outlined text-[96px] text-stamp mb-4 drop-shadow-[0_0_24px_rgba(255,180,172,0.6)] filter brightness-110">
             skull
           </span>
 
           {/* Title */}
-          <h1 className="font-display font-black text-[36px] leading-none text-stamp uppercase tracking-wider mb-1">
+          <h1 className="font-display font-black text-[48px] leading-none text-on-paper uppercase tracking-wider mb-2 drop-shadow-[0_2px_4px_rgba(26,26,26,0.3)]">
             MAFIA
           </h1>
 

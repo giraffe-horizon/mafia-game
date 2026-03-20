@@ -57,9 +57,9 @@ export default function OnboardingScreen({
 
       <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
         <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 border-2 border-stamp/40 flex items-center justify-center bg-background/80 shadow-[0_0_30px_rgba(255,180,172,0.2)] relative overflow-hidden">
-            <div className="absolute inset-0 bg-stamp/10 blur-xl" />
-            <span className="material-symbols-outlined text-[48px] text-stamp relative z-10 drop-shadow-md">
+          <div className="w-28 h-28 border-2 border-stamp/50 flex items-center justify-center bg-stamp/5 shadow-[0_0_40px_rgba(255,180,172,0.3)] relative overflow-hidden paper-grain">
+            <div className="absolute inset-0 bg-gradient-radial from-stamp/20 to-transparent" />
+            <span className="material-symbols-outlined text-[56px] text-stamp relative z-10 drop-shadow-lg opacity-90">
               person_add
             </span>
           </div>
@@ -71,22 +71,22 @@ export default function OnboardingScreen({
           Wybierz swoje imię i postać
         </p>
 
-        <div className="flex flex-col gap-4 w-full mb-6">
+        <div className="flex flex-col gap-4 w-full mb-6 paper-card p-4 border border-stamp/20">
           <FormField label="PSEUDONIM OPERACYJNY:">
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-on-surface-dim">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-on-paper-dim">
                 <span className="material-symbols-outlined text-[20px]">person</span>
               </span>
               <input
-                className="flex w-full text-on-surface focus:outline-none focus:ring-2 focus:ring-stamp/50 border border-stamp/30 bg-surface-lowest h-14 placeholder:text-on-surface-dim pl-12 pr-4 text-lg font-medium leading-normal transition-all font-display"
-                placeholder="Policjant..."
+                className="flex w-full text-on-paper focus:outline-none bg-transparent border-0 border-b-2 border-b-on-paper/30 focus:border-b-stamp h-14 placeholder:text-on-paper-dim pl-10 pr-4 text-lg font-medium leading-normal transition-all font-display"
+                placeholder="Agent..."
                 type="text"
                 value={onboardingNickname}
                 onChange={(e) => onNicknameChange(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && onSubmit()}
               />
             </div>
-            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/30 mt-1">
+            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-paper/50 mt-1">
               WYPEŁNIĆ PISMEM DRUKOWANYM
             </p>
           </FormField>

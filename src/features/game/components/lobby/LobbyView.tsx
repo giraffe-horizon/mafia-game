@@ -52,15 +52,17 @@ export default function LobbyView({
       {isHost && (
         <>
           {/* QR Code and sharing section */}
-          <div className="mx-5 mt-5 p-4 bg-surface-low border border-surface-highest">
-            <SectionHeader>PARAMETRY MISJI — udostępnij graczom</SectionHeader>
+          <div className="mx-5 mt-5 p-4 crt-surface">
+            <SectionHeader className="text-stamp-green">
+              PARAMETRY MISJI — udostępnij graczom
+            </SectionHeader>
             <div className="flex items-center justify-between gap-3 mb-4">
-              <span className="font-display text-2xl font-bold text-on-surface tracking-widest drop-shadow-[0_0_8px_rgba(255,180,172,0.3)]">
+              <span className="font-display text-2xl font-bold text-stamp-green tracking-widest drop-shadow-[0_0_8px_rgba(122,184,122,0.4)] font-mono">
                 {gameCode}
               </span>
               <button
                 onClick={copyCode}
-                className="flex items-center gap-1.5 px-3 py-2 bg-stamp/10 hover:bg-stamp/20 border border-stamp/30 text-stamp text-sm font-display uppercase tracking-wider transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 bg-stamp-green/10 hover:bg-stamp-green/20 border border-stamp-green/30 text-stamp-green text-sm font-display uppercase tracking-wider transition-all"
               >
                 <span className="material-symbols-outlined text-[16px]">
                   {copied ? "check" : "content_copy"}
@@ -82,19 +84,19 @@ export default function LobbyView({
                     setCopied(true),
                     setTimeout(() => setCopied(false), COPY_FEEDBACK_MS))
               }
-              className="w-full flex items-center justify-center gap-2 h-11 bg-surface-lowest hover:bg-surface-low border border-surface-highest text-on-surface-dim hover:text-on-surface text-sm font-display uppercase tracking-wider transition-all"
+              className="w-full flex items-center justify-center gap-2 h-11 bg-accent-green hover:bg-accent-green-bright border border-stamp-green/30 text-stamp-green hover:text-stamp-green text-sm font-display uppercase tracking-wider transition-all"
             >
               <span className="material-symbols-outlined text-[18px]">share</span>
               Udostępnij link
             </button>
-            <div className="flex flex-col items-center gap-2 pt-3 border-t border-surface-highest mt-3">
-              <p className="text-on-surface-dim text-xs font-display uppercase tracking-widest mb-1">
+            <div className="flex flex-col items-center gap-2 pt-3 border-t border-stamp-green/20 mt-3">
+              <p className="text-stamp-green text-xs font-display uppercase tracking-widest mb-1">
                 Zeskanuj aby dołączyć
               </p>
-              <div className="p-3 bg-secondary">
+              <div className="p-3 bg-paper border border-stamp-green/30 shadow-[inset_0_0_10px_rgba(122,184,122,0.1)]">
                 <QRCode value={joinUrl} size={160} bgColor="#d7c3b0" fgColor="#1a1a1a" />
               </div>
-              <p className="text-on-surface-dim text-[10px] font-display text-center mt-1 break-all px-2">
+              <p className="text-stamp-green/70 text-[10px] font-display text-center mt-1 break-all px-2 font-mono">
                 {joinUrl}
               </p>
             </div>
@@ -108,13 +110,13 @@ export default function LobbyView({
               </p>
             )}
             <div className="p-4 crt-surface">
-              <SectionHeader className="text-on-surface-dim">Tryb gry</SectionHeader>
+              <SectionHeader className="text-stamp-green">Tryb gry</SectionHeader>
               <div className="flex gap-2">
                 {(["full", "simple"] as const).map((mode) => (
                   <button
                     key={mode}
                     onClick={() => setGameMode(mode)}
-                    className={`flex-1 px-3 py-2.5 text-sm font-display border transition-all text-center ${gameMode === mode ? "bg-stamp/20 border-stamp/50 text-stamp" : "border-surface-highest text-on-surface-dim hover:border-on-surface-dim"}`}
+                    className={`flex-1 px-3 py-2.5 text-sm font-display border transition-all text-center ${gameMode === mode ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"}`}
                   >
                     <span className="block font-bold">
                       {mode === "full" ? "Pełny" : "Uproszczony"}
@@ -130,12 +132,12 @@ export default function LobbyView({
               </div>
             </div>
             {nonHostPlayers.length >= minPlayers && (
-              <div className="p-4 bg-surface-low border border-surface-highest">
-                <SectionHeader className="text-on-surface-dim">Liczba mafii</SectionHeader>
+              <div className="p-4 crt-surface">
+                <SectionHeader className="text-stamp-green">Liczba mafii</SectionHeader>
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setMafiaCount(0)}
-                    className={`px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-stamp/20 border-stamp/50 text-stamp" : "border-surface-highest text-on-surface-dim hover:border-on-surface-dim"}`}
+                    className={`px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"}`}
                   >
                     Auto ({autoMafiaCount(nonHostPlayers.length)})
                   </button>
@@ -146,13 +148,13 @@ export default function LobbyView({
                     <button
                       key={n}
                       onClick={() => setMafiaCount(n)}
-                      className={`w-10 h-10 text-sm font-bold font-display border transition-all ${mafiaCount === n ? "bg-stamp/20 border-stamp/50 text-stamp" : "border-surface-highest text-on-surface-dim hover:border-on-surface-dim"}`}
+                      className={`w-10 h-10 text-sm font-bold font-display border transition-all ${mafiaCount === n ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"}`}
                     >
                       {n}
                     </button>
                   ))}
                 </div>
-                <p className="text-on-surface-dim text-xs mt-2">
+                <p className="text-stamp-green/70 text-xs mt-2 font-mono">
                   {gameMode === "full" ? "+ 1 policjant, 1 lekarz, reszta cywile" : "reszta cywile"}
                 </p>
               </div>

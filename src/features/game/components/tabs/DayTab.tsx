@@ -32,7 +32,7 @@ export default function DayTab() {
 
   // Day/Voting/Review/Ended
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col bg-gradient-to-b from-background via-background to-amber-950/15">
       <DayContainer />
       <PlayersListContainer />
     </div>
