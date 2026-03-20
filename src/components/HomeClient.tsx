@@ -183,7 +183,7 @@ export default function HomeClient() {
       {/* Inputs */}
       {joinMode && (
         <div
-          className="flex flex-col gap-3 w-full mb-6 p-4"
+          className="flex flex-col gap-3 w-full mb-3 p-4"
           style={{ border: "2px dashed #5A5A4A" }}
         >
           <p
@@ -209,7 +209,7 @@ export default function HomeClient() {
         </div>
       )}
       {!joinMode && (
-        <div className="w-full mb-6">
+        <div className="w-full mb-3">
           {error && (
             <p className="text-sm font-display pl-1 animate-pulse" style={{ color: "#D94F3B" }}>
               {error}
@@ -219,7 +219,7 @@ export default function HomeClient() {
       )}
 
       {/* Action buttons */}
-      <div className="flex flex-col gap-4 w-full mt-auto">
+      <div className="flex flex-col gap-4 w-full mt-4">
         {!joinMode && (
           <button
             onClick={handleCreate}

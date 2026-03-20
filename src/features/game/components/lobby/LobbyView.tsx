@@ -52,7 +52,13 @@ export default function LobbyView({
       {isHost && (
         <>
           {/* QR Code and sharing section */}
-          <div className="mx-5 mt-5 p-4 crt-surface relative">
+          <div
+            className="mx-5 mt-5 p-4 card-lifted crt-monitor relative"
+            style={{
+              background:
+                "linear-gradient(155deg, #3D4D3D 0%, #6B7D62 35%, #8FA085 55%, #5A6A52 80%, #3D4D3D 100%)",
+            }}
+          >
             <SectionHeader
               className="relative z-10"
               style={{
@@ -99,9 +105,9 @@ export default function LobbyView({
             </button>
 
             {/* Small QR code in bottom-right */}
-            <div className="absolute bottom-4 right-4 z-10">
+            <div className="absolute bottom-4 right-4 z-10" style={{ maxWidth: "80px" }}>
               <div className="p-1 bg-paper border border-stamp-green/30">
-                <QRCode value={joinUrl} size={56} bgColor="#d7c3b0" fgColor="#1a1a1a" />
+                <QRCode value={joinUrl} size={48} bgColor="#d7c3b0" fgColor="#1a1a1a" />
               </div>
             </div>
           </div>
@@ -113,7 +119,13 @@ export default function LobbyView({
                 Potrzeba minimum {minPlayers} graczy ({nonHostPlayers.length}/{minPlayers})
               </p>
             )}
-            <div className="p-4 crt-surface">
+            <div
+              className="p-4 card-lifted crt-monitor"
+              style={{
+                background:
+                  "linear-gradient(155deg, #3D4D3D 0%, #6B7D62 35%, #8FA085 55%, #5A6A52 80%, #3D4D3D 100%)",
+              }}
+            >
               <SectionHeader
                 className="relative z-10"
                 style={{
@@ -146,7 +158,13 @@ export default function LobbyView({
               </div>
             </div>
             {nonHostPlayers.length >= minPlayers && (
-              <div className="p-4 crt-surface">
+              <div
+                className="p-4 card-lifted crt-monitor"
+                style={{
+                  background:
+                    "linear-gradient(155deg, #3D4D3D 0%, #6B7D62 35%, #8FA085 55%, #5A6A52 80%, #3D4D3D 100%)",
+                }}
+              >
                 <SectionHeader
                   className="relative z-10"
                   style={{
