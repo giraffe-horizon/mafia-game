@@ -4,7 +4,6 @@ import { useGameStore } from "@/features/game/store/gameStore";
 import { usePlayerState } from "@/features/game/hooks/usePlayerState";
 import { useCurrentPhase } from "@/features/game/hooks/useCurrentPhase";
 import NightContainer from "@/features/game/containers/NightContainer";
-import PlayersListContainer from "@/features/game/containers/PlayersListContainer";
 import DeadSpectatorView from "@/features/game/components/shared/DeadSpectatorView";
 import { Stamp } from "@/components/ui";
 
@@ -28,7 +27,6 @@ export default function NightTab() {
     return (
       <div className="flex-1 flex flex-col bg-gradient-to-b from-background via-background to-red-950/10">
         <NightContainer />
-        <PlayersListContainer />
       </div>
     );
   }

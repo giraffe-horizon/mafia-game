@@ -3,7 +3,6 @@
 import { useCurrentPhase } from "@/features/game/hooks/useCurrentPhase";
 import LobbyContainer from "@/features/game/containers/LobbyContainer";
 import DayContainer from "@/features/game/containers/DayContainer";
-import PlayersListContainer from "@/features/game/containers/PlayersListContainer";
 
 export default function DayTab() {
   const { phase, isLobby } = useCurrentPhase();
@@ -25,7 +24,6 @@ export default function DayTab() {
             Trwa noc...
           </p>
         </div>
-        <PlayersListContainer />
       </div>
     );
   }
@@ -34,7 +32,6 @@ export default function DayTab() {
   return (
     <div className="flex-1 flex flex-col bg-gradient-to-b from-background via-background to-amber-950/15">
       <DayContainer />
-      <PlayersListContainer />
     </div>
   );
 }

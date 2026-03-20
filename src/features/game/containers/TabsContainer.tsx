@@ -5,13 +5,13 @@ import { TabBar } from "@/components/ui";
 import NightTab from "@/features/game/components/tabs/NightTab";
 import DayTab from "@/features/game/components/tabs/DayTab";
 import VotesTab from "@/features/game/components/tabs/VotesTab";
-import LogsTab from "@/features/game/components/tabs/LogsTab";
+import AgentsTab from "@/features/game/components/tabs/AgentsTab";
 
 const TABS = [
   { id: "night", icon: "bedtime", label: "Noc" },
   { id: "day", icon: "wb_sunny", label: "Dzień" },
   { id: "votes", icon: "how_to_vote", label: "Głosy" },
-  { id: "logs", icon: "assignment", label: "Logi" },
+  { id: "agents", icon: "group", label: "Agenci" },
 ] as const;
 
 export default function TabsContainer() {
@@ -25,14 +25,14 @@ export default function TabsContainer() {
         {activeTab === "night" && <NightTab />}
         {activeTab === "day" && <DayTab />}
         {activeTab === "votes" && <VotesTab />}
-        {activeTab === "logs" && <LogsTab />}
+        {activeTab === "agents" && <AgentsTab />}
       </div>
 
       {/* Fixed bottom tab bar */}
       <TabBar
         tabs={[...TABS]}
         activeTab={activeTab}
-        onTabChange={(id) => setActiveTab(id as "night" | "day" | "votes" | "logs")}
+        onTabChange={(id) => setActiveTab(id as "night" | "day" | "votes" | "agents")}
       />
     </div>
   );

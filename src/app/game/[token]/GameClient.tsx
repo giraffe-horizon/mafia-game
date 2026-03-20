@@ -16,7 +16,6 @@ import ToastOverlay from "@/features/game/components/shared/ToastOverlay";
 import TransitionOverlay from "@/features/game/components/shared/TransitionOverlay";
 import GameHeader from "@/features/game/components/GameHeader";
 import SettingsModal from "@/features/game/components/modals/SettingsModal";
-import RankingModal from "@/features/game/components/modals/RankingModal";
 import { PageLayout } from "@/components/ui";
 
 // Stateless service — safe to create at module level
@@ -41,7 +40,6 @@ export default function GameClient() {
 
   // UI state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showRanking, setShowRanking] = useState(false);
   const [showGmPanel, setShowGmPanel] = useState(false);
 
   // Onboarding (character sync for settings modal)
@@ -143,7 +141,6 @@ export default function GameClient() {
         gameCode={game.code}
         currentPlayer={currentPlayer}
         onShowSettings={() => setShowSettingsModal(true)}
-        onShowRanking={() => setShowRanking(true)}
         onShowGmPanel={() => setShowGmPanel(true)}
       />
 
@@ -177,8 +174,6 @@ export default function GameClient() {
           </div>
         )}
       </div>
-
-      <RankingModal isOpen={showRanking} onClose={() => setShowRanking(false)} token={token} />
 
       <SettingsModal
         isVisible={showSettingsModal}

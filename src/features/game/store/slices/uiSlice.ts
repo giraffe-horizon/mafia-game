@@ -15,8 +15,8 @@ export interface UiSlice {
   toggleRole: () => void;
 
   // Active tab (bottom navigation)
-  activeTab: "night" | "day" | "votes" | "logs";
-  setActiveTab: (tab: "night" | "day" | "votes" | "logs") => void;
+  activeTab: "night" | "day" | "votes" | "agents";
+  setActiveTab: (tab: "night" | "day" | "votes" | "agents") => void;
 
   // Loading states
   actionPending: boolean;
