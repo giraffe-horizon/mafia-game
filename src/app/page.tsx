@@ -17,12 +17,7 @@ export default function Home() {
 
       <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
         {/* Dossier hero card */}
-        <div
-          className="flex flex-col items-center mb-8 p-6 border border-stamp/20 relative overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, rgba(30,40,38,0.6) 0%, rgba(40,28,26,0.6) 100%)",
-          }}
-        >
+        <div className="paper-card flex flex-col items-center mb-8 p-6 border border-stamp/20 relative overflow-hidden">
           {/* Stamp overlay */}
           <div className="absolute top-3 right-3">
             <Stamp color="red" rotate={12} className="text-[10px]">
@@ -41,9 +36,9 @@ export default function Home() {
           </h1>
 
           {/* Redacted op line */}
-          <p className="font-display text-[10px] uppercase tracking-[0.25em] text-on-surface/50">
+          <p className="font-display text-[10px] uppercase tracking-[0.25em] text-on-paper/50">
             OPERACJA:{" "}
-            <span className="bg-on-surface text-transparent select-none px-0.5">████████</span> 1954
+            <span className="bg-on-paper text-transparent select-none px-0.5">████████</span> 1954
           </p>
         </div>
 

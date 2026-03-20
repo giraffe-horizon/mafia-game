@@ -29,7 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           rel="stylesheet"
         />
       </head>
-      <body className="bg-background text-on-surface font-display min-h-screen flex flex-col items-center justify-center m-0 p-0 antialiased overflow-x-hidden">
+      <body className="mafia-app bg-background text-on-surface font-display min-h-screen flex flex-col items-center justify-center m-0 p-0 antialiased overflow-x-hidden">
         <ClientConfigProvider config={clientConfig}>{children}</ClientConfigProvider>
       </body>
     </html>

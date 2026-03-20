@@ -34,29 +34,35 @@ export default function CharacterPicker({
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      {characters.map((character) => {
+      {characters.map((character, _index) => {
         const isSelected = selectedId === character.id;
         const isDisabled = disabledIds.includes(character.id);
         const hasImgError = errorIds.has(character.id);
+        // Deterministic rotation based on character ID
+        const rotationDegrees = (character.id.charCodeAt(0) % 5) - 2; // -2 to +2 degrees
         return (
           <button
             type="button"
             key={character.id}
             onClick={() => !isDisabled && onSelect(character.id)}
             disabled={isDisabled}
+            aria-label={`Postać: ${character.name_pl}, ${
+              isSelected ? "wybrana" : isDisabled ? "zajęta" : "dostępna"
+            }`}
             className={`relative flex flex-col items-center gap-0 transition-all focus:outline-none ${
               isDisabled ? "cursor-not-allowed opacity-70" : ""
             }`}
           >
             {/* Polaroid frame */}
             <div
-              className={`w-full bg-secondary p-1.5 pb-0 border-2 transition-all ${
+              className={`tape-corner w-full bg-secondary p-1.5 pb-0 border-2 transition-all ${
                 isSelected
                   ? "border-primary shadow-[0_0_0_3px_var(--color-primary)] scale-[1.03]"
                   : isDisabled
                     ? "border-surface-highest grayscale"
                     : "border-surface-highest hover:border-on-surface/40"
               }`}
+              style={{ transform: `rotate(${rotationDegrees}deg)` }}
             >
               {/* Photo area */}
               <div className="relative w-full aspect-square bg-surface-low overflow-hidden">
@@ -66,7 +72,7 @@ export default function CharacterPicker({
                     alt={character.name_pl}
                     loading="lazy"
                     decoding="async"
-                    className={`w-full h-full object-cover transition-all ${
+                    className={`w-full h-full object-cover transition-all filter grayscale-[0.2] contrast-[1.1] ${
                       isDisabled
                         ? "grayscale brightness-50"
                         : isSelected
@@ -86,22 +92,16 @@ export default function CharacterPicker({
                 {/* ZAJĘTE stamp overlay */}
                 {isDisabled && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="rotate-[-15deg]">
-                      <span className="font-display font-black text-[11px] uppercase tracking-widest border-2 border-stamp text-stamp px-1.5 py-0.5 opacity-90 bg-black/30">
-                        ZAJĘTE
-                      </span>
-                    </div>
+                    <span className="stamp stamp-red bg-black/50">ZAJĘTE</span>
                   </div>
                 )}
 
                 {/* WYBRANO stamp overlay */}
                 {isSelected && (
                   <div className="absolute inset-0 flex items-center justify-center bg-primary/10">
-                    <div className="rotate-[-10deg]">
-                      <span className="font-display font-black text-sm uppercase tracking-widest border-2 border-primary text-primary px-2 py-1 bg-black/50 shadow-lg">
-                        WYBRANO
-                      </span>
-                    </div>
+                    <span className="stamp text-primary border-primary bg-black/50 shadow-lg">
+                      WYBRANO
+                    </span>
                   </div>
                 )}
               </div>
