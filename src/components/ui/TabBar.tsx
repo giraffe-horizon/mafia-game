@@ -21,6 +21,7 @@ export function TabBar({ tabs, activeTab, onTabChange, className }: TabBarProps)
         "fixed bottom-0 left-0 right-0 z-50",
         "flex items-stretch",
         "max-w-lg mx-auto",
+        "pb-[env(safe-area-inset-bottom)]",
         className
       )}
       style={{
@@ -38,7 +39,7 @@ export function TabBar({ tabs, activeTab, onTabChange, className }: TabBarProps)
             onClick={() => onTabChange(tab.id)}
             className={cn(
               "flex-1 flex flex-col items-center justify-center gap-0.5",
-              "min-h-[56px]",
+              "min-h-[48px]",
               "font-display text-[9px] font-bold uppercase tracking-widest",
               "transition-colors duration-[0.1s]",
               "border-0 outline-none"

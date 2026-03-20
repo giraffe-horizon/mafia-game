@@ -105,7 +105,7 @@ export default function LobbyView({
             </button>
 
             {/* Small QR code in bottom-right */}
-            <div className="absolute bottom-4 right-4 z-10" style={{ maxWidth: "80px" }}>
+            <div className="absolute bottom-4 right-4 z-10" style={{ maxWidth: "60px" }}>
               <div className="p-1 bg-paper border border-stamp-green/30">
                 <QRCode value={joinUrl} size={48} bgColor="#d7c3b0" fgColor="#1a1a1a" />
               </div>

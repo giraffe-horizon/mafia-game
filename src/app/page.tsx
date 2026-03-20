@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export default function Home() {
   return (
     <div
-      className="relative flex min-h-screen w-full md:max-w-lg flex-col overflow-hidden grain"
+      className="relative flex min-h-[100dvh] w-full md:max-w-lg flex-col overflow-y-auto grain"
       style={{
         background:
           "linear-gradient(160deg, #5E8F6D 0%, #8BA87A 15%, #B5B478 30%, #CBBC7A 45%, #D4B06E 55%, #D49E68 70%, #D48E5C 85%, #D08558 100%)",
@@ -35,15 +35,15 @@ export default function Home() {
       </div>
 
       {/* Main content — flex-1, justify-start, content od góry */}
-      <div className="relative z-20 flex-1 flex flex-col items-center px-8 pt-8 pb-6">
+      <div className="relative z-20 flex-1 flex flex-col items-center px-6 pt-4 pb-6">
         {/* Pieczątka — wycentrowana nad czaszką, nie nachodzi na MAFIA */}
-        <div className="z-30" style={{ transform: "rotate(-12deg)", marginBottom: "-20px" }}>
+        <div className="z-30" style={{ transform: "rotate(-12deg)", marginBottom: "-10px" }}>
           <div
-            className="font-display font-bold uppercase px-5 py-2 border-[3px]"
+            className="font-display font-bold uppercase px-4 py-1.5 border-[3px]"
             style={{
               color: "rgba(224, 144, 144, 0.75)",
               borderColor: "rgba(224, 144, 144, 0.75)",
-              fontSize: "18px",
+              fontSize: "14px",
               letterSpacing: "0.15em",
               whiteSpace: "nowrap",
             }}
@@ -52,11 +52,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Czaszka — DUŻA, 100px */}
+        {/* Czaszka — zmniejszona z 100px na 72px */}
         <span
           className="material-symbols-outlined mb-3"
           style={{
-            fontSize: "100px",
+            fontSize: "72px",
             lineHeight: 1,
             color: "#D94F3B",
             filter: "drop-shadow(0 0 20px rgba(217,79,59,0.4))",
@@ -65,17 +65,17 @@ export default function Home() {
           skull
         </span>
 
-        {/* Tytuł MAFIA — ciemny na jasnym tle */}
+        {/* Tytuł MAFIA — zmniejszony z 52px na 40px */}
         <h1
           className="font-display font-black leading-none uppercase mb-2"
-          style={{ color: "#2B2B2B", fontSize: "52px", letterSpacing: "4px" }}
+          style={{ color: "#2B2B2B", fontSize: "40px", letterSpacing: "4px" }}
         >
           MAFIA
         </h1>
 
-        {/* OPERACJA line */}
+        {/* OPERACJA line — zmniejszony mb z 6 na 4 */}
         <p
-          className="font-display text-[14px] uppercase mb-6"
+          className="font-display text-[14px] uppercase mb-4"
           style={{ color: "#6B6B5A", letterSpacing: "0.25em" }}
         >
           OPERACJA:{" "}

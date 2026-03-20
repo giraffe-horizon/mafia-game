@@ -65,21 +65,40 @@ export default function PlayersList({
             }
           />
         ))}
-        {/* Ghost slots - show placeholders for missing players */}
+        {/* Ghost slots - show maximum 3 placeholders, rest as text */}
         {isLobby &&
           nonHostPlayers.length < minPlayers &&
-          Array.from({ length: minPlayers - nonHostPlayers.length }, (_, i) => (
-            <div
-              key={`ghost-${i}`}
-              className="flex items-center gap-3 px-3 py-2.5 border-b border-dashed border-[rgba(255,255,255,0.15)] text-[rgba(255,255,255,0.2)]"
-            >
-              <div className="w-0.5 self-stretch flex-shrink-0 bg-[rgba(255,255,255,0.15)]" />
-              <span className="material-symbols-outlined text-[18px]">person_add</span>
-              <span className="font-display text-[10px] uppercase tracking-widest">
-                CZEKANIE NA AGENTA...
-              </span>
-            </div>
-          ))}
+          (() => {
+            const missingPlayers = minPlayers - nonHostPlayers.length;
+            const ghostSlotsToShow = Math.min(3, missingPlayers);
+            const remainingPlayers = missingPlayers - ghostSlotsToShow;
+
+            return (
+              <>
+                {Array.from({ length: ghostSlotsToShow }, (_, i) => (
+                  <div
+                    key={`ghost-${i}`}
+                    className="flex items-center gap-3 px-3 py-2 border-b border-dashed border-[rgba(255,255,255,0.15)] text-[rgba(255,255,255,0.2)]"
+                  >
+                    <div className="w-0.5 self-stretch flex-shrink-0 bg-[rgba(255,255,255,0.15)]" />
+                    <span className="material-symbols-outlined text-[18px]">person_add</span>
+                    <span className="font-display text-[10px] uppercase tracking-widest">
+                      CZEKANIE NA AGENTA...
+                    </span>
+                  </div>
+                ))}
+                {remainingPlayers > 0 && (
+                  <div className="flex items-center gap-3 px-3 py-2 border-b border-dashed border-[rgba(255,255,255,0.15)] text-[rgba(255,255,255,0.2)]">
+                    <div className="w-0.5 self-stretch flex-shrink-0 bg-[rgba(255,255,255,0.15)]" />
+                    <span className="material-symbols-outlined text-[18px]">more_horiz</span>
+                    <span className="font-display text-[10px] uppercase tracking-widest">
+                      ...i {remainingPlayers} więcej
+                    </span>
+                  </div>
+                )}
+              </>
+            );
+          })()}
       </div>
     </div>
   );

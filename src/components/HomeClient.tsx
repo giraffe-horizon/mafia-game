@@ -107,8 +107,8 @@ function CodeInput({
           autoFocus={i === 0}
           className="text-center text-xl font-bold font-display uppercase focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
           style={{
-            width: "48px",
-            height: "52px",
+            width: "40px",
+            height: "44px",
             border: "2px solid #3A3A30",
             borderRadius: "4px",
             backgroundColor: "transparent",
@@ -220,16 +220,15 @@ export default function HomeClient() {
       )}
 
       {/* Action buttons */}
-      <div className="flex flex-col gap-4 w-full mt-4">
+      <div className="flex flex-col gap-3 w-full mt-4">
         {!joinMode && (
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-12 font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-base"
             style={{
               backgroundColor: "#D94B3E",
               color: "white",
-              fontSize: "20px",
               borderRadius: "0",
             }}
           >
@@ -243,12 +242,11 @@ export default function HomeClient() {
         <button
           onClick={handleJoin}
           disabled={loading}
-          className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-12 font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-base"
           style={{
             border: "2px dashed #5A5A4A",
             color: "#2B2B2B",
             backgroundColor: "transparent",
-            fontSize: "18px",
           }}
         >
           <span className="material-symbols-outlined mr-2 text-[20px]">login</span>
