@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
-import { Stamp } from "@/components/ui";
 
 interface GameHeaderProps {
   phase: string;
@@ -55,8 +54,8 @@ export default function GameHeader({
         </button>
       </div>
 
-      {/* Center: Phase + Round + Session code */}
-      <div className="text-center">
+      {/* Center: Phase + Round + Session code - Absolutely centered */}
+      <div className="absolute left-1/2 -translate-x-1/2 text-center">
         {isHost ? (
           <div className="flex items-center gap-1.5">
             <span className="material-symbols-outlined text-[14px] text-primary">star</span>
