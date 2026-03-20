@@ -118,7 +118,7 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
                 {/* Position */}
                 <span
                   className={`font-display font-black text-sm border px-1.5 py-0.5 min-w-[32px] text-center ${
-                    i < 3 ? POSITION_COLORS[i] : "text-on-surface/30 border-on-surface/20"
+                    i < 3 ? POSITION_COLORS[i] : "text-on-surface/40 border-on-surface/20"
                   }`}
                 >
                   {i < 3 ? POSITION_STAMPS[i] : `${i + 1}`}
