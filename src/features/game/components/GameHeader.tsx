@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { PHASE_LABELS, PHASE_ICONS } from "@/lib/constants";
@@ -51,7 +53,6 @@ export default function GameHeader({
         >
           <span className="material-symbols-outlined text-[18px]">leaderboard</span>
         </button>
-        <span className="material-symbols-outlined text-[18px] text-on-surface/20">folder</span>
       </div>
 
       {/* Center: Phase + Round + Session code */}
@@ -87,9 +88,6 @@ export default function GameHeader({
 
       {/* Right: STATUS stamp + Settings + GM Panel */}
       <div className="flex items-center gap-1">
-        <Stamp color="red" rotate={-4} className="text-[7px] px-1 py-0 hidden sm:inline-block">
-          TAJNE
-        </Stamp>
         {isHost && onShowGmPanel && (
           <button
             onClick={onShowGmPanel}

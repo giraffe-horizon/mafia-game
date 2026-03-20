@@ -241,7 +241,7 @@ export async function resolveNight(
         "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at, event_type, round) VALUES (?, ?, ?, ?, ?, 0, ?, 'night_result', ?)"
       )
       .bind(
-        crypto.randomUUID(),
+        nanoid(),
         gameRow.id,
         hostPlayer.player_id,
         player.player_id,
@@ -304,7 +304,7 @@ export async function resolveVoting(
           "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at, event_type, round) VALUES (?, ?, ?, ?, ?, 0, ?, 'vote_result', ?)"
         )
         .bind(
-          crypto.randomUUID(),
+          nanoid(),
           gameRow.id,
           hostPlayer.player_id,
           player.player_id,

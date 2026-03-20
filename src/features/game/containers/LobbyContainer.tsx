@@ -17,6 +17,7 @@ export default function LobbyContainer() {
   const [copied, setCopied] = useState(false);
   const [mafiaCount, setMafiaCount] = useState(0);
   const [gameMode, setGameMode] = useState<"full" | "simple">("full");
+  const [joinUrl, setJoinUrl] = useState("");
 
   const lobbySettings = state?.lobbySettings;
   useEffect(() => {
@@ -26,9 +27,13 @@ export default function LobbyContainer() {
     }
   }, [lobbySettings]);
 
-  if (!state) return null;
+  useEffect(() => {
+    if (state?.game.code) {
+      setJoinUrl(`${window.location.origin}/?code=${state.game.code}`);
+    }
+  }, [state?.game.code]);
 
-  const joinUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/?code=${state.game.code}`;
+  if (!state) return null;
 
   function copyCode() {
     navigator.clipboard.writeText(state!.game.code);

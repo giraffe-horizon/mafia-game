@@ -107,6 +107,7 @@ export type GameStatus = "lobby" | "playing" | "finished";
 export type GamePhase = "lobby" | "night" | "day" | "voting" | "review" | "ended";
 export type Role = "mafia" | "detective" | "doctor" | "civilian";
 export type ActionType = "kill" | "investigate" | "protect" | "vote" | "wait";
+export type EventType = "night_result" | "vote_result" | "game_start" | "game_end";
 
 export interface PublicPlayer {
   playerId: string;

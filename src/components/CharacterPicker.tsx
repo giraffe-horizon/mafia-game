@@ -87,7 +87,7 @@ export default function CharacterPicker({
                 {isDisabled && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="rotate-[-15deg]">
-                      <span className="font-display font-black text-[11px] uppercase tracking-widest border-2 border-red-600 text-red-600 px-1.5 py-0.5 opacity-90 bg-black/30">
+                      <span className="font-display font-black text-[11px] uppercase tracking-widest border-2 border-stamp text-stamp px-1.5 py-0.5 opacity-90 bg-black/30">
                         ZAJĘTE
                       </span>
                     </div>

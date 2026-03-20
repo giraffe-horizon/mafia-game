@@ -15,6 +15,16 @@ import type {
   TransferGmInput,
 } from "@/lib/api/schemas";
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 // Common fetch options
 const defaultOptions: RequestInit = {
   headers: { "Content-Type": "application/json" },
@@ -24,7 +34,7 @@ const defaultOptions: RequestInit = {
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || `HTTP ${response.status}`);
+    throw new ApiError(error.error || `HTTP ${response.status}`, response.status);
   }
   return response.json();
 }

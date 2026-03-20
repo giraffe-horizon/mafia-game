@@ -6,6 +6,7 @@ import type {
   GameStatus,
   GamePhase,
   Role,
+  EventType,
   PublicPlayer,
 } from "@/db/types";
 import { generateSessionCode, now, nanoid } from "@/db/helpers";
@@ -524,7 +525,16 @@ export async function getGameState(
         "SELECT content, created_at, event_type, round FROM messages WHERE game_id = ? AND to_player_id = ? AND event_type IS NOT NULL ORDER BY round ASC, created_at ASC"
       )
       .bind(gameRow.id, playerRow.player_id)
-      .all<{ content: string; created_at: string; event_type: string; round: number }>();
+      .all<{
+        content: string;
+        created_at: string;
+        event_type: string | null;
+        round: number | null;
+      }>();
+
+    const validEventTypes: EventType[] = ["night_result", "vote_result", "game_start", "game_end"];
+    const isValidEventType = (val: string | null): val is EventType =>
+      val !== null && validEventTypes.includes(val as EventType);
 
     if (eventMsgs.length > 0) {
       const roundMap = new Map<number, typeof eventMsgs>();
@@ -537,11 +547,13 @@ export async function getGameState(
         .sort((a, b) => a[0] - b[0])
         .map(([round, msgs]) => ({
           round,
-          events: msgs.map((m) => ({
-            type: m.event_type as "night_result" | "vote_result" | "game_start" | "game_end",
-            description: m.content,
-            timestamp: m.created_at,
-          })),
+          events: msgs
+            .filter((m) => isValidEventType(m.event_type))
+            .map((m) => ({
+              type: m.event_type as EventType,
+              description: m.content,
+              timestamp: m.created_at,
+            })),
         }));
     }
   }
