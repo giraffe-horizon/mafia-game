@@ -104,10 +104,34 @@ export default function LobbyView({
               Udostępnij link
             </button>
 
-            {/* QR code — inline under share button */}
-            <div className="flex items-center justify-center mt-3 relative z-10">
-              <div className="p-1.5 bg-paper">
-                <QRCode value={joinUrl} size={64} bgColor="#d7c3b0" fgColor="#1a1a1a" />
+            {/* QR code — dossier style */}
+            <div className="flex flex-col items-center mt-4 relative z-10">
+              <div
+                className="p-3 relative"
+                style={{
+                  background: "linear-gradient(135deg, #d7c3b0 0%, #c4af9d 50%, #b89e8a 100%)",
+                  boxShadow: "2px 3px 8px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.05)",
+                }}
+              >
+                {/* Tape effect top */}
+                <div
+                  className="absolute -top-2 left-1/2 -translate-x-1/2 pointer-events-none z-20"
+                  style={{
+                    width: "56px",
+                    height: "14px",
+                    background:
+                      "linear-gradient(180deg, rgba(215,195,176,0.5) 0%, rgba(215,195,176,0.35) 100%)",
+                    transform: "translateX(-50%) rotate(-1deg)",
+                  }}
+                />
+                <QRCode value={joinUrl} size={160} bgColor="#d7c3b0" fgColor="#1a1a1a" />
+                {/* Label under QR */}
+                <p
+                  className="font-display text-[8px] uppercase tracking-[0.2em] text-center mt-2"
+                  style={{ color: "#5A5A4A" }}
+                >
+                  SKANUJ ABY DOŁĄCZYĆ // KOD: {gameCode}
+                </p>
               </div>
             </div>
           </div>
