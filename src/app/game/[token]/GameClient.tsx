@@ -146,7 +146,7 @@ export default function GameClient() {
       />
 
       {/* Scrollable content */}
-      <div className="relative z-10 flex-1 flex flex-col overflow-y-auto pb-6">
+      <div className="relative z-10 flex-1 flex flex-col overflow-y-auto pb-20">
         {isLobby && <LobbyContainer />}
         {isPlaying && phase === "night" && <NightContainer />}
         {isPlaying && phase === "day" && <DayContainer />}
