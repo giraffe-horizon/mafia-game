@@ -59,7 +59,10 @@
     overflow-x: hidden;
   }
 
-  * {
+  /* App-specific border-radius reset (avoid breaking third-party components) */
+  .mafia-app *,
+  .mafia-app *:before,
+  .mafia-app *:after {
     border-radius: 0 !important;
   }
 
