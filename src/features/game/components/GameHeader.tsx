@@ -36,7 +36,10 @@ export default function GameHeader({
   const handleImgError = useCallback(() => setImgError(true), []);
 
   return (
-    <div className="relative z-20 flex items-center justify-between px-4 py-2.5 border-b border-surface-highest bg-gradient-to-b from-surface-low to-surface-lowest">
+    <div
+      className="relative z-20 flex items-center justify-between px-4 py-2.5 border-b border-surface-highest"
+      style={{ backgroundColor: "#1C1C1C" }}
+    >
       {/* Left: Back + Ranking + folder icon */}
       <div className="flex items-center gap-1">
         <Link
@@ -52,8 +55,10 @@ export default function GameHeader({
         >
           <span className="material-symbols-outlined text-[18px]">leaderboard</span>
         </button>
-        <div className="size-9 flex items-center justify-center text-on-surface/40">
-          <span className="material-symbols-outlined text-[18px]">folder</span>
+        <div className="size-9 flex items-center justify-center">
+          <span className="material-symbols-outlined text-[18px]" style={{ color: "#D48B5E" }}>
+            folder
+          </span>
         </div>
       </div>
 
@@ -91,8 +96,16 @@ export default function GameHeader({
       {/* Right: STATUS stamp + Settings + GM Panel */}
       <div className="flex items-center gap-1">
         <div className="flex items-center">
-          <div className="border border-stamp/30 bg-stamp/10 px-1.5 py-0.5">
-            <span className="font-display font-black text-[8px] uppercase tracking-[0.15em] text-stamp">
+          <div
+            className="px-1.5 py-0.5"
+            style={{
+              border: "1.5px solid #E05050",
+            }}
+          >
+            <span
+              className="font-display font-black text-[8px] uppercase tracking-[0.15em]"
+              style={{ color: "#E05050" }}
+            >
               STATUS: TAJNE
             </span>
           </div>

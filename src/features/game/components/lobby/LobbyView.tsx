@@ -52,11 +52,19 @@ export default function LobbyView({
       {isHost && (
         <>
           {/* QR Code and sharing section */}
-          <div className="mx-5 mt-5 p-4 crt-surface">
-            <SectionHeader className="text-stamp-green">
+          <div className="mx-5 mt-5 p-4 crt-surface relative">
+            <SectionHeader
+              className="relative z-10"
+              style={{
+                backgroundColor: "rgba(0,0,0,0.45)",
+                color: "#A0B89A",
+                padding: "4px 8px",
+                marginBottom: "12px",
+              }}
+            >
               PARAMETRY MISJI — udostępnij graczom
             </SectionHeader>
-            <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center justify-between gap-3 mb-4 relative z-10">
               <span className="font-display text-2xl font-bold text-stamp-green tracking-widest drop-shadow-[0_0_8px_rgba(122,184,122,0.4)] font-mono">
                 {gameCode}
               </span>
@@ -84,21 +92,17 @@ export default function LobbyView({
                     setCopied(true),
                     setTimeout(() => setCopied(false), COPY_FEEDBACK_MS))
               }
-              className="w-full flex items-center justify-center gap-2 h-11 bg-accent-green hover:bg-accent-green-bright border border-stamp-green/30 text-stamp-green hover:text-stamp-green text-sm font-display uppercase tracking-wider transition-all"
+              className="w-full flex items-center justify-center gap-2 h-11 bg-accent-green hover:bg-accent-green-bright border border-stamp-green/30 text-stamp-green hover:text-stamp-green text-sm font-display uppercase tracking-wider transition-all relative z-10"
             >
               <span className="material-symbols-outlined text-[18px]">share</span>
               Udostępnij link
             </button>
-            <div className="flex flex-col items-center gap-2 pt-3 border-t border-stamp-green/20 mt-3">
-              <p className="text-stamp-green text-xs font-display uppercase tracking-widest mb-1">
-                Zeskanuj aby dołączyć
-              </p>
-              <div className="p-3 bg-paper border border-stamp-green/30 shadow-[inset_0_0_10px_rgba(122,184,122,0.1)]">
-                <QRCode value={joinUrl} size={160} bgColor="#d7c3b0" fgColor="#1a1a1a" />
+
+            {/* Small QR code in bottom-right */}
+            <div className="absolute bottom-4 right-4 z-10">
+              <div className="p-1 bg-paper border border-stamp-green/30">
+                <QRCode value={joinUrl} size={56} bgColor="#d7c3b0" fgColor="#1a1a1a" />
               </div>
-              <p className="text-stamp-green/70 text-[10px] font-display text-center mt-1 break-all px-2 font-mono">
-                {joinUrl}
-              </p>
             </div>
           </div>
 
@@ -110,7 +114,17 @@ export default function LobbyView({
               </p>
             )}
             <div className="p-4 crt-surface">
-              <SectionHeader className="text-stamp-green">Tryb gry</SectionHeader>
+              <SectionHeader
+                className="relative z-10"
+                style={{
+                  backgroundColor: "rgba(0,0,0,0.45)",
+                  color: "#A0B89A",
+                  padding: "4px 8px",
+                  marginBottom: "12px",
+                }}
+              >
+                Tryb gry
+              </SectionHeader>
               <div className="flex gap-2">
                 {(["full", "simple"] as const).map((mode) => (
                   <button
@@ -133,7 +147,17 @@ export default function LobbyView({
             </div>
             {nonHostPlayers.length >= minPlayers && (
               <div className="p-4 crt-surface">
-                <SectionHeader className="text-stamp-green">Liczba mafii</SectionHeader>
+                <SectionHeader
+                  className="relative z-10"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    color: "#A0B89A",
+                    padding: "4px 8px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Liczba mafii
+                </SectionHeader>
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setMafiaCount(0)}
@@ -162,7 +186,11 @@ export default function LobbyView({
             <button
               onClick={onStart}
               disabled={starting || nonHostPlayers.length < minPlayers}
-              className="flex w-full items-center justify-center h-14 bg-stamp hover:bg-stamp-dark text-on-paper text-lg font-bold transition-all shadow-[0_4px_14px_0_rgba(255,180,172,0.39)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-display uppercase tracking-wider"
+              className="flex w-full items-center justify-center h-14 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-display uppercase tracking-wider"
+              style={{
+                backgroundColor: "#C94A42",
+                color: "white",
+              }}
             >
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
               {starting ? "Startuję..." : "Rozpocznij grę"}

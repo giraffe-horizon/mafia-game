@@ -105,7 +105,14 @@ function CodeInput({
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
           autoFocus={i === 0}
-          className="w-12 h-14 text-center text-xl font-bold font-display uppercase bg-surface-lowest border border-dashed border-primary/40 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+          className="text-center text-xl font-bold font-display uppercase bg-transparent border-[2.5px] focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          style={{
+            width: "48px",
+            height: "52px",
+            borderColor: "#3A3A30",
+            borderRadius: "4px",
+            color: "#2B2B2B",
+          }}
         />
       ))}
     </div>
@@ -175,8 +182,14 @@ export default function HomeClient() {
     <>
       {/* Inputs */}
       {joinMode && (
-        <div className="flex flex-col gap-3 w-full mb-6 border border-dashed border-surface-highest p-4">
-          <p className="text-on-surface-dim text-xs font-display leading-normal uppercase tracking-widest">
+        <div
+          className="flex flex-col gap-3 w-full mb-6 p-4"
+          style={{ border: "2px dashed #5A5A4A" }}
+        >
+          <p
+            className="text-xs font-display leading-normal uppercase tracking-widest"
+            style={{ color: "#6B6B5A" }}
+          >
             KOD SESJI
           </p>
           <CodeInput
@@ -186,13 +199,22 @@ export default function HomeClient() {
             length={6}
           />
           {error && (
-            <p className="text-primary text-sm font-display animate-pulse text-center">{error}</p>
+            <p
+              className="text-sm font-display animate-pulse text-center"
+              style={{ color: "#D94F3B" }}
+            >
+              {error}
+            </p>
           )}
         </div>
       )}
       {!joinMode && (
         <div className="w-full mb-6">
-          {error && <p className="text-primary text-sm font-display pl-1 animate-pulse">{error}</p>}
+          {error && (
+            <p className="text-sm font-display pl-1 animate-pulse" style={{ color: "#D94F3B" }}>
+              {error}
+            </p>
+          )}
         </div>
       )}
 
@@ -202,11 +224,17 @@ export default function HomeClient() {
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 bg-stamp text-on-paper text-lg font-bold leading-normal tracking-[0.02em] transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: "#D94B3E",
+              color: "white",
+              fontSize: "20px",
+              borderRadius: "0",
+            }}
           >
             <span className="material-symbols-outlined mr-2 text-[20px]">add_circle</span>
             <span className="truncate uppercase font-display tracking-wider">
-              {loading ? "Tworzę..." : "Stwórz grę"}
+              {loading ? "Tworzę..." : "STWÓRZ GRĘ"}
             </span>
           </button>
         )}
@@ -214,11 +242,16 @@ export default function HomeClient() {
         <button
           onClick={handleJoin}
           disabled={loading}
-          className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 bg-transparent border-2 border-dashed border-surface-highest hover:border-on-surface-dim text-on-surface-dim hover:text-on-surface text-lg font-bold leading-normal tracking-[0.02em] transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 bg-transparent border-[2.5px] font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{
+            borderColor: "#3A3A30",
+            color: "#2B2B2B",
+            fontSize: "18px",
+          }}
         >
           <span className="material-symbols-outlined mr-2 text-[20px]">login</span>
           <span className="truncate uppercase font-display tracking-wider">
-            {joinMode ? (loading ? "Dołączam..." : "Wejdź do gry") : "Dołącz do gry"}
+            {joinMode ? (loading ? "Dołączam..." : "WEJDŹ DO GRY") : "DOŁĄCZ DO GRY"}
           </span>
         </button>
 
@@ -229,7 +262,8 @@ export default function HomeClient() {
               setSessionCode("");
               setError("");
             }}
-            className="text-on-surface-dim hover:text-on-surface text-sm font-display uppercase tracking-widest transition-colors text-center"
+            className="text-sm font-display uppercase tracking-widest transition-colors text-center"
+            style={{ color: "#6B6B5A" }}
           >
             ← Wróć
           </button>

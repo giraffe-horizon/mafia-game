@@ -19,11 +19,14 @@ export function TabBar({ tabs, activeTab, onTabChange, className }: TabBarProps)
       role="tablist"
       className={cn(
         "fixed bottom-0 left-0 right-0 z-50",
-        "bg-paper border-t border-on-paper/20",
         "flex items-stretch",
         "max-w-lg mx-auto",
         className
       )}
+      style={{
+        backgroundColor: "#1C1C1C",
+        borderTop: "1px solid #333333",
+      }}
     >
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
@@ -35,14 +38,27 @@ export function TabBar({ tabs, activeTab, onTabChange, className }: TabBarProps)
             onClick={() => onTabChange(tab.id)}
             className={cn(
               "flex-1 flex flex-col items-center justify-center gap-0.5",
-              "py-2 px-1 min-h-[56px]",
+              "min-h-[56px]",
               "font-display text-[9px] font-bold uppercase tracking-widest",
               "transition-colors duration-[0.1s]",
-              "border-0 outline-none",
-              isActive
-                ? "text-stamp border-t-2 border-t-stamp"
-                : "text-on-paper/60 border-t-2 border-t-transparent hover:text-on-paper/80"
+              "border-0 outline-none"
             )}
+            style={
+              isActive
+                ? {
+                    color: "#F0B8AE",
+                    backgroundColor: "#333333",
+                    borderRadius: "8px",
+                    padding: "8px 16px",
+                    margin: "4px",
+                  }
+                : {
+                    color: "#888888",
+                    backgroundColor: "transparent",
+                    padding: "8px 16px",
+                    margin: "4px",
+                  }
+            }
           >
             <span className="material-symbols-outlined text-[20px] leading-none">{tab.icon}</span>
             <span>{tab.label}</span>

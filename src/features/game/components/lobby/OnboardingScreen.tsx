@@ -1,7 +1,7 @@
 "use client";
 
 import CharacterPicker from "@/components/CharacterPicker";
-import { Button, PageLayout, FormField } from "@/components/ui";
+import { PageLayout } from "@/components/ui";
 
 export interface FormData {
   onboardingNickname: string;
@@ -71,28 +71,39 @@ export default function OnboardingScreen({
           Wybierz swoje imię i postać
         </p>
 
-        <div className="flex flex-col gap-4 w-full mb-6 paper-card p-4 border border-stamp/20">
-          <FormField label="PSEUDONIM OPERACYJNY:">
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-on-paper-dim">
-                <span className="material-symbols-outlined text-[20px]">person</span>
-              </span>
-              <input
-                className="flex w-full text-on-paper focus:outline-none bg-transparent border-0 border-b-2 border-b-on-paper/30 focus:border-b-stamp h-14 placeholder:text-on-paper-dim pl-10 pr-4 text-lg font-medium leading-normal transition-all font-display"
-                placeholder="Agent..."
-                type="text"
-                value={onboardingNickname}
-                onChange={(e) => onNicknameChange(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-              />
-            </div>
-            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-paper/50 mt-1">
-              WYPEŁNIĆ PISMEM DRUKOWANYM
-            </p>
-          </FormField>
+        <div
+          className="flex flex-col gap-4 w-full mb-6 p-4 border border-stamp/20"
+          style={{ backgroundColor: "#D5C4B1" }}
+        >
+          <div className="flex flex-col">
+            <label
+              className="block font-display text-[16px] font-bold uppercase mb-2"
+              style={{ color: "#1A1A1A" }}
+            >
+              PSEUDONIM OPERACYJNY:
+            </label>
+            <input
+              className="flex w-full bg-transparent border-none focus:outline-none h-14 pr-4 text-lg font-medium leading-normal transition-all font-display"
+              style={{
+                borderBottom: "1px solid #1A1A1A",
+                color: "#1A1A1A",
+              }}
+              placeholder="Agent..."
+              type="text"
+              value={onboardingNickname}
+              onChange={(e) => onNicknameChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+            />
+          </div>
 
           {characters.length > 0 && (
-            <FormField label="DOSTĘPNE WIZERUNKI OPERACYJNE:" className="[&>p]:pb-3">
+            <div className="flex flex-col">
+              <label
+                className="block font-display text-[16px] font-bold uppercase mb-3"
+                style={{ color: "#1A1A1A" }}
+              >
+                DOSTĘPNE WIZERUNKI OPERACYJNE:
+              </label>
               <div className="max-h-[45vh] overflow-y-auto">
                 <CharacterPicker
                   characters={characters}
@@ -101,24 +112,35 @@ export default function OnboardingScreen({
                   disabledIds={takenCharacterIds}
                 />
               </div>
-            </FormField>
+            </div>
           )}
 
           {onboardingError && (
-            <p className="text-stamp text-sm font-display pl-1 animate-pulse">{onboardingError}</p>
+            <p className="text-sm font-display pl-1 animate-pulse" style={{ color: "#D94F3B" }}>
+              {onboardingError}
+            </p>
           )}
         </div>
 
-        <Button
+        <button
           onClick={onSubmit}
           disabled={onboardingLoading || !onboardingNickname.trim() || !selectedCharacterId}
-          size="lg"
-          loading={onboardingLoading}
-          icon="login"
-          className="w-full"
+          className="w-full h-16 font-bold transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          style={{
+            backgroundColor: "#F0B8AE",
+            color: "#D4564C",
+            fontSize: "32px",
+            fontWeight: 700,
+            letterSpacing: "6px",
+          }}
         >
-          {onboardingLoading ? "Dołączam..." : "Dołącz do gry"}
-        </Button>
+          {onboardingLoading && (
+            <span className="material-symbols-outlined text-[32px]">hourglass_empty</span>
+          )}
+          <span className="uppercase font-display">
+            {onboardingLoading ? "DOŁĄCZAM..." : "DOŁĄCZ"}
+          </span>
+        </button>
 
         <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/20 text-center mt-4">
           ZATWIERDZENIE PIECZĘCIĄ GŁÓWNĄ // V.3

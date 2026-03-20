@@ -33,13 +33,14 @@ export default function CharacterPicker({
   }, []);
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3" style={{ gap: "20px" }}>
       {characters.map((character, _index) => {
         const isSelected = selectedId === character.id;
         const isDisabled = disabledIds.includes(character.id);
         const hasImgError = errorIds.has(character.id);
-        // Deterministic rotation based on character ID
-        const rotationDegrees = (character.id.charCodeAt(0) % 5) - 2; // -2 to +2 degrees
+        // Deterministic rotation based on index
+        const rotations = [-3, 4, 2, -2, -4, 3];
+        const rotationDegrees = rotations[_index % rotations.length];
         return (
           <button
             type="button"
@@ -55,15 +56,23 @@ export default function CharacterPicker({
           >
             {/* Polaroid frame */}
             <div
-              className={`tape-corner w-full bg-secondary p-1.5 pb-0 border-2 transition-all ${
-                isSelected
-                  ? "border-primary shadow-[0_0_0_3px_var(--color-primary)] scale-[1.03]"
-                  : isDisabled
-                    ? "border-surface-highest grayscale"
-                    : "border-surface-highest hover:border-on-surface/40"
-              }`}
-              style={{ transform: `rotate(${rotationDegrees}deg)` }}
+              className={`relative w-full transition-all ${isSelected ? "scale-[1.03]" : ""}`}
+              style={{
+                transform: `rotate(${rotationDegrees}deg)`,
+                backgroundColor: "#FFFFFF",
+                padding: "8px 8px 28px 8px",
+                boxShadow: "2px 3px 8px rgba(0,0,0,0.25)",
+              }}
             >
+              {/* Tape corner */}
+              <div
+                className="absolute top-[-8px] left-1/2 transform -translate-x-1/2 rotate-[-2deg]"
+                style={{
+                  width: "60px",
+                  height: "18px",
+                  backgroundColor: "rgba(200,200,190,0.55)",
+                }}
+              ></div>
               {/* Photo area */}
               <div className="relative w-full aspect-square bg-surface-low overflow-hidden">
                 {character.avatar_url && !hasImgError ? (
@@ -72,13 +81,12 @@ export default function CharacterPicker({
                     alt={character.name_pl}
                     loading="lazy"
                     decoding="async"
-                    className={`w-full h-full object-cover transition-all filter grayscale-[0.2] contrast-[1.1] ${
-                      isDisabled
-                        ? "grayscale brightness-50"
-                        : isSelected
-                          ? "brightness-100"
-                          : "brightness-75"
+                    className={`w-full h-full object-cover transition-all ${
+                      isDisabled ? "brightness-50 opacity-50" : ""
                     }`}
+                    style={{
+                      filter: "grayscale(100%)",
+                    }}
                     onError={() => handleImgError(character.id)}
                   />
                 ) : (
@@ -92,7 +100,19 @@ export default function CharacterPicker({
                 {/* ZAJĘTE stamp overlay */}
                 {isDisabled && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="stamp stamp-red bg-black/50">ZAJĘTE</span>
+                    <span
+                      className="font-display font-bold uppercase border-[3px] px-2 py-1"
+                      style={{
+                        fontSize: "28px",
+                        color: "#C96B64",
+                        borderColor: "#C96B64",
+                        transform: "rotate(-18deg)",
+                        opacity: 0.85,
+                        fontWeight: 700,
+                      }}
+                    >
+                      ZAJĘTE
+                    </span>
                   </div>
                 )}
 
@@ -107,15 +127,10 @@ export default function CharacterPicker({
               </div>
 
               {/* Polaroid label strip */}
-              <div className="py-1.5 px-1">
+              <div className="py-1.5 px-1 text-center">
                 <span
-                  className={`font-display text-[10px] uppercase tracking-wider text-center block truncate font-black ${
-                    isSelected
-                      ? "text-primary"
-                      : isDisabled
-                        ? "text-on-secondary/40"
-                        : "text-on-secondary"
-                  }`}
+                  className="font-display text-[10px] uppercase tracking-wider block truncate font-black"
+                  style={{ color: "#1A1A1A" }}
                 >
                   {character.name_pl}
                 </span>

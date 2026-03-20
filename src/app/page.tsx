@@ -1,5 +1,4 @@
 import HomeClient from "@/components/HomeClient";
-import { Stamp } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -15,42 +14,84 @@ export default function Home() {
         <div className="size-12 shrink-0" />
       </div>
 
-      <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
+      <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-8 pb-8">
         {/* Dossier hero card */}
-        <div className="paper-card flex flex-col items-center mb-8 p-6 border-2 border-stamp/30 relative overflow-hidden bg-gradient-to-br from-paper via-paper to-paper-dim shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+        <div
+          className="flex-1 flex flex-col items-center mx-0 p-10 relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+          style={{
+            background:
+              "linear-gradient(160deg, #5E8F6D 0%, #8BA87A 15%, #B5B478 30%, #CBBC7A 45%, #D4B06E 55%, #D49E68 70%, #D48E5C 85%, #D08558 100%)",
+            borderRadius: "16px",
+            margin: "0 24px",
+            padding: "40px 28px",
+          }}
+        >
+          {/* Vignette overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(0,0,0,0.15) 100%)",
+              borderRadius: "16px",
+            }}
+          ></div>
           {/* Stamp overlay */}
-          <div className="absolute top-2 right-2">
-            <Stamp
-              color="red"
-              rotate={12}
-              className="text-[12px] px-3 py-1 border-[3px] opacity-95"
+          <div className="absolute top-4 right-4 z-10">
+            <div
+              className="font-display font-bold uppercase px-4 py-2 border-[3px] opacity-85 text-[22px]"
+              style={{
+                color: "#E09090",
+                borderColor: "#E09090",
+                transform: "rotate(-15deg)",
+              }}
             >
               ŚCIŚLE TAJNE
-            </Stamp>
+            </div>
           </div>
 
           {/* Skull icon */}
-          <span className="material-symbols-outlined text-[96px] text-stamp mb-4 drop-shadow-[0_0_24px_rgba(255,180,172,0.6)] filter brightness-110">
+          <span
+            className="material-symbols-outlined text-[120px] mb-4 relative z-10"
+            style={{
+              color: "#D94F3B",
+              filter: "drop-shadow(0 0 16px rgba(217,79,59,0.4))",
+            }}
+          >
             skull
           </span>
 
           {/* Title */}
-          <h1 className="font-display font-black text-[48px] leading-none text-on-paper uppercase tracking-wider mb-2 drop-shadow-[0_2px_4px_rgba(26,26,26,0.3)]">
+          <h1
+            className="font-display font-black text-[52px] leading-none uppercase mb-2 relative z-10"
+            style={{
+              color: "#2B2B2B",
+              letterSpacing: "4px",
+              fontWeight: 900,
+            }}
+          >
             MAFIA
           </h1>
 
           {/* Redacted op line */}
-          <p className="font-display text-[10px] uppercase tracking-[0.25em] text-on-paper/50">
+          <p
+            className="font-display text-[14px] uppercase tracking-[0.25em] relative z-10 mb-6"
+            style={{ color: "#6B6B5A" }}
+          >
             OPERACJA:{" "}
             <span className="bg-on-paper text-transparent select-none px-0.5">████████</span> 1954
           </p>
+
+          {/* Client interactive content - now INSIDE the card */}
+          <div className="relative z-10 w-full flex-1 flex flex-col">
+            <HomeClient />
+          </div>
         </div>
 
-        {/* Client interactive content */}
-        <HomeClient />
-
-        {/* Classified footer */}
-        <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/20 text-center mt-6">
+        {/* Classified footer - outside card */}
+        <p
+          className="font-display text-[8px] uppercase tracking-[0.2em] text-center mt-4"
+          style={{ color: "#7A7A6A" }}
+        >
           ODDZIAŁ KONTRWYWIADU // DOKUMENT NR X-ALPHA
         </p>
       </div>
