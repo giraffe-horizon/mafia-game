@@ -7,24 +7,34 @@ interface DeadSpectatorViewProps {
   players: PublicPlayer[];
 }
 
+const ROLE_COLORS: Record<string, string> = {
+  mafia: "text-red-400 border-red-800/50 bg-red-950/20",
+  detective: "text-blue-400 border-blue-800/50 bg-blue-950/20",
+  doctor: "text-green-400 border-green-800/50 bg-green-950/20",
+  civilian: "text-on-surface/60 border-surface-highest bg-surface-highest/20",
+};
+
 export default function DeadSpectatorView({ currentPlayer, players }: DeadSpectatorViewProps) {
+  const nonHostPlayers = players.filter((p) => !p.isHost);
+
   return (
-    <div className="mx-4 mt-4 flex flex-col gap-4">
-      {/* NIE ŻYJESZ stamp card */}
-      <div className="border border-primary-dark/30 bg-red-950/10 p-6 flex flex-col items-center gap-3 relative">
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Stamp variant="classified" rotate={-2} className="text-sm px-3 py-1">
-            NIE ŻYJESZ
-          </Stamp>
-        </div>
-        <span className="material-symbols-outlined text-[48px] text-primary-dark/40 mt-2">
-          skull
-        </span>
-        <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center">
+    <div className="flex-1 flex flex-col">
+      {/* NIE ŻYJESZ header */}
+      <div
+        className="p-5 flex flex-col items-center gap-2 relative"
+        style={{
+          background: "linear-gradient(180deg, rgba(80,20,20,0.3) 0%, transparent 100%)",
+        }}
+      >
+        <Stamp variant="classified" rotate={-2} className="text-base px-4 py-1.5">
+          NIE ŻYJESZ
+        </Stamp>
+        <span className="material-symbols-outlined text-[36px] text-primary-dark/50">skull</span>
+        <p className="font-display text-on-surface/50 text-xs uppercase tracking-widest text-center">
           Obserwujesz grę jako widz
         </p>
         {currentPlayer.role && (
-          <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest">
+          <p className="font-display text-on-surface/50 text-xs uppercase tracking-widest">
             Byłeś:{" "}
             <span className="text-on-surface font-black">
               {ROLE_LABELS[currentPlayer.role] ?? currentPlayer.role}
@@ -33,39 +43,44 @@ export default function DeadSpectatorView({ currentPlayer, players }: DeadSpecta
         )}
       </div>
 
-      {/* Player roles list */}
-      <div className="border border-surface-highest">
-        <div className="border-b border-surface-highest px-3 py-2 flex items-center gap-2">
-          <span className="material-symbols-outlined text-[14px] text-on-surface/40">
+      {/* Player roles list — full dossier */}
+      <div className="flex-1 border-t border-surface-highest">
+        <div className="px-4 py-2 flex items-center gap-2 border-b border-surface-highest/40">
+          <span className="material-symbols-outlined text-[14px] text-on-surface/50">
             visibility
           </span>
-          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/40">
-            Role graczy
+          <span className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/50">
+            TECZKI AGENTÓW — ODTAJNIONE
           </span>
         </div>
         <div className="flex flex-col">
-          {players
-            .filter((p) => !p.isHost)
-            .map((p, i) => (
-              <div
-                key={p.playerId}
-                className={`flex items-center gap-3 px-3 py-2.5 ${i > 0 ? "border-t border-surface-highest/40" : ""} ${!p.isAlive ? "opacity-40" : ""}`}
+          {nonHostPlayers.map((p, i) => (
+            <div
+              key={p.playerId}
+              className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-surface-highest/30" : ""}`}
+              style={!p.isAlive ? { opacity: 0.5 } : undefined}
+            >
+              <span className="material-symbols-outlined text-[18px] text-on-surface/50">
+                {p.isAlive ? "person" : "skull"}
+              </span>
+              <span
+                className={`font-display font-bold text-sm uppercase tracking-wide flex-1 ${!p.isAlive ? "line-through text-on-surface/40" : "text-on-surface"}`}
               >
-                <span className="material-symbols-outlined text-[16px] text-on-surface/50">
-                  {p.isAlive ? "person" : "skull"}
-                </span>
+                {p.nickname}
+              </span>
+              {p.role ? (
                 <span
-                  className={`font-display text-sm uppercase tracking-wide flex-1 ${!p.isAlive ? "line-through text-on-surface/40" : "text-on-surface"}`}
+                  className={`font-display font-black text-[10px] uppercase tracking-widest px-2 py-1 border ${ROLE_COLORS[p.role] ?? ROLE_COLORS.civilian}`}
                 >
-                  {p.nickname}
+                  {ROLE_LABELS[p.role] ?? p.role}
                 </span>
-                {p.role && (
-                  <Badge variant={p.role as "mafia" | "detective" | "doctor" | "civilian"}>
-                    {ROLE_LABELS[p.role] ?? p.role}
-                  </Badge>
-                )}
-              </div>
-            ))}
+              ) : (
+                <span className="font-display text-[10px] uppercase tracking-widest text-on-surface/30 px-2 py-1 border border-dashed border-on-surface/15">
+                  ???
+                </span>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
