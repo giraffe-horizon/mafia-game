@@ -6,7 +6,6 @@ export interface StampProps {
   children?: ReactNode;
   variant?: "classified" | "occupied" | "secret" | "approved" | "rejected" | "custom";
   color?: "red" | "green" | "gold" | "default";
-  rotation?: number;
   rotate?: number;
   className?: string;
 }
@@ -22,18 +21,10 @@ const variantColorMap: Partial<
   custom: "default",
 };
 
-export function Stamp({
-  label,
-  children,
-  variant,
-  color,
-  rotation,
-  rotate = -2,
-  className,
-}: StampProps) {
+export function Stamp({ label, children, variant, color, rotate = -2, className }: StampProps) {
   const effectiveColor: NonNullable<StampProps["color"]> =
     color ?? (variant != null ? (variantColorMap[variant] ?? "red") : "red");
-  const deg = rotation ?? rotate;
+  const deg = rotate;
   return (
     <span
       className={cn(
