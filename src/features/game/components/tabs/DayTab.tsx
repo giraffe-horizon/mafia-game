@@ -1,16 +1,28 @@
 "use client";
 
 import { useCurrentPhase } from "@/features/game/hooks/useCurrentPhase";
+import { usePlayerState } from "@/features/game/hooks/usePlayerState";
 import LobbyContainer from "@/features/game/containers/LobbyContainer";
 import DayContainer from "@/features/game/containers/DayContainer";
+import GMPanelContainer from "@/features/game/containers/GMPanelContainer";
 
 export default function DayTab() {
   const { phase, isLobby } = useCurrentPhase();
+  const { isHost } = usePlayerState();
 
   if (isLobby) {
     return (
       <div className="flex-1 flex flex-col">
         <LobbyContainer />
+      </div>
+    );
+  }
+
+  // GM gets full panel instead of day view
+  if (isHost) {
+    return (
+      <div className="flex-1 flex flex-col">
+        <GMPanelContainer />
       </div>
     );
   }
@@ -28,7 +40,7 @@ export default function DayTab() {
     );
   }
 
-  // Day/Voting/Review/Ended
+  // Day/Voting/Review/Ended — regular players
   return (
     <div className="flex-1 flex flex-col bg-gradient-to-b from-background via-background to-amber-950/15">
       <DayContainer />
