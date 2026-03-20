@@ -145,38 +145,36 @@ export default function GameClient() {
         onShowGmPanel={() => setShowGmPanel(true)}
       />
 
-      {/* End screen overlay */}
-      {isFinished && <EndContainer />}
+      {/* Tab-based layout (always rendered — EndContainer overlays on top when game ends) */}
+      <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+        <TabsContainer />
 
-      {/* Tab-based layout (always rendered, even on end screen as background) */}
-      {!isFinished && (
-        <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
-          <TabsContainer />
+        {/* End screen overlay — absolutely covers tab content when game is finished */}
+        {isFinished && <EndContainer />}
 
-          {/* GM panel drawer overlay */}
-          {isHost && showGmPanel && (
-            <div className="absolute inset-0 z-30 flex flex-col bg-background">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-surface-highest bg-surface-low">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[16px] text-primary">star</span>
-                  <span className="font-display font-black text-xs uppercase tracking-widest text-primary">
-                    Panel Mistrza Gry
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowGmPanel(false)}
-                  className="size-8 flex items-center justify-center text-on-surface/40 hover:text-on-surface/70"
-                >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
-                </button>
+        {/* GM panel drawer overlay */}
+        {!isFinished && isHost && showGmPanel && (
+          <div className="absolute inset-0 z-30 flex flex-col bg-background">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-surface-highest bg-surface-low">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px] text-primary">star</span>
+                <span className="font-display font-black text-xs uppercase tracking-widest text-primary">
+                  Panel Mistrza Gry
+                </span>
               </div>
-              <div className="flex-1 overflow-y-auto">
-                <GMPanelContainer />
-              </div>
+              <button
+                onClick={() => setShowGmPanel(false)}
+                className="size-8 flex items-center justify-center text-on-surface/40 hover:text-on-surface/70"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
             </div>
-          )}
-        </div>
-      )}
+            <div className="flex-1 overflow-y-auto">
+              <GMPanelContainer />
+            </div>
+          </div>
+        )}
+      </div>
 
       <RankingModal isOpen={showRanking} onClose={() => setShowRanking(false)} token={token} />
 

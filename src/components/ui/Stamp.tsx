@@ -11,14 +11,28 @@ export interface StampProps {
   className?: string;
 }
 
+const variantColorMap: Partial<
+  Record<NonNullable<StampProps["variant"]>, NonNullable<StampProps["color"]>>
+> = {
+  classified: "red",
+  occupied: "red",
+  secret: "gold",
+  approved: "green",
+  rejected: "red",
+  custom: "default",
+};
+
 export function Stamp({
   label,
   children,
-  color = "red",
+  variant,
+  color,
   rotation,
   rotate = -2,
   className,
 }: StampProps) {
+  const effectiveColor: NonNullable<StampProps["color"]> =
+    color ?? (variant != null ? (variantColorMap[variant] ?? "red") : "red");
   const deg = rotation ?? rotate;
   return (
     <span
@@ -26,10 +40,10 @@ export function Stamp({
         "inline-block font-display font-black text-xs uppercase tracking-[0.2em]",
         "border-2 px-2 py-0.5",
         "select-none pointer-events-none",
-        color === "red" && "text-stamp border-stamp",
-        color === "green" && "text-stamp-green border-stamp-green",
-        color === "gold" && "text-stamp-gold border-stamp-gold",
-        color === "default" && "text-on-surface border-on-surface",
+        effectiveColor === "red" && "text-stamp border-stamp",
+        effectiveColor === "green" && "text-stamp-green border-stamp-green",
+        effectiveColor === "gold" && "text-stamp-gold border-stamp-gold",
+        effectiveColor === "default" && "text-on-surface border-on-surface",
         className
       )}
       style={{ transform: `rotate(${deg}deg)`, display: "inline-block" }}

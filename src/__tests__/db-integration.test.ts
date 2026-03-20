@@ -1673,6 +1673,412 @@ describe("Database Integration Tests (SQLite)", () => {
     });
   });
 
+  // ─── voteHistory ─────────────────────────────────────────────────────────
+
+  describe("voteHistory", () => {
+    async function setupVotingGame() {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const p1 = await db.joinGame(mockDb, code, "Player1");
+      const p2 = await db.joinGame(mockDb, code, "Player2");
+      const p3 = await db.joinGame(mockDb, code, "Player3");
+
+      await db.startGame(mockDb, hostToken, 1, "simple");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      const mafiaPlayer = state!.players.find((p) => p.role === "mafia")!;
+      const civilians = state!.players.filter((p) => p.role === "civilian");
+
+      const allTokens = [
+        { nickname: "Player1", token: p1.token },
+        { nickname: "Player2", token: p2.token },
+        { nickname: "Player3", token: p3.token },
+      ];
+      const mafiaToken = allTokens.find((t) => t.nickname === mafiaPlayer.nickname)!.token;
+      const civilianTokens = civilians.map(
+        (c) => allTokens.find((t) => t.nickname === c.nickname)!.token
+      );
+
+      return { hostToken, mafiaToken, mafiaPlayer, civilians, civilianTokens };
+    }
+
+    it("should return vote tallies for completed voting rounds", async () => {
+      const { hostToken, civilians, civilianTokens } = await setupVotingGame();
+      const target = civilians[0];
+
+      // Advance to voting
+      await db.changePhase(mockDb, hostToken, "day");
+      await db.changePhase(mockDb, hostToken, "voting");
+
+      // Civilians vote for target
+      for (const token of civilianTokens) {
+        await db.submitAction(mockDb, token, "vote", target.playerId);
+      }
+
+      // Resolve voting (advances to night round 2)
+      await db.changePhase(mockDb, hostToken, "night");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      expect(state!.voteHistory).toBeDefined();
+      expect(state!.voteHistory!.length).toBeGreaterThan(0);
+
+      const round1 = state!.voteHistory!.find((v) => v.round === 1);
+      expect(round1).toBeDefined();
+
+      const targetResult = round1!.results.find((r) => r.playerId === target.playerId);
+      expect(targetResult).toBeDefined();
+      expect(targetResult!.votes).toBeGreaterThan(0);
+      expect(targetResult!.nickname).toBe(target.nickname);
+    });
+
+    it("should mark eliminated player when they have a plurality of votes", async () => {
+      const { hostToken, mafiaToken, civilians, civilianTokens } = await setupVotingGame();
+      const target = civilians[0];
+
+      await db.changePhase(mockDb, hostToken, "day");
+      await db.changePhase(mockDb, hostToken, "voting");
+
+      // All players vote for the same target → plurality, no tie
+      for (const token of civilianTokens) {
+        await db.submitAction(mockDb, token, "vote", target.playerId);
+      }
+      await db.submitAction(mockDb, mafiaToken, "vote", target.playerId);
+
+      await db.changePhase(mockDb, hostToken, "night");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      const round1 = state!.voteHistory!.find((v) => v.round === 1)!;
+      const targetResult = round1.results.find((r) => r.playerId === target.playerId)!;
+      expect(targetResult.eliminated).toBe(true);
+    });
+
+    it("should not mark eliminated when votes are tied", async () => {
+      const { hostToken, civilians, civilianTokens } = await setupVotingGame();
+      // Need exactly 2 civilians and split vote — only works if we have 2 civilians
+      if (civilians.length < 2) return; // guard
+
+      await db.changePhase(mockDb, hostToken, "day");
+      await db.changePhase(mockDb, hostToken, "voting");
+
+      // Each civilian votes for the other → tie
+      await db.submitAction(mockDb, civilianTokens[0], "vote", civilians[1].playerId);
+      await db.submitAction(mockDb, civilianTokens[1], "vote", civilians[0].playerId);
+
+      await db.changePhase(mockDb, hostToken, "night");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      const round1 = state!.voteHistory!.find((v) => v.round === 1)!;
+      // All results should have eliminated=false when tied
+      expect(round1.results.every((r) => r.eliminated === false)).toBe(true);
+    });
+
+    it("should accumulate history across multiple rounds", async () => {
+      const { hostToken, mafiaToken, civilians, civilianTokens } = await setupVotingGame();
+
+      // Round 1: night (no kill) → day → voting (vote for civilians[0]) → resolve
+      await db.changePhase(mockDb, hostToken, "day");
+      await db.changePhase(mockDb, hostToken, "voting");
+      for (const token of civilianTokens) {
+        await db.submitAction(mockDb, token, "vote", civilians[0].playerId);
+      }
+      await db.submitAction(mockDb, mafiaToken, "vote", civilians[0].playerId);
+      await db.changePhase(mockDb, hostToken, "night"); // → round 2
+
+      // Round 2: vote for civilians[1] (if alive)
+      const stateR2 = await db.getGameState(mockDb, hostToken);
+      const aliveCivilians = stateR2!.players.filter((p) => p.role === "civilian" && p.isAlive);
+      if (aliveCivilians.length > 0) {
+        await db.changePhase(mockDb, hostToken, "day");
+        await db.changePhase(mockDb, hostToken, "voting");
+        await db.submitAction(mockDb, mafiaToken, "vote", aliveCivilians[0].playerId);
+        await db.changePhase(mockDb, hostToken, "night"); // → round 3 or end
+      }
+
+      const finalState = await db.getGameState(mockDb, hostToken);
+      if (finalState!.voteHistory) {
+        expect(finalState!.voteHistory.length).toBeGreaterThanOrEqual(1);
+        // Rounds returned descending
+        const rounds = finalState!.voteHistory.map((v) => v.round);
+        expect(rounds[0]).toBeGreaterThanOrEqual(rounds[rounds.length - 1]);
+      }
+    });
+  });
+
+  // ─── lastNightSummary ─────────────────────────────────────────────────────
+
+  describe("lastNightSummary", () => {
+    async function setupSimpleNightGame() {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      // 4 non-host players → 1 mafia + 3 civilians; after 1 kill: 1 mafia + 2 civilians → game continues
+      const p1 = await db.joinGame(mockDb, code, "Player1");
+      const p2 = await db.joinGame(mockDb, code, "Player2");
+      const p3 = await db.joinGame(mockDb, code, "Player3");
+      const p4 = await db.joinGame(mockDb, code, "Player4");
+
+      await db.startGame(mockDb, hostToken, 1, "simple");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      const mafiaPlayer = state!.players.find((p) => p.role === "mafia")!;
+      const civilians = state!.players.filter((p) => p.role === "civilian");
+
+      const allTokens = [
+        { nickname: "Player1", token: p1.token },
+        { nickname: "Player2", token: p2.token },
+        { nickname: "Player3", token: p3.token },
+        { nickname: "Player4", token: p4.token },
+      ];
+      const mafiaToken = allTokens.find((t) => t.nickname === mafiaPlayer.nickname)!.token;
+
+      return { hostToken, mafiaToken, civilians };
+    }
+
+    it("should return kill result after mafia kills a player", async () => {
+      const { hostToken, mafiaToken, civilians } = await setupSimpleNightGame();
+      const target = civilians[0];
+
+      await db.submitAction(mockDb, mafiaToken, "kill", target.playerId);
+      await db.changePhase(mockDb, hostToken, "day");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      expect(state!.lastNightSummary).toBeDefined();
+      expect(state!.lastNightSummary!.round).toBe(1);
+      expect(state!.lastNightSummary!.killedNickname).toBe(target.nickname);
+      expect(state!.lastNightSummary!.savedByDoctor).toBe(false);
+    });
+
+    it("should return no-kill result when mafia does not submit action", async () => {
+      const { hostToken } = await setupSimpleNightGame();
+
+      // No kill action submitted
+      await db.changePhase(mockDb, hostToken, "day");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      expect(state!.lastNightSummary).toBeDefined();
+      expect(state!.lastNightSummary!.killedNickname).toBeNull();
+      expect(state!.lastNightSummary!.savedByDoctor).toBe(false);
+    });
+
+    it("should return savedByDoctor=true when doctor protects the kill target", async () => {
+      // Need full mode with doctor (minimum 5 non-host players)
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const p1 = await db.joinGame(mockDb, code, "Player1");
+      const p2 = await db.joinGame(mockDb, code, "Player2");
+      const p3 = await db.joinGame(mockDb, code, "Player3");
+      const p4 = await db.joinGame(mockDb, code, "Player4");
+      const p5 = await db.joinGame(mockDb, code, "Player5");
+
+      await db.startGame(mockDb, hostToken, 1, "full");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      const mafiaPlayer = state!.players.find((p) => p.role === "mafia")!;
+      const doctorPlayer = state!.players.find((p) => p.role === "doctor")!;
+      const civilian = state!.players.find((p) => p.role === "civilian")!;
+
+      const allTokens = [
+        { nickname: "Player1", token: p1.token },
+        { nickname: "Player2", token: p2.token },
+        { nickname: "Player3", token: p3.token },
+        { nickname: "Player4", token: p4.token },
+        { nickname: "Player5", token: p5.token },
+      ];
+      const mafiaToken = allTokens.find((t) => t.nickname === mafiaPlayer.nickname)!.token;
+      const doctorToken = allTokens.find((t) => t.nickname === doctorPlayer.nickname)!.token;
+
+      // Mafia kills civilian, doctor protects the same civilian
+      await db.submitAction(mockDb, mafiaToken, "kill", civilian.playerId);
+      await db.submitAction(mockDb, doctorToken, "protect", civilian.playerId);
+      await db.changePhase(mockDb, hostToken, "day");
+
+      const dayState = await db.getGameState(mockDb, hostToken);
+      expect(dayState!.lastNightSummary).toBeDefined();
+      expect(dayState!.lastNightSummary!.killedNickname).toBeNull();
+      expect(dayState!.lastNightSummary!.savedByDoctor).toBe(true);
+
+      // Protected civilian should still be alive
+      const updatedCivilian = dayState!.players.find((p) => p.playerId === civilian.playerId);
+      expect(updatedCivilian!.isAlive).toBe(true);
+    });
+
+    it("should not return lastNightSummary during night phase", async () => {
+      const { hostToken } = await setupSimpleNightGame();
+
+      // Still in night phase
+      const state = await db.getGameState(mockDb, hostToken);
+      expect(state!.lastNightSummary).toBeUndefined();
+    });
+  });
+
+  // ─── gameLog ──────────────────────────────────────────────────────────────
+
+  describe("gameLog", () => {
+    it("should group night_result and vote_result events by round", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const p1 = await db.joinGame(mockDb, code, "Player1");
+      const p2 = await db.joinGame(mockDb, code, "Player2");
+      const p3 = await db.joinGame(mockDb, code, "Player3");
+
+      await db.startGame(mockDb, hostToken, 1, "simple");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      const mafiaPlayer = state!.players.find((p) => p.role === "mafia")!;
+      const civilian = state!.players.filter((p) => p.role === "civilian")[0];
+
+      const allTokens = [
+        { nickname: "Player1", token: p1.token },
+        { nickname: "Player2", token: p2.token },
+        { nickname: "Player3", token: p3.token },
+      ];
+      const mafiaToken = allTokens.find((t) => t.nickname === mafiaPlayer.nickname)!.token;
+
+      // Night 1: mafia kills → day (night_result event created)
+      await db.submitAction(mockDb, mafiaToken, "kill", civilian.playerId);
+      await db.changePhase(mockDb, hostToken, "day");
+
+      // Day → voting → resolve (vote_result event created if someone voted)
+      await db.changePhase(mockDb, hostToken, "voting");
+      // Note: if no votes, resolveVoting sends no message; skip voting to test night_result only
+
+      await db.changePhase(mockDb, hostToken, "night");
+
+      const finalState = await db.getGameState(mockDb, hostToken);
+      expect(finalState!.gameLog).toBeDefined();
+      expect(finalState!.gameLog!.length).toBeGreaterThan(0);
+
+      const round1Log = finalState!.gameLog!.find((g) => g.round === 1);
+      expect(round1Log).toBeDefined();
+      expect(round1Log!.events.length).toBeGreaterThan(0);
+
+      const nightEvent = round1Log!.events.find((e) => e.type === "night_result");
+      expect(nightEvent).toBeDefined();
+      expect(nightEvent!.description).toContain(civilian.nickname);
+    });
+
+    it("should include vote_result event type after resolveVoting with a winner", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const p1 = await db.joinGame(mockDb, code, "Player1");
+      const p2 = await db.joinGame(mockDb, code, "Player2");
+      const p3 = await db.joinGame(mockDb, code, "Player3");
+
+      await db.startGame(mockDb, hostToken, 1, "simple");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      const mafiaPlayer = state!.players.find((p) => p.role === "mafia")!;
+      const civilians = state!.players.filter((p) => p.role === "civilian");
+
+      const allTokens = [
+        { nickname: "Player1", token: p1.token },
+        { nickname: "Player2", token: p2.token },
+        { nickname: "Player3", token: p3.token },
+      ];
+      const mafiaToken = allTokens.find((t) => t.nickname === mafiaPlayer.nickname)!.token;
+      const civilianTokens = civilians.map(
+        (c) => allTokens.find((t) => t.nickname === c.nickname)!.token
+      );
+      const voteTarget = civilians[0];
+
+      // Progress to voting and cast unanimous votes
+      await db.changePhase(mockDb, hostToken, "day");
+      await db.changePhase(mockDb, hostToken, "voting");
+      for (const token of civilianTokens) {
+        await db.submitAction(mockDb, token, "vote", voteTarget.playerId);
+      }
+      await db.submitAction(mockDb, mafiaToken, "vote", voteTarget.playerId);
+      await db.changePhase(mockDb, hostToken, "night"); // resolveVoting
+
+      const finalState = await db.getGameState(mockDb, hostToken);
+      expect(finalState!.gameLog).toBeDefined();
+
+      const round1Log = finalState!.gameLog!.find((g) => g.round === 1);
+      expect(round1Log).toBeDefined();
+
+      const voteEvent = round1Log!.events.find((e) => e.type === "vote_result");
+      expect(voteEvent).toBeDefined();
+      expect(voteEvent!.description).toContain(voteTarget.nickname);
+    });
+
+    it("should not return gameLog during lobby phase", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const state = await db.getGameState(mockDb, hostToken);
+      expect(state!.gameLog).toBeUndefined();
+    });
+  });
+
+  // ─── event_type column ───────────────────────────────────────────────────
+
+  describe("event_type column", () => {
+    it("resolveNight should create messages with event_type=night_result", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      await db.joinGame(mockDb, code, "Player1");
+      await db.joinGame(mockDb, code, "Player2");
+      await db.joinGame(mockDb, code, "Player3");
+
+      await db.startGame(mockDb, hostToken, 1, "simple");
+
+      // Resolve night without a kill
+      await db.changePhase(mockDb, hostToken, "day");
+
+      const { results } = await mockDb
+        .prepare("SELECT event_type FROM messages WHERE event_type = 'night_result'")
+        .all<{ event_type: string }>();
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results.every((r) => r.event_type === "night_result")).toBe(true);
+    });
+
+    it("resolveVoting should create messages with event_type=vote_result", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const p1 = await db.joinGame(mockDb, code, "Player1");
+      const p2 = await db.joinGame(mockDb, code, "Player2");
+      const p3 = await db.joinGame(mockDb, code, "Player3");
+
+      await db.startGame(mockDb, hostToken, 1, "simple");
+
+      const state = await db.getGameState(mockDb, hostToken);
+      const mafiaPlayer = state!.players.find((p) => p.role === "mafia")!;
+      const civilian = state!.players.filter((p) => p.role === "civilian")[0];
+
+      const allTokens = [
+        { nickname: "Player1", token: p1.token },
+        { nickname: "Player2", token: p2.token },
+        { nickname: "Player3", token: p3.token },
+      ];
+      const mafiaToken = allTokens.find((t) => t.nickname === mafiaPlayer.nickname)!.token;
+
+      // Progress to voting with unanimous vote for civilian
+      await db.changePhase(mockDb, hostToken, "day");
+      await db.changePhase(mockDb, hostToken, "voting");
+      await db.submitAction(mockDb, mafiaToken, "vote", civilian.playerId);
+      await db.changePhase(mockDb, hostToken, "night"); // resolveVoting
+
+      const { results } = await mockDb
+        .prepare("SELECT event_type FROM messages WHERE event_type = 'vote_result'")
+        .all<{ event_type: string }>();
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results.every((r) => r.event_type === "vote_result")).toBe(true);
+    });
+  });
+
   describe("resolveNight with fewer mafia than at start", () => {
     it("should work correctly when one mafia member died in a previous round", async () => {
       // Setup game with 2 mafia

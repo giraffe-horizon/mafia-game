@@ -25,8 +25,8 @@ export default function DayView({
 }: DayViewProps) {
   return (
     <div className="bg-background min-h-full">
-      {/* Role card for non-host players */}
-      {!isHost && (
+      {/* Role card for alive non-host players (dead players see all roles via DeadSpectatorView) */}
+      {!isHost && currentPlayer.isAlive && (
         <RoleCard
           role={currentPlayer.role || undefined}
           roleVisible={roleVisible}
