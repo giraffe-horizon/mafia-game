@@ -11,6 +11,7 @@ interface PlayersListProps {
   roleVisible: boolean;
   onKick?: (playerId: string) => void;
   investigatedPlayers?: { playerId: string; isMafia: boolean }[];
+  minPlayers?: number;
 }
 
 export default function PlayersList({
@@ -23,6 +24,7 @@ export default function PlayersList({
   roleVisible,
   onKick,
   investigatedPlayers,
+  minPlayers = 5,
 }: PlayersListProps) {
   const investigatedMap = investigatedPlayers
     ? new Map(investigatedPlayers.map((ip) => [ip.playerId, ip.isMafia]))
@@ -35,8 +37,8 @@ export default function PlayersList({
       {/* Header */}
       <div className="px-4 py-2 flex items-center justify-between border-b border-surface-highest/40">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[14px] text-on-surface/30">group</span>
-          <span className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/30">
+          <span className="material-symbols-outlined text-[14px] text-on-surface/50">group</span>
+          <span className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/50">
             LISTA OBECNOŚCI AGENTÓW
           </span>
         </div>
@@ -63,18 +65,21 @@ export default function PlayersList({
             }
           />
         ))}
-        {/* Empty slot — lobby only */}
-        {isLobby && (
-          <div className="flex items-center gap-3 px-3 py-2.5 border-b border-dashed border-surface-highest/40 opacity-40">
-            <div className="w-0.5 self-stretch flex-shrink-0 bg-surface-highest" />
-            <span className="material-symbols-outlined text-[18px] text-on-surface/30">
-              person_add
-            </span>
-            <span className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
-              CZEKANIE NA AGENTÓW...
-            </span>
-          </div>
-        )}
+        {/* Ghost slots - show placeholders for missing players */}
+        {isLobby &&
+          nonHostPlayers.length < minPlayers &&
+          Array.from({ length: minPlayers - nonHostPlayers.length }, (_, i) => (
+            <div
+              key={`ghost-${i}`}
+              className="flex items-center gap-3 px-3 py-2.5 border-b border-dashed border-[rgba(255,255,255,0.15)] text-[rgba(255,255,255,0.2)]"
+            >
+              <div className="w-0.5 self-stretch flex-shrink-0 bg-[rgba(255,255,255,0.15)]" />
+              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              <span className="font-display text-[10px] uppercase tracking-widest">
+                CZEKANIE NA AGENTA...
+              </span>
+            </div>
+          ))}
       </div>
     </div>
   );

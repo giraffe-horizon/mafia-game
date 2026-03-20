@@ -58,8 +58,8 @@ export default function VotingView({
 
       {/* Vote tally — dossier style */}
       {voteTally && (
-        <div className="mx-4 mt-4 border border-on-surface/20 bg-surface-low">
-          <div className="border-b border-on-surface/10 px-3 py-2 flex items-center justify-between">
+        <div className="mx-4 mt-4 border border-on-surface/30 bg-surface-low">
+          <div className="border-b border-on-surface/20 px-3 py-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[14px] text-on-surface/40">
                 how_to_vote

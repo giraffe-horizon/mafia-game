@@ -113,7 +113,7 @@ export default function PlayerRow({
             />
           ) : (
             <div className="w-full h-full bg-surface-highest flex items-center justify-center">
-              <span className="material-symbols-outlined text-[14px] text-on-surface/30">
+              <span className="material-symbols-outlined text-[14px] text-on-surface/40">
                 {isChoosingCharacter || hasNicknameNoCharacter
                   ? "hourglass_top"
                   : player.isHost
@@ -124,7 +124,7 @@ export default function PlayerRow({
           )}
         </div>
         {player.character && (
-          <span className="font-display text-[8px] text-on-surface/30 uppercase tracking-wider max-w-[40px] truncate text-center">
+          <span className="font-display text-[8px] text-on-surface/40 uppercase tracking-wider max-w-[40px] truncate text-center">
             {player.character.namePl}
           </span>
         )}
@@ -150,7 +150,7 @@ export default function PlayerRow({
             <button onClick={handleSaveRename} className="text-primary hover:opacity-70">
               <span className="material-symbols-outlined text-[14px]">check</span>
             </button>
-            <button onClick={handleCancelEdit} className="text-on-surface/30 hover:opacity-70">
+            <button onClick={handleCancelEdit} className="text-on-surface/40 hover:opacity-70">
               <span className="material-symbols-outlined text-[14px]">close</span>
             </button>
           </div>
@@ -158,7 +158,7 @@ export default function PlayerRow({
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               {isChoosingCharacter ? (
-                <span className="font-display text-xs text-on-surface/30 uppercase tracking-widest animate-pulse">
+                <span className="font-display text-xs text-on-surface/40 uppercase tracking-widest animate-pulse">
                   Wybiera postać...
                 </span>
               ) : (
@@ -190,7 +190,7 @@ export default function PlayerRow({
               </span>
             )}
             {!player.isAlive && (
-              <span className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+              <span className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest">
                 Wyeliminowany
               </span>
             )}
@@ -226,7 +226,7 @@ export default function PlayerRow({
       {onRename && isLobby && player.isYou && !isEditing && !isHost && (
         <button
           onClick={() => setIsEditing(true)}
-          className="size-7 flex items-center justify-center text-on-surface/20 hover:text-on-surface/50 transition-colors"
+          className="size-7 flex items-center justify-center text-on-surface/40 hover:text-on-surface/50 transition-colors"
           title="Zmień pseudonim"
         >
           <span className="material-symbols-outlined text-[14px]">edit</span>
@@ -237,7 +237,7 @@ export default function PlayerRow({
       {isLobby && isHost && !player.isHost && onKick && (
         <button
           onClick={() => onKick(player.playerId)}
-          className="size-7 flex items-center justify-center text-on-surface/20 hover:text-primary-dark transition-colors mr-2"
+          className="size-7 flex items-center justify-center text-on-surface/40 hover:text-primary-dark transition-colors mr-2"
           title="Usuń gracza"
         >
           <span className="material-symbols-outlined text-[14px]">close</span>

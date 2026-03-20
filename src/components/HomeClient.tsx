@@ -105,12 +105,13 @@ function CodeInput({
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
           autoFocus={i === 0}
-          className="text-center text-xl font-bold font-display uppercase bg-transparent border-[2.5px] focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          className="text-center text-xl font-bold font-display uppercase focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
           style={{
             width: "48px",
             height: "52px",
-            borderColor: "#3A3A30",
+            border: "2px solid #3A3A30",
             borderRadius: "4px",
+            backgroundColor: "transparent",
             color: "#2B2B2B",
           }}
         />
@@ -188,7 +189,7 @@ export default function HomeClient() {
         >
           <p
             className="text-xs font-display leading-normal uppercase tracking-widest"
-            style={{ color: "#6B6B5A" }}
+            style={{ color: "#3A3A30" }}
           >
             KOD SESJI
           </p>
@@ -242,10 +243,11 @@ export default function HomeClient() {
         <button
           onClick={handleJoin}
           disabled={loading}
-          className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 bg-transparent border-[2.5px] font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-14 font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
-            borderColor: "#3A3A30",
+            border: "2px dashed #5A5A4A",
             color: "#2B2B2B",
+            backgroundColor: "transparent",
             fontSize: "18px",
           }}
         >

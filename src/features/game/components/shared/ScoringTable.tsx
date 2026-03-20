@@ -72,7 +72,7 @@ export default function ScoringTable({ roundScores, ranking, totalRounds }: Scor
           </tbody>
         </table>
       </Card>
-      <div className="mt-2 flex gap-3 text-xs text-on-surface/30 font-display px-1">
+      <div className="mt-2 flex gap-3 text-xs text-on-surface/40 font-display px-1">
         <span>📋 Misje</span>
         <span>💀 Przeżycie (+1)</span>
         <span>⭐ Wygrana (+3)</span>

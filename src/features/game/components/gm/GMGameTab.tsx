@@ -145,7 +145,7 @@ export default function GMGameTab({
 
       {/* GM override */}
       {alivePlayers.length > 0 && (phase === "night" || phase === "voting") && (
-        <div className="border border-on-surface/10 p-3 flex flex-col gap-2 crt-surface">
+        <div className="border border-on-surface/20 p-3 flex flex-col gap-2 crt-surface">
           <span className="font-display font-black text-[10px] uppercase tracking-widest text-primary/60">
             Override gracza
           </span>
@@ -208,13 +208,13 @@ export default function GMGameTab({
                   : nextPhase.label}
         </Button>
       ) : (
-        <p className="font-display text-on-surface/30 text-xs text-center uppercase tracking-widest">
+        <p className="font-display text-on-surface/40 text-xs text-center uppercase tracking-widest">
           Brak dostępnych przejść
         </p>
       )}
 
       {!canAdvancePhase && phaseProgress && (
-        <p className="font-display text-on-surface/30 text-[10px] text-center uppercase tracking-widest">
+        <p className="font-display text-on-surface/40 text-[10px] text-center uppercase tracking-widest">
           Czekaj na:{" "}
           {phaseProgress.requiredActions
             .filter((a) => !a.done)

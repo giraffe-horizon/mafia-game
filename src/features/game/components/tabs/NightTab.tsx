@@ -16,7 +16,7 @@ export default function NightTab() {
   if (isLobby) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
-        <span className="material-symbols-outlined text-[48px] text-on-surface/20">bedtime</span>
+        <span className="material-symbols-outlined text-[48px] text-on-surface/40">bedtime</span>
         <p className="font-display text-on-surface/40 text-sm uppercase tracking-widest text-center">
           Gra nie została jeszcze rozpoczęta
         </p>
@@ -60,7 +60,7 @@ export default function NightTab() {
             </>
           ) : (
             <>
-              <span className="material-symbols-outlined text-[56px] text-on-surface/20">
+              <span className="material-symbols-outlined text-[56px] text-on-surface/40">
                 shield_moon
               </span>
               <p className="font-display font-black text-lg text-on-surface uppercase tracking-wide text-center">
@@ -92,7 +92,7 @@ export default function NightTab() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8">
-      <span className="material-symbols-outlined text-[48px] text-on-surface/20">bedtime</span>
+      <span className="material-symbols-outlined text-[48px] text-on-surface/40">bedtime</span>
       <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center">
         Czekaj na wyniki nocy
       </p>

@@ -51,11 +51,11 @@ export default function DeadSpectatorView({ currentPlayer, players }: DeadSpecta
                 key={p.playerId}
                 className={`flex items-center gap-3 px-3 py-2.5 ${i > 0 ? "border-t border-surface-highest/40" : ""} ${!p.isAlive ? "opacity-40" : ""}`}
               >
-                <span className="material-symbols-outlined text-[16px] text-on-surface/30">
+                <span className="material-symbols-outlined text-[16px] text-on-surface/50">
                   {p.isAlive ? "person" : "skull"}
                 </span>
                 <span
-                  className={`font-display text-sm uppercase tracking-wide flex-1 ${!p.isAlive ? "line-through text-on-surface/30" : "text-on-surface"}`}
+                  className={`font-display text-sm uppercase tracking-wide flex-1 ${!p.isAlive ? "line-through text-on-surface/40" : "text-on-surface"}`}
                 >
                   {p.nickname}
                 </span>

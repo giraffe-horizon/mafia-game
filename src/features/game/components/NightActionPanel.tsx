@@ -124,13 +124,13 @@ export default function NightActionPanel({
   if (!action) {
     return (
       <div className="mx-4 mt-4 border border-surface-highest p-4 flex items-center gap-3">
-        <span className="material-symbols-outlined text-[24px] text-on-surface/20">bedtime</span>
+        <span className="material-symbols-outlined text-[24px] text-on-surface/40">bedtime</span>
         <div>
           <p className="font-display font-black text-xs uppercase tracking-widest text-on-surface/40">
             Noc — czekaj na rozkazy
           </p>
           {roleHidden && (
-            <p className="text-on-surface/30 text-xs mt-1 font-display">
+            <p className="text-on-surface/40 text-xs mt-1 font-display">
               ↑ Odkryj rolę aby wykonać akcję nocną
             </p>
           )}
@@ -142,7 +142,7 @@ export default function NightActionPanel({
   if (role === "civilian") {
     return (
       <div className="mx-4 mt-4 border border-surface-highest bg-surface-highest/10 p-6 flex flex-col items-center gap-3">
-        <span className="material-symbols-outlined text-[40px] text-on-surface/20">bedtime</span>
+        <span className="material-symbols-outlined text-[40px] text-on-surface/40">bedtime</span>
         <p className="font-display font-black text-xs uppercase tracking-widest text-on-surface/40 text-center">
           Czekasz w ukryciu
         </p>
@@ -178,23 +178,23 @@ export default function NightActionPanel({
               className={cn(
                 "flex items-center gap-3 p-3 border transition-colors text-left",
                 isBlocked
-                  ? "border-surface-highest/30 text-on-surface/20 cursor-not-allowed"
+                  ? "border-surface-highest/30 text-on-surface/40 cursor-not-allowed"
                   : "border-surface-highest hover:border-primary/40 hover:bg-primary/5 active:opacity-70"
               )}
             >
-              <span className="material-symbols-outlined text-[16px] text-on-surface/30">
+              <span className="material-symbols-outlined text-[16px] text-on-surface/50">
                 person
               </span>
               <span className="font-display text-sm text-on-surface flex-1 uppercase tracking-wide">
                 {p.nickname}
               </span>
               {isBlockedDoctor && (
-                <span className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+                <span className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest">
                   chroniony
                 </span>
               )}
               {isBlockedDetective && (
-                <span className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+                <span className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest">
                   sprawdzony
                 </span>
               )}

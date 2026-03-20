@@ -44,13 +44,13 @@ export default function GameHeader({
       <div className="flex items-center gap-1">
         <Link
           href="/"
-          className="size-9 flex items-center justify-center text-on-surface/30 hover:text-on-surface/60 transition-colors"
+          className="size-9 flex items-center justify-center text-on-surface/50 hover:text-on-surface/60 transition-colors"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
         </Link>
         <button
           onClick={onShowRanking}
-          className="size-9 flex items-center justify-center text-on-surface/30 hover:text-on-surface/60 transition-colors"
+          className="size-9 flex items-center justify-center text-on-surface/50 hover:text-on-surface/60 transition-colors"
           title="Ranking sesji"
         >
           <span className="material-symbols-outlined text-[18px]">leaderboard</span>
@@ -87,7 +87,7 @@ export default function GameHeader({
           </p>
         )}
         {round > 0 && (
-          <p className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+          <p className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest">
             Runda {round}
           </p>
         )}
@@ -153,7 +153,7 @@ export default function GameHeader({
               onClick={onShowSettings}
               className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 transition-colors bg-surface-highest/20 flex items-center justify-center"
             >
-              <span className="material-symbols-outlined text-[16px] text-on-surface/30">
+              <span className="material-symbols-outlined text-[16px] text-on-surface/40">
                 person
               </span>
             </button>

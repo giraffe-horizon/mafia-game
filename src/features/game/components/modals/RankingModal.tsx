@@ -54,7 +54,7 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
               Ranking
             </span>
           </div>
-          <p className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest mt-0.5">
+          <p className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest mt-0.5">
             {gameStatus === "finished" ? "Koniec gry" : `Runda ${round}`}
             {winner && ` · ${winner === "mafia" ? "Mafia" : "Miasto"} wygrywa`}
           </p>
@@ -62,7 +62,7 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
         <button
           onClick={onClose}
           aria-label="Zamknij"
-          className="text-on-surface/30 hover:text-on-surface/60"
+          className="text-on-surface/50 hover:text-on-surface/60"
         >
           <span className="material-symbols-outlined text-[20px]">close</span>
         </button>
@@ -75,14 +75,14 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
             <span className="material-symbols-outlined text-[32px] text-primary animate-spin">
               refresh
             </span>
-            <p className="font-display text-on-surface/30 uppercase tracking-widest text-xs">
+            <p className="font-display text-on-surface/40 uppercase tracking-widest text-xs">
               Ładowanie...
             </p>
           </div>
         )}
 
         {!loading && ranking.length === 0 && (
-          <p className="font-display text-on-surface/30 text-xs uppercase tracking-widest text-center py-8">
+          <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center py-8">
             Brak danych
           </p>
         )}
@@ -131,7 +131,7 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
                       {r.nickname}
                     </span>
                     {!r.isAlive && (
-                      <span className="material-symbols-outlined text-[12px] text-on-surface/30">
+                      <span className="material-symbols-outlined text-[12px] text-on-surface/40">
                         skull
                       </span>
                     )}
@@ -142,7 +142,7 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
                     )}
                   </div>
                   {r.missionsTotal > 0 && (
-                    <span className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+                    <span className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest">
                       misje: {r.missionsDone}/{r.missionsTotal}
                     </span>
                   )}
@@ -155,7 +155,7 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
                   >
                     {r.totalScore}
                   </span>
-                  <p className="font-display text-[10px] text-on-surface/30 uppercase tracking-widest">
+                  <p className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest">
                     pkt
                   </p>
                 </div>
@@ -164,7 +164,7 @@ export default function RankingModal({ isOpen, onClose, token }: RankingModalPro
 
             {/* Legend */}
             <div className="mt-4 border border-surface-highest p-3">
-              <p className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/30 mb-2">
+              <p className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/40 mb-2">
                 Punktacja
               </p>
               <div className="flex flex-col gap-1">

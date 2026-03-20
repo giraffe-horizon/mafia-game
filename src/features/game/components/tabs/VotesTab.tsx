@@ -12,7 +12,7 @@ export default function VotesTab() {
   if (isLobby) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
-        <span className="material-symbols-outlined text-[48px] text-on-surface/20">
+        <span className="material-symbols-outlined text-[48px] text-on-surface/40">
           how_to_vote
         </span>
         <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center">
@@ -95,7 +95,7 @@ export default function VotesTab() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8">
-      <span className="material-symbols-outlined text-[48px] text-on-surface/20">how_to_vote</span>
+      <span className="material-symbols-outlined text-[48px] text-on-surface/40">how_to_vote</span>
       <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center">
         Brak historii głosowań
       </p>

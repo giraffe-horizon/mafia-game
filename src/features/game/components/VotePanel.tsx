@@ -69,7 +69,7 @@ export default function VotePanel({
             onClick={() => onVote(p.playerId)}
             className="flex items-center gap-3 p-3 border border-surface-highest hover:border-primary/40 hover:bg-primary/5 active:opacity-70 transition-colors text-left"
           >
-            <span className="material-symbols-outlined text-[16px] text-on-surface/30">person</span>
+            <span className="material-symbols-outlined text-[16px] text-on-surface/50">person</span>
             <span className="font-display text-sm text-on-surface uppercase tracking-wide">
               {p.nickname}
             </span>

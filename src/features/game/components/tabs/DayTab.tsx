@@ -20,7 +20,7 @@ export default function DayTab() {
     return (
       <div className="flex-1 flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8">
-          <span className="material-symbols-outlined text-[48px] text-on-surface/20">bedtime</span>
+          <span className="material-symbols-outlined text-[48px] text-on-surface/40">bedtime</span>
           <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center">
             Trwa noc...
           </p>

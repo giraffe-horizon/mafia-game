@@ -86,12 +86,12 @@ export default function LogsTab() {
               .map((msg) => (
                 <div key={msg.id} className="border border-surface-highest p-3 relative">
                   <div className="absolute -top-1.5 left-3">
-                    <span className="font-display font-black text-[9px] uppercase tracking-widest text-on-surface/30 bg-surface-low px-1">
+                    <span className="font-display font-black text-[9px] uppercase tracking-widest text-on-surface/40 bg-surface-low px-1">
                       Depesza
                     </span>
                   </div>
                   <p className="font-display text-sm text-on-surface/80 mt-1">{msg.content}</p>
-                  <p className="font-display text-[10px] text-on-surface/30 mt-1 uppercase tracking-wider">
+                  <p className="font-display text-[10px] text-on-surface/40 mt-1 uppercase tracking-wider">
                     {new Date(msg.createdAt).toLocaleTimeString("pl-PL", {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -135,7 +135,7 @@ export default function LogsTab() {
           state?.messages.filter((m) => !m.eventType).length === 0 &&
           isHost && (
             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8">
-              <span className="material-symbols-outlined text-[48px] text-on-surface/20">
+              <span className="material-symbols-outlined text-[48px] text-on-surface/40">
                 assignment
               </span>
               <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center">

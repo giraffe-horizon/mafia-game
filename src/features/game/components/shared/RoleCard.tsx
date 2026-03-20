@@ -38,7 +38,7 @@ export default function RoleCard({ role, roleVisible, onToggle }: RoleCardProps)
 
   return (
     <div className="mx-4 mt-4">
-      <div className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/30 mb-1.5 pl-0.5">
+      <div className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/40 mb-1.5 pl-0.5">
         Twoja rola
       </div>
       <button
@@ -62,7 +62,7 @@ export default function RoleCard({ role, roleVisible, onToggle }: RoleCardProps)
                   Twoi wspólnicy są oznaczeni
                 </p>
               )}
-              <p className="text-on-surface/30 text-xs mt-1 font-display uppercase tracking-widest">
+              <p className="text-on-surface/40 text-xs mt-1 font-display uppercase tracking-widest">
                 stuknij aby ukryć
               </p>
             </div>
@@ -72,10 +72,10 @@ export default function RoleCard({ role, roleVisible, onToggle }: RoleCardProps)
           </div>
         ) : (
           <div className="flex items-center gap-3 py-1">
-            <span className="material-symbols-outlined text-[28px] text-on-surface/20">
+            <span className="material-symbols-outlined text-[28px] text-on-surface/50">
               visibility_off
             </span>
-            <p className="font-display font-black text-on-surface/30 uppercase tracking-widest text-xs">
+            <p className="font-display font-black text-on-surface/40 uppercase tracking-widest text-xs">
               Stuknij aby zobaczyć rolę
             </p>
             <div className="ml-auto">

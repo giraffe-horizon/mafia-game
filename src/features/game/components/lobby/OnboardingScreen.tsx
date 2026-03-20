@@ -142,7 +142,7 @@ export default function OnboardingScreen({
           </span>
         </button>
 
-        <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/20 text-center mt-4">
+        <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/40 text-center mt-4">
           ZATWIERDZENIE PIECZĘCIĄ GŁÓWNĄ // V.3
         </p>
       </div>

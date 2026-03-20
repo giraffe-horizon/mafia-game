@@ -142,7 +142,11 @@ export default function LobbyView({
                   <button
                     key={mode}
                     onClick={() => setGameMode(mode)}
-                    className={`flex-1 px-3 py-2.5 text-sm font-display border transition-all text-center ${gameMode === mode ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"}`}
+                    className={`flex-1 px-3 py-2.5 text-sm font-display font-bold border transition-all text-center uppercase tracking-wider ${
+                      gameMode === mode
+                        ? "bg-[rgba(255,180,172,0.15)] border-[#F0B8AE] text-[#F0B8AE]"
+                        : "bg-transparent border-[rgba(255,255,255,0.15)] text-[rgba(255,255,255,0.5)]"
+                    }`}
                   >
                     <span className="block font-bold">
                       {mode === "full" ? "Pełny" : "Uproszczony"}
@@ -219,7 +223,7 @@ export default function LobbyView({
             <div className="mt-4 pt-4 border-t border-surface-highest">
               <LobbyTransferGm players={nonHostPlayers} onTransfer={onTransferGm} />
             </div>
-            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/20 text-center mt-2">
+            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/40 text-center mt-2">
               OP: MAFIA_HELPER // V.3.0.1
             </p>
           </div>
