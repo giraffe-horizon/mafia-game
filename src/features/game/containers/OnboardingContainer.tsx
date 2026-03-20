@@ -34,11 +34,11 @@ export default function OnboardingContainer() {
   const initialSyncDone = useRef(false);
   const characterId = state?.currentPlayer?.character?.id;
   useEffect(() => {
-    if (characterId && !initialSyncDone.current) {
+    if (characterId && !initialSyncDone.current && !selectedCharacterId) {
       setSelectedCharacterId(characterId);
       initialSyncDone.current = true;
     }
-  }, [characterId, setSelectedCharacterId]);
+  }, [characterId, setSelectedCharacterId, selectedCharacterId]);
 
   if (!state) return null;
 
