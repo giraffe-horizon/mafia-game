@@ -45,7 +45,7 @@ export default function CharacterPicker({
             onClick={() => !isDisabled && onSelect(character.id)}
             disabled={isDisabled}
             className={`relative flex flex-col items-center gap-0 transition-all focus:outline-none ${
-              isDisabled ? "cursor-not-allowed opacity-70" : "hover:scale-[1.02]"
+              isDisabled ? "cursor-not-allowed opacity-70" : ""
             }`}
           >
             {/* Polaroid frame */}

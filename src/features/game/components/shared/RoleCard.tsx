@@ -43,7 +43,7 @@ export default function RoleCard({ role, roleVisible, onToggle }: RoleCardProps)
       </div>
       <button
         onClick={onToggle}
-        className={`w-full border p-4 cursor-pointer transition-all active:opacity-70 text-left ${tint}`}
+        className={`w-full border p-4 cursor-pointer transition-all active:opacity-70 text-left ${roleVisible ? tint : "bg-surface-highest/20 border-surface-highest"}`}
         aria-label={roleVisible ? "Ukryj rolę" : "Pokaż rolę"}
       >
         {roleVisible ? (

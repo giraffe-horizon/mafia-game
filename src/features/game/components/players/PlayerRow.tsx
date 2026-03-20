@@ -223,7 +223,7 @@ export default function PlayerRow({
       )}
 
       {/* Rename button for own player in lobby */}
-      {isLobby && player.isYou && !isEditing && !isHost && (
+      {onRename && isLobby && player.isYou && !isEditing && !isHost && (
         <button
           onClick={() => setIsEditing(true)}
           className="size-7 flex items-center justify-center text-on-surface/20 hover:text-on-surface/50 transition-colors"

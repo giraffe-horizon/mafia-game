@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCurrentPhase } from "@/features/game/hooks/useCurrentPhase";
@@ -66,10 +66,12 @@ export default function GameClient() {
     setChangingDecision(false);
   }, [phase, round, setChangingDecision]);
 
-  // Sync selected character from server state
+  // Sync selected character from server state (once, so polling doesn't override local picks)
+  const characterSyncDone = useRef(false);
   useEffect(() => {
-    if (state?.currentPlayer?.character) {
+    if (state?.currentPlayer?.character && !characterSyncDone.current) {
       setSelectedCharacterId(state.currentPlayer.character.id);
+      characterSyncDone.current = true;
     }
   }, [state?.currentPlayer?.character, setSelectedCharacterId]);
 
