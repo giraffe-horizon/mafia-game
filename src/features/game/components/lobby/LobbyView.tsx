@@ -104,35 +104,40 @@ export default function LobbyView({
               Udostępnij link
             </button>
 
-            {/* QR code — dossier style */}
-            <div className="flex flex-col items-center mt-4 relative z-10">
+            {/* QR code — full width dossier document */}
+            <div
+              className="mt-4 p-4 relative z-10"
+              style={{
+                background: "linear-gradient(135deg, #d7c3b0 0%, #c4af9d 50%, #b89e8a 100%)",
+                boxShadow: "2px 3px 8px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.05)",
+              }}
+            >
+              {/* Tape effect top */}
               <div
-                className="p-3 relative"
+                className="absolute -top-2 left-1/2 -translate-x-1/2 pointer-events-none z-20"
                 style={{
-                  background: "linear-gradient(135deg, #d7c3b0 0%, #c4af9d 50%, #b89e8a 100%)",
-                  boxShadow: "2px 3px 8px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.05)",
+                  width: "56px",
+                  height: "14px",
+                  background:
+                    "linear-gradient(180deg, rgba(215,195,176,0.5) 0%, rgba(215,195,176,0.35) 100%)",
+                  transform: "translateX(-50%) rotate(-1deg)",
                 }}
-              >
-                {/* Tape effect top */}
-                <div
-                  className="absolute -top-2 left-1/2 -translate-x-1/2 pointer-events-none z-20"
-                  style={{
-                    width: "56px",
-                    height: "14px",
-                    background:
-                      "linear-gradient(180deg, rgba(215,195,176,0.5) 0%, rgba(215,195,176,0.35) 100%)",
-                    transform: "translateX(-50%) rotate(-1deg)",
-                  }}
+              />
+              <div className="flex justify-center">
+                <QRCode
+                  value={joinUrl}
+                  size={256}
+                  bgColor="#d7c3b0"
+                  fgColor="#1a1a1a"
+                  style={{ width: "100%", height: "auto", maxWidth: "256px" }}
                 />
-                <QRCode value={joinUrl} size={160} bgColor="#d7c3b0" fgColor="#1a1a1a" />
-                {/* Label under QR */}
-                <p
-                  className="font-display text-[8px] uppercase tracking-[0.2em] text-center mt-2"
-                  style={{ color: "#5A5A4A" }}
-                >
-                  SKANUJ ABY DOŁĄCZYĆ // KOD: {gameCode}
-                </p>
               </div>
+              <p
+                className="font-display text-[9px] uppercase tracking-[0.2em] text-center mt-3"
+                style={{ color: "#5A5A4A" }}
+              >
+                SKANUJ ABY DOŁĄCZYĆ // KOD: {gameCode}
+              </p>
             </div>
           </div>
 
@@ -166,10 +171,10 @@ export default function LobbyView({
                   <button
                     key={mode}
                     onClick={() => setGameMode(mode)}
-                    className={`flex-1 px-3 py-2.5 text-sm font-display font-bold border transition-all text-center uppercase tracking-wider ${
+                    className={`flex-1 px-3 py-2.5 text-sm font-display font-bold border-2 transition-all text-center uppercase tracking-wider ${
                       gameMode === mode
-                        ? "bg-[rgba(255,180,172,0.15)] border-[#F0B8AE] text-[#F0B8AE]"
-                        : "bg-transparent border-[rgba(255,255,255,0.15)] text-[rgba(255,255,255,0.5)]"
+                        ? "bg-[rgba(255,180,172,0.25)] border-[#F0B8AE] text-[#F0B8AE] shadow-[0_0_12px_rgba(240,184,174,0.2)]"
+                        : "bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.25)] text-[rgba(255,255,255,0.7)] hover:border-[rgba(255,255,255,0.4)]"
                     }`}
                   >
                     <span className="block font-bold">
