@@ -50,7 +50,7 @@
 
 @layer base {
   body {
-    background: radial-gradient(ellipse at center, #2A2A2A 0%, #111111 100%);
+    background: radial-gradient(ellipse at center, #2a2a2a 0%, #111111 100%);
     background-attachment: fixed;
     color: #e8e0d8;
     font-family: "Space Grotesk", sans-serif;
@@ -192,7 +192,14 @@
 
   /* CRT surface for GM panel */
   .crt-surface {
-    background: linear-gradient(155deg, #3D4D3D 0%, #6B7D62 35%, #8FA085 55%, #5A6A52 80%, #3D4D3D 100%);
+    background: linear-gradient(
+      155deg,
+      #3d4d3d 0%,
+      #6b7d62 35%,
+      #8fa085 55%,
+      #5a6a52 80%,
+      #3d4d3d 100%
+    );
     border: 1px solid #3d5c3d;
     border-radius: 0 !important;
     position: relative;
