@@ -69,11 +69,14 @@ export default function VotePanel({
             key={p.playerId}
             disabled={pending}
             onClick={() => setPendingVoteTarget(p)}
-            className="flex items-center gap-3 p-3 border border-surface-highest hover:border-primary/40 hover:bg-primary/5 active:opacity-70 transition-colors text-left"
+            className="flex items-center gap-3 p-3 border border-surface-highest hover:border-primary/60 hover:bg-primary/5 active:opacity-70 transition-colors text-left"
           >
             <span className="material-symbols-outlined text-[16px] text-on-surface/50">person</span>
-            <span className="font-display text-sm text-on-surface uppercase tracking-wide">
+            <span className="font-display text-sm text-on-surface flex-1 uppercase tracking-wide">
               {p.nickname}
+            </span>
+            <span className="material-symbols-outlined text-[16px] text-on-surface/30">
+              chevron_right
             </span>
           </button>
         ))}

@@ -66,7 +66,7 @@ export function TabBar({ tabs, activeTab, onTabChange, notifications, className 
             <div className="relative">
               <span className="material-symbols-outlined text-[20px] leading-none">{tab.icon}</span>
               {hasNotification && !isActive && (
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border border-surface animate-pulse" />
+                <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-primary rounded-full border-2 border-background-dark" />
               )}
             </div>
             <span>{tab.label}</span>

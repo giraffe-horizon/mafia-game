@@ -102,7 +102,7 @@ export default function Home() {
       <div className="relative z-20 pb-4">
         <p
           className="font-display text-[8px] uppercase text-center"
-          style={{ color: "#5A5A4A", letterSpacing: "0.2em" }}
+          style={{ color: "#8A8A7A", letterSpacing: "0.2em" }}
         >
           ODDZIAŁ KONTRWYWIADU // DOKUMENT NR X-ALPHA
         </p>

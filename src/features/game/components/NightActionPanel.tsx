@@ -184,7 +184,7 @@ export default function NightActionPanel({
                 "flex items-center gap-3 p-3 border transition-colors text-left",
                 isBlocked
                   ? "border-surface-highest/30 text-on-surface/40 cursor-not-allowed"
-                  : "border-surface-highest hover:border-primary/40 hover:bg-primary/5 active:opacity-70"
+                  : "border-surface-highest hover:border-primary/60 hover:bg-primary/5 active:opacity-70"
               )}
             >
               <span className="material-symbols-outlined text-[16px] text-on-surface/50">
@@ -201,6 +201,11 @@ export default function NightActionPanel({
               {isBlockedDetective && (
                 <span className="font-display text-[10px] text-on-surface/40 uppercase tracking-widest">
                   sprawdzony
+                </span>
+              )}
+              {!isBlocked && (
+                <span className="material-symbols-outlined text-[16px] text-on-surface/30">
+                  chevron_right
                 </span>
               )}
             </button>

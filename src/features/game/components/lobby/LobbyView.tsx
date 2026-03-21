@@ -130,10 +130,10 @@ export default function LobbyView({
               <div className="flex justify-center">
                 <QRCode
                   value={joinUrl}
-                  size={256}
+                  size={180}
                   bgColor="#d7c3b0"
                   fgColor="#1a1a1a"
-                  style={{ width: "100%", height: "auto", maxWidth: "256px" }}
+                  style={{ width: "100%", height: "auto", maxWidth: "180px" }}
                 />
               </div>
               <p
@@ -293,9 +293,6 @@ export default function LobbyView({
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
               {starting ? "Startuję..." : "Rozpocznij grę"}
             </button>
-            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/30 text-center">
-              AUTORYZACJA WYMAGANA
-            </p>
             <div className="mt-4 pt-4 border-t border-surface-highest">
               <LobbyTransferGm players={nonHostPlayers} onTransfer={onTransferGm} />
             </div>
