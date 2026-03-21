@@ -114,9 +114,8 @@ describe("Edge Cases Tests", () => {
       // Test that leaveGame function works (basic functionality test)
       const leaveResult = await db.leaveGame(mockDb, playerResult!.token);
 
-      // The function should work regardless of success/failure
-      expect(typeof leaveResult.success).toBe("boolean");
-      expect(typeof leaveResult.error === "string" || leaveResult.error === undefined).toBe(true);
+      // Player leaving during active game should succeed (marks as dead)
+      expect(leaveResult.success).toBe(true);
     });
   });
 
@@ -331,21 +330,21 @@ describe("Edge Cases Tests", () => {
       const mafiaPlayers = gameState!.players.filter((p) => p.role === "mafia");
       const civilians = gameState!.players.filter((p) => p.role === "civilian");
 
-      const mafia1Token = playerTokens.find((t) => {
-        const playerState = mockDb
-          .prepare("SELECT * FROM game_players WHERE token = ?")
-          .bind(t)
-          .first() as { player_id: string } | null;
-        return playerState && playerState.player_id === mafiaPlayers[0].playerId;
-      })!;
+      let mafia1Token = "";
+      let mafia2Token = "";
 
-      const mafia2Token = playerTokens.find((t) => {
-        const playerState = mockDb
+      for (const t of playerTokens) {
+        const playerState = (await mockDb
           .prepare("SELECT * FROM game_players WHERE token = ?")
           .bind(t)
-          .first() as { player_id: string } | null;
-        return playerState && playerState.player_id === mafiaPlayers[1].playerId;
-      })!;
+          .first()) as { player_id: string } | null;
+        if (playerState && playerState.player_id === mafiaPlayers[0].playerId) {
+          mafia1Token = t;
+        }
+        if (playerState && playerState.player_id === mafiaPlayers[1].playerId) {
+          mafia2Token = t;
+        }
+      }
 
       // Mafia vote for different targets
       await db.submitAction(mockDb, mafia1Token, "kill", civilians[0].playerId);
@@ -528,13 +527,17 @@ describe("Edge Cases Tests", () => {
         (p) => !p.isHost && p.playerId !== deadPlayer.playerId
       )!;
 
-      const deadPlayerToken = playerTokens.find((t) => {
-        const playerState = mockDb
+      let deadPlayerToken = "";
+      for (const t of playerTokens) {
+        const playerState = (await mockDb
           .prepare("SELECT * FROM game_players WHERE token = ?")
           .bind(t)
-          .first() as { player_id: string } | null;
-        return playerState && playerState.player_id === deadPlayer.playerId;
-      })!;
+          .first()) as { player_id: string } | null;
+        if (playerState && playerState.player_id === deadPlayer.playerId) {
+          deadPlayerToken = t;
+          break;
+        }
+      }
 
       // Kill the player
       await mockDb
@@ -683,6 +686,173 @@ describe("Edge Cases Tests", () => {
       // Player operations should fail gracefully
       const playerState = await db.getGameState(mockDb, playerResult!.token);
       expect(playerState).toBeNull();
+    });
+  });
+
+  describe("Additional Edge Cases", () => {
+    it("should prevent GM from leaving game", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      for (let i = 0; i < 3; i++) {
+        await db.joinGame(mockDb, code, `Player${i}`);
+      }
+
+      await db.startGame(mockDb, hostToken, undefined, "simple");
+
+      // GM tries to leave game
+      const leaveResult = await db.leaveGame(mockDb, hostToken);
+
+      // GM leaving should be prevented
+      expect(leaveResult.success).toBe(false);
+      expect(leaveResult.error).toBeTruthy(); // Just check that there's an error message
+    });
+
+    it("should handle vote changing during voting phase", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const playerTokens = [];
+      for (let i = 0; i < 4; i++) {
+        const result = await db.joinGame(mockDb, code, `Player${i}`);
+        playerTokens.push(result!.token);
+      }
+
+      await db.startGame(mockDb, hostToken, undefined, "simple");
+      await db.changePhase(mockDb, hostToken, "day");
+      await db.changePhase(mockDb, hostToken, "voting");
+
+      const votingState = await db.getGameState(mockDb, hostToken);
+      const alivePlayers = votingState!.players.filter((p) => !p.isHost && p.isAlive);
+
+      // Player votes for A, then changes vote to B
+      await db.submitAction(mockDb, playerTokens[0], "vote", alivePlayers[0].playerId);
+      await db.submitAction(mockDb, playerTokens[0], "vote", alivePlayers[1].playerId);
+
+      // Other players vote for A
+      await db.submitAction(mockDb, playerTokens[1], "vote", alivePlayers[0].playerId);
+      await db.submitAction(mockDb, playerTokens[2], "vote", alivePlayers[0].playerId);
+
+      const postVoteState = await db.getGameState(mockDb, hostToken);
+
+      // Player B should have 1 vote (the changed vote), Player A should have 2 votes
+      const voteForA =
+        postVoteState!.voteTally!.results.find((r) => r.playerId === alivePlayers[0].playerId)
+          ?.votes || 0;
+      const voteForB =
+        postVoteState!.voteTally!.results.find((r) => r.playerId === alivePlayers[1].playerId)
+          ?.votes || 0;
+
+      expect(voteForA).toBe(2); // Two other players voted for A
+      expect(voteForB).toBe(1); // One player changed their vote to B
+    });
+
+    it("should handle mafia changing night action", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const playerTokens = [];
+      for (let i = 0; i < 5; i++) {
+        const result = await db.joinGame(mockDb, code, `Player${i}`);
+        playerTokens.push(result!.token);
+      }
+
+      await db.startGame(mockDb, hostToken);
+      const gameState = await db.getGameState(mockDb, hostToken);
+
+      const mafioso = gameState!.players.find((p) => p.role === "mafia")!;
+      const civilians = gameState!.players.filter((p) => p.role === "civilian");
+
+      let mafiaToken = "";
+      for (const t of playerTokens) {
+        const playerState = (await mockDb
+          .prepare("SELECT * FROM game_players WHERE token = ?")
+          .bind(t)
+          .first()) as { player_id: string } | null;
+        if (playerState && playerState.player_id === mafioso.playerId) {
+          mafiaToken = t;
+          break;
+        }
+      }
+
+      // Mafia first targets A, then changes to target B
+      await db.submitAction(mockDb, mafiaToken, "kill", civilians[0].playerId);
+      await db.submitAction(mockDb, mafiaToken, "kill", civilians[1].playerId);
+
+      // Advance to day - B should be killed, not A
+      await db.changePhase(mockDb, hostToken, "day");
+
+      const dayState = await db.getGameState(mockDb, hostToken);
+      const deadPlayer = dayState!.players.find((p) => !p.isAlive && !p.isHost);
+
+      expect(deadPlayer!.playerId).toBe(civilians[1].playerId);
+      expect(dayState!.lastNightSummary?.killedNickname).toBe(civilians[1].nickname);
+    });
+
+    it("should handle transfer GM during game - old GM becomes civilian", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "OldGM");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      const playerTokens = [];
+      for (let i = 0; i < 4; i++) {
+        const result = await db.joinGame(mockDb, code, `Player${i}`);
+        playerTokens.push(result!.token);
+      }
+
+      await db.startGame(mockDb, hostToken, undefined, "simple");
+
+      const gameState = await db.getGameState(mockDb, hostToken);
+      const newGmTarget = gameState!.players.find((p) => !p.isHost && p.isAlive)!;
+
+      // Transfer GM during active game
+      await db.transferGm(mockDb, hostToken, newGmTarget.playerId);
+
+      const postTransferState = await db.getGameState(mockDb, hostToken);
+      const oldGm = postTransferState!.players.find((p) => p.nickname === "OldGM")!;
+      const newGm = postTransferState!.players.find((p) => p.playerId === newGmTarget.playerId)!;
+
+      expect(oldGm.isHost).toBe(false);
+      expect(oldGm.role).toBe("civilian"); // Old GM should become civilian
+      expect(newGm.isHost).toBe(true);
+      // New GM role might be null (GM role is handled by isHost flag)
+    });
+
+    it("should handle rematch - behavior with new players", async () => {
+      const { token: hostToken } = await db.createGame(mockDb, "Host");
+      const hostState = await db.getGameState(mockDb, hostToken);
+      const code = hostState!.game.code;
+
+      for (let i = 0; i < 3; i++) {
+        await db.joinGame(mockDb, code, `Player${i}`);
+      }
+
+      await db.startGame(mockDb, hostToken, undefined, "simple");
+
+      // Force game to end
+      await mockDb
+        .prepare("UPDATE games SET status = 'finished', winner = 'town' WHERE id = ?")
+        .bind(hostState!.game.id)
+        .run();
+
+      // Rematch
+      await db.rematch(mockDb, hostToken);
+
+      const postRematchState = await db.getGameState(mockDb, hostToken);
+      expect(postRematchState!.game.status).toBe("lobby");
+
+      // Try to join with new player - should work (rematch returns to lobby, allows new players)
+      const newPlayerResult = await db.joinGame(mockDb, code, "NewPlayer");
+
+      expect(newPlayerResult).not.toBeNull();
+      expect(newPlayerResult!.success).toBe(true);
+
+      const finalState = await db.getGameState(mockDb, hostToken);
+      const newPlayer = finalState!.players.find((p) => p.nickname === "NewPlayer");
+      expect(newPlayer).toBeDefined();
     });
   });
 });
