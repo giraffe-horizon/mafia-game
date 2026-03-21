@@ -16,6 +16,9 @@
     ]
   },
 
+  // Durable Object migrations
+  "migrations": [{ "tag": "v1", "new_classes": ["GameRoom"] }],
+
   // D1 database binding (same as main wrangler.jsonc)
   "d1_databases": [
     {

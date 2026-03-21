@@ -11,7 +11,7 @@ export type WsServerMessage =
   | { type: "error"; code: string; message: string }
   | { type: "pong" };
 
-// WebSocket connection state
+// WebSocket connection state (stored via serializeAttachment/deserializeAttachment)
 export interface ConnectionState {
   gameId: string;
   token: string;
@@ -24,4 +24,5 @@ export interface ConnectionState {
 export interface Env {
   GAME_ROOM: DurableObjectNamespace;
   DB: D1Database;
+  NOTIFY_SECRET: string;
 }

@@ -5,25 +5,52 @@
 import type { WsClientMessage, WsServerMessage, ConnectionState, Env } from "./types";
 
 export class GameRoom extends DurableObject {
-  private connectionStates = new Map<WebSocket, ConnectionState>();
-  private sequenceNumber = 0;
-
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
   }
+
+  // ---------------------------------------------------------------------------
+  // Helpers: attachment-based connection state (survives hibernation)
+  // ---------------------------------------------------------------------------
+
+  private getState(ws: WebSocket): ConnectionState | null {
+    try {
+      return ws.deserializeAttachment() as ConnectionState | null;
+    } catch {
+      return null;
+    }
+  }
+
+  private setState(ws: WebSocket, state: ConnectionState): void {
+    ws.serializeAttachment(state);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers: sequenceNumber persisted in DO storage
+  // ---------------------------------------------------------------------------
+
+  private async nextSeq(): Promise<number> {
+    const current = (await this.ctx.storage.get<number>("seq")) ?? 0;
+    const next = current + 1;
+    await this.ctx.storage.put("seq", next);
+    return next;
+  }
+
+  // ---------------------------------------------------------------------------
+  // HTTP fetch handler
+  // ---------------------------------------------------------------------------
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
     if (request.method === "GET" && url.pathname === "/websocket") {
-      // Extract gameId from URL parameters
       const gameId = url.searchParams.get("gameId");
       if (!gameId) {
         return new Response("Missing gameId parameter", { status: 400 });
       }
 
-      // Check rate limit - max 5 connections per DO
-      if (this.connectionStates.size >= 5) {
+      // Rate limit — use getWebSockets() (survives hibernation)
+      if (this.ctx.getWebSockets().length >= 5) {
         return new Response("Too many connections", { status: 429 });
       }
 
@@ -31,10 +58,9 @@ export class GameRoom extends DurableObject {
       const pair = new WebSocketPair();
       const [client, server] = Object.values(pair);
 
-      // Accept the WebSocket connection
       this.ctx.acceptWebSocket(server);
 
-      // Initialize connection state (unauthenticated)
+      // Store connection state in attachment (survives hibernation)
       const connectionState: ConnectionState = {
         gameId,
         token: "",
@@ -42,24 +68,16 @@ export class GameRoom extends DurableObject {
         authenticated: false,
         connectedAt: Date.now(),
       };
-      this.connectionStates.set(server, connectionState);
+      this.setState(server, connectionState);
 
-      // Send auth challenge - client has 5 seconds to authenticate
+      // Send auth challenge
       this.sendMessage(server, {
         type: "error",
         code: "AUTH_REQUIRED",
         message: "Send auth message within 5 seconds",
       });
 
-      // Set timeout for authentication
-      setTimeout(() => {
-        const state = this.connectionStates.get(server);
-        if (state && !state.authenticated) {
-          console.log(`Disconnecting unauthenticated connection for game ${gameId}`);
-          server.close(1008, "Authentication timeout");
-          this.connectionStates.delete(server);
-        }
-      }, 5000);
+      // NOTE: No setTimeout — auth timeout is checked in webSocketMessage
 
       return new Response(null, {
         status: 101,
@@ -67,14 +85,19 @@ export class GameRoom extends DurableObject {
       });
     }
 
-    // HTTP endpoint to trigger broadcasts
+    // HTTP endpoint to trigger broadcasts (called by API routes)
     if (request.method === "POST" && url.pathname === "/notify") {
+      // Authorize with shared secret
+      const secret = request.headers.get("X-Notify-Secret");
+      if (!secret || secret !== this.env.NOTIFY_SECRET) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
       const gameId = url.searchParams.get("gameId");
       if (!gameId) {
         return new Response("Missing gameId parameter", { status: 400 });
       }
 
-      // Broadcast updated game state to all authenticated connections
       await this.broadcastGameState(gameId);
       return new Response("OK");
     }
@@ -82,9 +105,26 @@ export class GameRoom extends DurableObject {
     return new Response("Not found", { status: 404 });
   }
 
-  // WebSocket message handler (Hibernation API)
+  // ---------------------------------------------------------------------------
+  // WebSocket Hibernation API handlers
+  // ---------------------------------------------------------------------------
+
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     try {
+      const state = this.getState(ws);
+
+      if (!state) {
+        ws.close(1008, "Connection state lost");
+        return;
+      }
+
+      // Auth timeout check (replaces setTimeout which doesn't survive hibernation)
+      if (!state.authenticated && Date.now() - state.connectedAt > 5000) {
+        console.log(`Disconnecting unauthenticated connection for game ${state.gameId}`);
+        ws.close(1008, "Authentication timeout");
+        return;
+      }
+
       if (typeof message !== "string") {
         this.sendMessage(ws, {
           type: "error",
@@ -95,20 +135,14 @@ export class GameRoom extends DurableObject {
       }
 
       const parsedMessage: WsClientMessage = JSON.parse(message);
-      const connectionState = this.connectionStates.get(ws);
-
-      if (!connectionState) {
-        ws.close(1008, "Connection state lost");
-        return;
-      }
 
       switch (parsedMessage.type) {
         case "auth":
-          await this.handleAuth(ws, parsedMessage.token, connectionState);
+          await this.handleAuth(ws, parsedMessage.token, state);
           break;
 
         case "ping":
-          if (!connectionState.authenticated) {
+          if (!state.authenticated) {
             this.sendMessage(ws, {
               type: "error",
               code: "NOT_AUTHENTICATED",
@@ -132,46 +166,39 @@ export class GameRoom extends DurableObject {
     }
   }
 
-  // WebSocket close handler (Hibernation API)
   async webSocketClose(ws: WebSocket, code: number, reason: string): Promise<void> {
-    const connectionState = this.connectionStates.get(ws);
-    if (connectionState) {
+    const state = this.getState(ws);
+    if (state) {
       console.log(
-        `WebSocket closed for game ${connectionState.gameId}, player ${connectionState.playerId}, code: ${code}, reason: ${reason}`
+        `WebSocket closed for game ${state.gameId}, player ${state.playerId}, code: ${code}, reason: ${reason}`
       );
-      this.connectionStates.delete(ws);
     }
   }
 
-  // WebSocket error handler (Hibernation API)
   async webSocketError(ws: WebSocket, error: unknown): Promise<void> {
     console.error("WebSocket error:", error);
-    const connectionState = this.connectionStates.get(ws);
-    if (connectionState) {
-      console.log(
-        `WebSocket error for game ${connectionState.gameId}, player ${connectionState.playerId}`
-      );
-      this.connectionStates.delete(ws);
+    const state = this.getState(ws);
+    if (state) {
+      console.log(`WebSocket error for game ${state.gameId}, player ${state.playerId}`);
     }
   }
 
-  // Alarm handler - log connection status every 10 seconds
+  // Alarm handler
   async alarm(): Promise<void> {
-    console.log(`GameRoom alarm: ${this.connectionStates.size} active connections`);
+    const sockets = this.ctx.getWebSockets();
+    console.log(`GameRoom alarm: ${sockets.length} active connections`);
 
-    // Set next alarm in 10 seconds
-    const now = Date.now();
-    await this.ctx.storage.setAlarm(now + 10000);
+    if (sockets.length > 0) {
+      await this.ctx.storage.setAlarm(Date.now() + 10000);
+    }
   }
 
-  // Authenticate connection and send initial game state
-  private async handleAuth(
-    ws: WebSocket,
-    token: string,
-    connectionState: ConnectionState
-  ): Promise<void> {
+  // ---------------------------------------------------------------------------
+  // Auth
+  // ---------------------------------------------------------------------------
+
+  private async handleAuth(ws: WebSocket, token: string, state: ConnectionState): Promise<void> {
     try {
-      // Query player from database using token
       const playerRow = await this.env.DB.prepare(
         "SELECT game_id, player_id, nickname FROM game_players WHERE token = ?"
       )
@@ -181,45 +208,45 @@ export class GameRoom extends DurableObject {
       if (!playerRow) {
         this.sendMessage(ws, { type: "error", code: "INVALID_TOKEN", message: "Invalid token" });
         ws.close(1008, "Invalid token");
-        this.connectionStates.delete(ws);
         return;
       }
 
-      // Verify gameId matches
-      if (playerRow.game_id !== connectionState.gameId) {
+      if (playerRow.game_id !== state.gameId) {
         this.sendMessage(ws, {
           type: "error",
           code: "GAME_MISMATCH",
           message: "Token does not belong to this game",
         });
         ws.close(1008, "Game mismatch");
-        this.connectionStates.delete(ws);
         return;
       }
 
-      // Update connection state
-      connectionState.token = token;
-      connectionState.playerId = playerRow.player_id;
-      connectionState.authenticated = true;
+      // Update connection state in attachment
+      state.token = token;
+      state.playerId = playerRow.player_id;
+      state.authenticated = true;
+      this.setState(ws, state);
 
-      console.log(`Player ${playerRow.nickname} authenticated in game ${connectionState.gameId}`);
+      console.log(`Player ${playerRow.nickname} authenticated in game ${state.gameId}`);
 
-      // Get game state and send to client
-      const gameState = await this.getGameState(connectionState.gameId);
+      const gameState = await this.getGameState(state.gameId);
+      const seq = await this.nextSeq();
       this.sendMessage(ws, {
         type: "state",
         payload: gameState,
-        seq: ++this.sequenceNumber,
+        seq,
       });
     } catch (error) {
       console.error("Auth error:", error);
       this.sendMessage(ws, { type: "error", code: "AUTH_ERROR", message: "Authentication failed" });
       ws.close(1008, "Authentication error");
-      this.connectionStates.delete(ws);
     }
   }
 
-  // Send message to WebSocket client
+  // ---------------------------------------------------------------------------
+  // Messaging
+  // ---------------------------------------------------------------------------
+
   private sendMessage(ws: WebSocket, message: WsServerMessage): void {
     try {
       ws.send(JSON.stringify(message));
@@ -228,25 +255,29 @@ export class GameRoom extends DurableObject {
     }
   }
 
-  // Broadcast game state to all authenticated connections for a game
+  // Broadcast game state to all authenticated connections (uses getWebSockets, survives hibernation)
   private async broadcastGameState(gameId: string): Promise<void> {
     const gameState = await this.getGameState(gameId);
+    const seq = await this.nextSeq();
 
-    for (const [ws, state] of this.connectionStates.entries()) {
-      if (state.authenticated && state.gameId === gameId) {
+    for (const ws of this.ctx.getWebSockets()) {
+      const state = this.getState(ws);
+      if (state?.authenticated && state.gameId === gameId) {
         this.sendMessage(ws, {
           type: "state",
           payload: gameState,
-          seq: ++this.sequenceNumber,
+          seq,
         });
       }
     }
   }
 
-  // Simple game state query (simplified version of getGameState from src/db/queries/game.ts)
+  // ---------------------------------------------------------------------------
+  // Game state query
+  // ---------------------------------------------------------------------------
+
   private async getGameState(gameId: string): Promise<any> {
     try {
-      // Get basic game info
       const game = await this.env.DB.prepare(
         "SELECT id, code, status, phase, round, winner, config FROM games WHERE id = ?"
       )
@@ -265,7 +296,6 @@ export class GameRoom extends DurableObject {
         return { error: "Game not found" };
       }
 
-      // Get players
       const { results: players } = await this.env.DB.prepare(
         "SELECT player_id, nickname, role, is_alive, is_host FROM game_players WHERE game_id = ? ORDER BY is_host DESC, nickname ASC"
       )
@@ -319,8 +349,8 @@ Manual Testing Instructions:
    ws.onopen = () => ws.send(JSON.stringify({ type: 'auth', token: 'your-player-token' }));
    ws.send(JSON.stringify({ type: 'ping' }));
 
-4. Test HTTP notification:
-   curl -X POST "https://your-worker-domain.workers.dev/notify?gameId=test123"
+4. Test HTTP notification (requires X-Notify-Secret header):
+   curl -X POST -H "X-Notify-Secret: your-secret" "https://your-worker-domain.workers.dev/notify?gameId=test123"
 
 5. Expected flow:
    - Connect -> receive auth challenge
