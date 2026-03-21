@@ -256,19 +256,59 @@ export default function LobbyView({
                 </SectionHeader>
                 <div className="flex items-center gap-3">
                   <button
+                    role="switch"
+                    aria-checked={secretVoting}
                     onClick={() => setSecretVoting(!secretVoting)}
-                    className={`flex items-center gap-2 px-3 py-2 text-sm font-display uppercase tracking-wider border-2 transition-all ${
-                      secretVoting
-                        ? "bg-stamp-green/30 border-stamp-green text-white shadow-[0_0_10px_rgba(122,184,122,0.3)]"
-                        : "border-white/20 text-white/60 hover:border-white/40 hover:text-white/80"
-                    }`}
+                    className="group flex items-center gap-3 cursor-pointer select-none"
                   >
-                    <span
-                      className={`material-symbols-outlined text-[16px] ${secretVoting ? "text-white" : "text-white/60"}`}
+                    {/* Track */}
+                    <div
+                      className={`relative w-12 h-6 border transition-all duration-300 flex-shrink-0 ${
+                        secretVoting
+                          ? "bg-stamp-green/20 border-stamp-green shadow-[0_0_8px_rgba(122,184,122,0.4)]"
+                          : "bg-black/40 border-white/20 group-hover:border-white/35"
+                      }`}
                     >
-                      {secretVoting ? "visibility_off" : "visibility"}
+                      {/* Corner marks — military feel */}
+                      <span
+                        className={`absolute top-0 left-0 w-1.5 h-1.5 border-t border-l transition-colors duration-300 ${secretVoting ? "border-stamp-green" : "border-white/30"}`}
+                      />
+                      <span
+                        className={`absolute top-0 right-0 w-1.5 h-1.5 border-t border-r transition-colors duration-300 ${secretVoting ? "border-stamp-green" : "border-white/30"}`}
+                      />
+                      <span
+                        className={`absolute bottom-0 left-0 w-1.5 h-1.5 border-b border-l transition-colors duration-300 ${secretVoting ? "border-stamp-green" : "border-white/30"}`}
+                      />
+                      <span
+                        className={`absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r transition-colors duration-300 ${secretVoting ? "border-stamp-green" : "border-white/30"}`}
+                      />
+
+                      {/* Knob */}
+                      <div
+                        className={`absolute top-0.5 w-5 h-5 transition-all duration-300 flex items-center justify-center ${
+                          secretVoting
+                            ? "left-[calc(100%-1.375rem)] bg-stamp-green shadow-[0_0_6px_rgba(122,184,122,0.7)]"
+                            : "left-0.5 bg-white/20"
+                        }`}
+                      >
+                        <span
+                          className={`material-symbols-outlined text-[11px] transition-colors duration-300 ${
+                            secretVoting ? "text-black" : "text-white/40"
+                          }`}
+                        >
+                          {secretVoting ? "visibility_off" : "visibility"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Label */}
+                    <span
+                      className={`font-display text-sm uppercase tracking-wider transition-colors duration-300 ${
+                        secretVoting ? "text-white" : "text-white/50 group-hover:text-white/70"
+                      }`}
+                    >
+                      Tajne głosowanie
                     </span>
-                    Tajne głosowanie
                   </button>
                 </div>
                 <p className="text-white/80 text-xs mt-2 font-mono">
