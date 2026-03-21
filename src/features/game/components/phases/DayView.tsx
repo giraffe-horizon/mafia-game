@@ -3,6 +3,7 @@ import DeadSpectatorView from "@/features/game/components/shared/DeadSpectatorVi
 import RoleCard from "@/features/game/components/shared/RoleCard";
 import PhaseIndicator from "@/features/game/components/shared/PhaseIndicator";
 import { Stamp } from "@/components/ui";
+import { useMemo } from "react";
 
 interface DayViewProps {
   isHost: boolean;
@@ -27,6 +28,8 @@ export default function DayView({
   detectiveResult,
   lastNightSummary,
 }: DayViewProps) {
+  const aliveNonHost = useMemo(() => players.filter((p) => !p.isHost && p.isAlive), [players]);
+  const totalAlive = aliveNonHost.length;
   return (
     <div className="bg-background min-h-full">
       {/* Role card for alive non-host players (dead players see all roles via DeadSpectatorView) */}
@@ -109,20 +112,14 @@ export default function DayView({
               )}
 
               {/* Game status */}
-              {(() => {
-                const aliveNonHost = players.filter((p) => !p.isHost && p.isAlive);
-                const totalAlive = aliveNonHost.length;
-                return (
-                  <div className="flex items-center justify-between">
-                    <span className="font-display text-xs uppercase tracking-widest text-on-surface/50">
-                      Agenci w grze:
-                    </span>
-                    <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface">
-                      {totalAlive} osób
-                    </span>
-                  </div>
-                );
-              })()}
+              <div className="flex items-center justify-between">
+                <span className="font-display text-xs uppercase tracking-widest text-on-surface/50">
+                  Agenci w grze:
+                </span>
+                <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface">
+                  {totalAlive} osób
+                </span>
+              </div>
 
               {/* Instructions */}
               <p className="font-display text-xs text-on-surface/60 pt-2 border-t border-on-surface/10">
@@ -132,37 +129,34 @@ export default function DayView({
           </div>
 
           {/* Alive players list */}
-          {(() => {
-            const aliveNonHost = players.filter((p) => !p.isHost && p.isAlive);
-            return aliveNonHost.length > 0 ? (
-              <div className="mt-3 border border-surface-highest bg-surface-highest/5">
-                <div className="border-b border-surface-highest px-3 py-2 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[14px] text-on-surface/50">
-                    group
-                  </span>
-                  <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/50">
-                    Żywi agenci
-                  </span>
-                </div>
-                <div className="p-3">
-                  <div className="flex flex-wrap gap-2">
-                    {aliveNonHost.map((p) => (
-                      <div
-                        key={p.playerId}
-                        className={`px-2 py-1 border border-surface-highest text-xs font-display font-black uppercase tracking-widest ${
-                          p.isYou
-                            ? "text-amber-400 border-amber-400/40 bg-amber-400/5"
-                            : "text-on-surface/70"
-                        }`}
-                      >
-                        {p.nickname}
-                      </div>
-                    ))}
-                  </div>
+          {aliveNonHost.length > 0 && (
+            <div className="mt-3 border border-surface-highest bg-surface-highest/5">
+              <div className="border-b border-surface-highest px-3 py-2 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[14px] text-on-surface/50">
+                  group
+                </span>
+                <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/50">
+                  Żywi agenci
+                </span>
+              </div>
+              <div className="p-3">
+                <div className="flex flex-wrap gap-2">
+                  {aliveNonHost.map((p) => (
+                    <div
+                      key={p.playerId}
+                      className={`px-2 py-1 border border-surface-highest text-xs font-display font-black uppercase tracking-widest ${
+                        p.isYou
+                          ? "text-amber-400 border-amber-400/40 bg-amber-400/5"
+                          : "text-on-surface/70"
+                      }`}
+                    >
+                      {p.nickname}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ) : null;
-          })()}
+            </div>
+          )}
         </div>
       )}
 

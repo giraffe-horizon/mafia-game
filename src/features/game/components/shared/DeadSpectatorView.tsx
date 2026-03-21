@@ -1,4 +1,4 @@
-import { ROLE_LABELS } from "@/lib/constants";
+import { ROLE_LABELS, ROLE_BADGE_COLORS } from "@/lib/constants";
 import type { PublicPlayer } from "@/db/types";
 import { Stamp } from "@/components/ui";
 
@@ -8,13 +8,6 @@ interface DeadSpectatorViewProps {
   phase?: string;
   round?: number;
 }
-
-const ROLE_COLORS: Record<string, string> = {
-  mafia: "text-red-400 border-red-800/50 bg-red-950/20",
-  detective: "text-blue-400 border-blue-800/50 bg-blue-950/20",
-  doctor: "text-green-400 border-green-800/50 bg-green-950/20",
-  civilian: "text-on-surface/60 border-surface-highest bg-surface-highest/20",
-};
 
 export default function DeadSpectatorView({
   currentPlayer,
@@ -170,7 +163,7 @@ export default function DeadSpectatorView({
               </span>
               {p.role ? (
                 <span
-                  className={`font-display font-black text-[10px] uppercase tracking-widest px-2 py-1 border ${ROLE_COLORS[p.role] ?? ROLE_COLORS.civilian}`}
+                  className={`font-display font-black text-[10px] uppercase tracking-widest px-2 py-1 border ${ROLE_BADGE_COLORS[p.role] ?? ROLE_BADGE_COLORS.civilian}`}
                 >
                   {ROLE_LABELS[p.role] ?? p.role}
                 </span>
