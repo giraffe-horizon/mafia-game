@@ -85,14 +85,8 @@ export class GameRoom extends DurableObject {
       });
     }
 
-    // HTTP endpoint to trigger broadcasts (called by API routes)
+    // HTTP endpoint to trigger broadcasts (called by entry worker after secret validation)
     if (request.method === "POST" && url.pathname === "/notify") {
-      // Authorize with shared secret
-      const secret = request.headers.get("X-Notify-Secret");
-      if (!secret || secret !== this.env.NOTIFY_SECRET) {
-        return new Response("Unauthorized", { status: 401 });
-      }
-
       const gameId = url.searchParams.get("gameId");
       if (!gameId) {
         return new Response("Missing gameId parameter", { status: 400 });

@@ -24,7 +24,7 @@ export default {
         headers: {
           "Access-Control-Allow-Origin": getAllowedOrigin(origin),
           "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Notify-Secret",
           "Access-Control-Max-Age": "86400",
         },
       });
@@ -71,6 +71,12 @@ export default {
 
     // HTTP notification route: /notify?gameId=XXX
     if (url.pathname === "/notify" && request.method === "POST") {
+      // Validate shared secret at the entry worker level
+      const secret = request.headers.get("X-Notify-Secret");
+      if (!secret || secret !== env.NOTIFY_SECRET) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
       const gameId = url.searchParams.get("gameId");
       if (!gameId) {
         return new Response("Missing gameId parameter", { status: 400 });
@@ -85,7 +91,7 @@ export default {
       const id = env.GAME_ROOM.idFromName(gameId);
       const stub = env.GAME_ROOM.get(id);
 
-      // Forward notification to Durable Object
+      // Forward notification to Durable Object (no secret needed — already validated)
       const doRequest = new Request(`${url.origin}/notify?gameId=${gameId}`, {
         method: "POST",
       });
@@ -143,7 +149,10 @@ function addCorsHeaders(response: Response, requestOrigin: string | null): Respo
 
   newResponse.headers.set("Access-Control-Allow-Origin", getAllowedOrigin(requestOrigin));
   newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  newResponse.headers.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Notify-Secret"
+  );
 
   return newResponse;
 }
