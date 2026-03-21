@@ -184,7 +184,7 @@ export default function LobbyView({
                     <span className="block text-xs opacity-75 mt-0.5">
                       {mode === "full" ? "Mafia + Policjant + Lekarz" : "Mafia vs Cywile"}
                     </span>
-                    <span className="block text-xs opacity-55">
+                    <span className="block text-xs opacity-70">
                       min. {mode === "full" ? MIN_PLAYERS_FULL : MIN_PLAYERS_SIMPLE} graczy
                     </span>
                   </button>
@@ -213,7 +213,7 @@ export default function LobbyView({
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setMafiaCount(0)}
-                    className={`px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/40 text-stamp-green hover:border-stamp-green/50"}`}
+                    className={`px-3 py-2 text-sm font-display uppercase tracking-wider border-2 transition-all ${mafiaCount === 0 ? "bg-stamp-green/30 border-stamp-green text-white shadow-[0_0_10px_rgba(122,184,122,0.3)]" : "border-white/20 text-white/60 hover:border-white/40 hover:text-white/80"}`}
                   >
                     Auto ({autoMafiaCount(nonHostPlayers.length)})
                   </button>
@@ -224,7 +224,7 @@ export default function LobbyView({
                     <button
                       key={n}
                       onClick={() => setMafiaCount(n)}
-                      className={`w-10 h-10 text-sm font-bold font-display border transition-all ${mafiaCount === n ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/40 text-stamp-green hover:border-stamp-green/50"}`}
+                      className={`w-10 h-10 text-sm font-bold font-display border-2 transition-all ${mafiaCount === n ? "bg-stamp-green/30 border-stamp-green text-white shadow-[0_0_10px_rgba(122,184,122,0.3)]" : "border-white/20 text-white/60 hover:border-white/40 hover:text-white/80"}`}
                     >
                       {n}
                     </button>
@@ -257,14 +257,14 @@ export default function LobbyView({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setSecretVoting(!secretVoting)}
-                    className={`flex items-center gap-2 px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${
+                    className={`flex items-center gap-2 px-3 py-2 text-sm font-display uppercase tracking-wider border-2 transition-all ${
                       secretVoting
-                        ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green"
-                        : "border-stamp-green/40 text-stamp-green hover:border-stamp-green/50"
+                        ? "bg-stamp-green/30 border-stamp-green text-white shadow-[0_0_10px_rgba(122,184,122,0.3)]"
+                        : "border-white/20 text-white/60 hover:border-white/40 hover:text-white/80"
                     }`}
                   >
                     <span
-                      className={`material-symbols-outlined text-[16px] ${secretVoting ? "text-stamp-green" : "text-stamp-green"}`}
+                      className={`material-symbols-outlined text-[16px] ${secretVoting ? "text-white" : "text-white/60"}`}
                     >
                       {secretVoting ? "visibility_off" : "visibility"}
                     </span>
