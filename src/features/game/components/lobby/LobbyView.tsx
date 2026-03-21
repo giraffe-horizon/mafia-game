@@ -2,7 +2,6 @@
 
 import QRCode from "react-qr-code";
 import type { PublicPlayer } from "@/db";
-import LobbyTransferGm from "@/features/game/components/lobby/LobbyTransferGm";
 import { SectionHeader, InfoCard } from "@/components/ui";
 import {
   autoMafiaCount,
@@ -27,7 +26,6 @@ interface LobbyViewProps {
   setSecretVoting: (secretVoting: boolean) => void;
   starting: boolean;
   onStart: () => void;
-  onTransferGm: (playerId: string) => void;
 }
 
 export default function LobbyView({
@@ -46,7 +44,6 @@ export default function LobbyView({
   setSecretVoting,
   starting,
   onStart,
-  onTransferGm,
 }: LobbyViewProps) {
   const minPlayers = gameMode === "full" ? MIN_PLAYERS_FULL : MIN_PLAYERS_SIMPLE;
 
@@ -293,9 +290,6 @@ export default function LobbyView({
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
               {starting ? "Startuję..." : "Rozpocznij grę"}
             </button>
-            <div className="mt-4 pt-4 border-t border-surface-highest">
-              <LobbyTransferGm players={nonHostPlayers} onTransfer={onTransferGm} />
-            </div>
             <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/40 text-center mt-2">
               OP: MAFIA_HELPER // V.3.0.1
             </p>

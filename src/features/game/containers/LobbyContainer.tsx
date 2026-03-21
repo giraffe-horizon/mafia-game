@@ -11,7 +11,6 @@ export default function LobbyContainer() {
   const state = useGameStore((s) => s.state);
   const starting = useGameStore((s) => s.starting);
   const startGame = useGameStore((s) => s.startGame);
-  const transferGameMaster = useGameStore((s) => s.transferGameMaster);
 
   const [copied, setCopied] = useState(false);
   const [mafiaCount, setMafiaCount] = useState(0);
@@ -65,7 +64,6 @@ export default function LobbyContainer() {
       setSecretVoting={setSecretVoting}
       starting={starting}
       onStart={() => startGame(gameMode, mafiaCount, secretVoting)}
-      onTransferGm={(playerId: string) => transferGameMaster(playerId)}
     />
   );
 }
