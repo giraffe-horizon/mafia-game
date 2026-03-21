@@ -207,7 +207,7 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
         // Auto-switch active tab on phase change
         if (newPhase === "night") get().setActiveTab("night");
         else if (newPhase === "day") get().setActiveTab("day");
-        else if (newPhase === "voting") get().setActiveTab("votes");
+        else if (newPhase === "voting") get().setActiveTab("archive");
         // review/ended: stay on current tab
 
         // Set notification badges for inactive tabs when phase changes
@@ -216,9 +216,9 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
           // Nowe wyniki nocy - badge na "Noc" tab
           get().setTabNotification("night", true);
         }
-        if (newPhase === "voting" && currentTab !== "votes") {
-          // Nowe głosowanie - badge na "Głosy" tab
-          get().setTabNotification("votes", true);
+        if (newPhase === "voting" && currentTab !== "archive") {
+          // Nowe głosowanie - badge na "Archiwum" tab
+          get().setTabNotification("archive", true);
         }
       }
 

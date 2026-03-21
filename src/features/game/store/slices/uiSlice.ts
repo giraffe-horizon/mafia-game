@@ -15,8 +15,8 @@ export interface UiSlice {
   toggleRole: () => void;
 
   // Active tab (bottom navigation)
-  activeTab: "night" | "day" | "votes" | "agents";
-  setActiveTab: (tab: "night" | "day" | "votes" | "agents") => void;
+  activeTab: "night" | "day" | "archive" | "agents";
+  setActiveTab: (tab: "night" | "day" | "archive" | "agents") => void;
 
   // Tab notifications (badges)
   tabNotifications: Record<string, boolean>;

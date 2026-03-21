@@ -15,6 +15,7 @@ export default function PlayerRow({
   roleVisible,
   onKick,
   onRename,
+  onTransferGm,
   investigated,
 }: {
   player: PublicPlayer;
@@ -26,6 +27,7 @@ export default function PlayerRow({
   roleVisible?: boolean;
   onKick?: (playerId: string) => void;
   onRename?: (newNickname: string) => void;
+  onTransferGm?: (playerId: string) => void;
   investigated?: boolean | null;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -230,6 +232,23 @@ export default function PlayerRow({
           title="Zmień pseudonim"
         >
           <span className="material-symbols-outlined text-[14px]">edit</span>
+        </button>
+      )}
+
+      {/* Transfer GM button (host only, in lobby, not for self) */}
+      {isLobby && isHost && !player.isHost && !player.isYou && onTransferGm && (
+        <button
+          onClick={() => {
+            if (
+              confirm(`Czy na pewno chcesz przekazać rolę Mistrza Gry graczowi ${player.nickname}?`)
+            ) {
+              onTransferGm(player.playerId);
+            }
+          }}
+          className="size-7 flex items-center justify-center text-on-surface/40 hover:text-primary transition-colors"
+          title="Przekaż GM"
+        >
+          <span className="material-symbols-outlined text-[14px]">swap_horiz</span>
         </button>
       )}
 
