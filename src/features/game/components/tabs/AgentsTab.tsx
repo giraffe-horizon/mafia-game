@@ -97,6 +97,13 @@ export default function AgentsTab() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {/* Missions for non-host — first section */}
+        {!isHost && state && state.missions.length > 0 && (
+          <div className="border-b border-surface-highest">
+            <MissionsList missions={state.missions} showPoints={state.showPoints} />
+          </div>
+        )}
+
         {/* Lista graczy */}
         <div className="border-b border-surface-highest">
           <PlayersListContainer />
@@ -106,13 +113,6 @@ export default function AgentsTab() {
         <div className="border-b border-surface-highest">
           <RankingInline />
         </div>
-
-        {/* Missions for non-host */}
-        {!isHost && state && (
-          <div className="border-b border-surface-highest">
-            <MissionsList missions={state.missions} showPoints={state.showPoints} />
-          </div>
-        )}
 
         {/* GM messages (non-system) */}
         {state && state.messages.filter((m) => !m.eventType).length > 0 && (

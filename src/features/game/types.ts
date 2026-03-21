@@ -105,6 +105,9 @@ export interface HostMission {
 export interface Toast {
   id: string;
   content: string;
+  icon?: string;
+  action?: { label: string; tab: string };
+  variant?: "default" | "mission";
 }
 
 // ---------------------------------------------------------------------------

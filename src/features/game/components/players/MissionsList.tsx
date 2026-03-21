@@ -15,9 +15,12 @@ export default function MissionsList({ missions, showPoints }: MissionsListProps
 
   return (
     <div className="mx-5 mt-4">
-      <p className="text-on-surface/40 text-xs font-display uppercase tracking-widest mb-2 pl-1">
-        Twoje misje
-      </p>
+      <div className="flex items-center gap-2 mb-2 pl-1">
+        <span className="material-symbols-outlined text-[16px] text-primary">task</span>
+        <p className="text-on-surface/40 text-xs font-display uppercase tracking-widest">
+          Twoje misje
+        </p>
+      </div>
       <div className="flex flex-col gap-2">
         {missions.map((m) => (
           <div

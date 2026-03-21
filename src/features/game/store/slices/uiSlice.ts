@@ -18,9 +18,10 @@ export interface UiSlice {
   activeTab: "night" | "day" | "archive" | "agents";
   setActiveTab: (tab: "night" | "day" | "archive" | "agents") => void;
 
-  // Tab notifications (badges)
-  tabNotifications: Record<string, boolean>;
-  setTabNotification: (tab: string, show: boolean) => void;
+  // Tab notifications (badge counters)
+  tabNotifications: Record<string, number>;
+  setTabNotification: (tab: string, count: number) => void;
+  incrementTabNotification: (tab: string) => void;
   clearTabNotification: (tab: string) => void;
 
   // Loading states
@@ -68,15 +69,23 @@ export const createUiSlice: StateCreator<GameState, [], [], UiSlice> = (set, get
       activeTab: tab,
       tabNotifications: {
         ...state.tabNotifications,
-        [tab]: false, // Clear notification when user enters tab
+        [tab]: 0, // Clear notification when user enters tab
       },
     })),
 
-  setTabNotification: (tab: string, show: boolean) =>
+  setTabNotification: (tab: string, count: number) =>
     set((state) => ({
       tabNotifications: {
         ...state.tabNotifications,
-        [tab]: show,
+        [tab]: count,
+      },
+    })),
+
+  incrementTabNotification: (tab: string) =>
+    set((state) => ({
+      tabNotifications: {
+        ...state.tabNotifications,
+        [tab]: (state.tabNotifications[tab] ?? 0) + 1,
       },
     })),
 
@@ -84,7 +93,7 @@ export const createUiSlice: StateCreator<GameState, [], [], UiSlice> = (set, get
     set((state) => ({
       tabNotifications: {
         ...state.tabNotifications,
-        [tab]: false,
+        [tab]: 0,
       },
     })),
 });

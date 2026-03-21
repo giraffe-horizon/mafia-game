@@ -10,7 +10,7 @@ export interface TabBarProps {
   tabs: Tab[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
-  notifications?: Record<string, boolean>;
+  notifications?: Record<string, number>;
   className?: string;
 }
 
@@ -32,7 +32,7 @@ export function TabBar({ tabs, activeTab, onTabChange, notifications, className 
     >
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
-        const hasNotification = notifications?.[tab.id] === true;
+        const notificationCount = notifications?.[tab.id] ?? 0;
         return (
           <button
             key={tab.id}
@@ -65,8 +65,12 @@ export function TabBar({ tabs, activeTab, onTabChange, notifications, className 
           >
             <div className="relative">
               <span className="material-symbols-outlined text-[20px] leading-none">{tab.icon}</span>
-              {hasNotification && !isActive && (
-                <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-primary rounded-full border-2 border-background-dark" />
+              {notificationCount > 0 && !isActive && (
+                <div className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] bg-primary rounded-full flex items-center justify-center px-0.5">
+                  <span className="font-display text-[9px] font-black text-white leading-none">
+                    {notificationCount}
+                  </span>
+                </div>
               )}
             </div>
             <span>{tab.label}</span>

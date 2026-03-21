@@ -9,6 +9,7 @@ import { buildTransition } from "@/features/game/store/buildTransition";
 // Polling constants
 const POLL_INTERVAL = 2000;
 const TOAST_DURATION = 7000;
+const MISSION_TOAST_DURATION = 10000;
 const MAX_BACKOFF = 16000;
 
 export interface GameSlice {
@@ -219,11 +220,11 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
         const currentTab = get().activeTab;
         if (newPhase === "day" && currentTab !== "night") {
           // Nowe wyniki nocy - badge na "Noc" tab
-          get().setTabNotification("night", true);
+          get().incrementTabNotification("night");
         }
         if (newPhase === "voting" && currentTab !== "day") {
-          // Nowe głosowanie - badge na "Archiwum" tab
-          get().setTabNotification("day", true);
+          // Nowe głosowanie - badge na "Dzień" tab
+          get().incrementTabNotification("day");
         }
       }
 
@@ -253,7 +254,7 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
             const currentTab = get().activeTab;
             if (currentTab !== "agents" && !msg.eventType) {
               // Regular GM message (not system event) - badge on "Agenci" tab
-              get().setTabNotification("agents", true);
+              get().incrementTabNotification("agents");
             }
 
             const timeoutId = setTimeout(() => {
@@ -287,6 +288,9 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
             const missionToast = {
               id: `mission-${mission.id}`,
               content: `Nowa misja: ${mission.description}`,
+              icon: "task",
+              action: { label: "Zobacz →", tab: "agents" },
+              variant: "mission" as const,
             };
             set((s) => ({ toasts: [...s.toasts, missionToast] }));
 
@@ -295,13 +299,13 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
               set((s) => ({
                 toasts: s.toasts.filter((t) => t.id !== missionToast.id),
               }));
-            }, TOAST_DURATION);
+            }, MISSION_TOAST_DURATION);
             get()._toastTimeouts.set(missionToast.id, timeoutId);
 
             // Badge on "Agenci" tab
             const currentTab = get().activeTab;
             if (currentTab !== "agents") {
-              get().setTabNotification("agents", true);
+              get().incrementTabNotification("agents");
             }
           }
         }
