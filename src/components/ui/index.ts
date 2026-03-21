@@ -5,6 +5,7 @@ export { default as Select } from "@/components/ui/Select";
 export { Input, TextArea, Textarea } from "@/components/ui/Input";
 export { default as ProgressBar } from "@/components/ui/ProgressBar";
 export { default as Modal } from "@/components/ui/Modal";
+export { default as ConfirmDialog } from "@/components/ui/ConfirmDialog";
 export { default as GameLayout } from "@/components/ui/GameLayout";
 export { default as PageLayout } from "@/components/ui/GameLayout";
 export { default as SectionHeader } from "@/components/ui/SectionHeader";

@@ -21,6 +21,7 @@ export interface LeaveResult {
 export interface StartGameOpts {
   mafiaCount?: number;
   mode?: "full" | "simple";
+  secretVoting?: boolean;
 }
 
 export interface GameService {

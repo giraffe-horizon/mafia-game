@@ -6,7 +6,8 @@ export async function startGame(
   db: D1Database,
   token: string,
   customMafiaCount?: number,
-  mode: "full" | "simple" = "full"
+  mode: "full" | "simple" = "full",
+  secretVoting: boolean = false
 ): Promise<{ success: boolean; error?: string }> {
   const playerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
@@ -48,7 +49,7 @@ export async function startGame(
       )
       .bind(
         gameRow.round + 1,
-        JSON.stringify({ mode, mafiaCount: customMafiaCount || 0 }),
+        JSON.stringify({ mode, mafiaCount: customMafiaCount || 0, secretVoting }),
         playerRow.game_id
       ),
     db

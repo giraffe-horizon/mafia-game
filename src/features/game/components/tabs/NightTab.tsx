@@ -11,6 +11,7 @@ export default function NightTab() {
   const { phase, isLobby } = useCurrentPhase();
   const { currentPlayer, players } = usePlayerState();
   const lastNightSummary = useGameStore((s) => s.state?.lastNightSummary);
+  const round = useGameStore((s) => s.state?.game?.round ?? 1);
 
   if (isLobby) {
     return (
@@ -83,6 +84,8 @@ export default function NightTab() {
         <DeadSpectatorView
           currentPlayer={{ role: currentPlayer.role || undefined }}
           players={players}
+          phase={phase}
+          round={round}
         />
       </div>
     );

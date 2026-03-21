@@ -16,6 +16,7 @@ import NightView from "@/features/game/components/phases/NightView";
 
 export default function NightContainer() {
   const { isHost, currentPlayer, players } = usePlayerState();
+  const round = useGameStore((s) => s.state?.game?.round ?? 1);
   const { roleVisible, toggleRole } = useRoleVisibility();
   const actionTargets = useActionTargets(roleVisible);
 
@@ -69,6 +70,7 @@ export default function NightContainer() {
       viewState={viewState}
       actionData={actionData}
       players={players}
+      round={round}
     />
   );
 }

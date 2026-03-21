@@ -11,6 +11,7 @@ export default function VotingContainer() {
   const { isHost, currentPlayer, players } = usePlayerState();
   const { roleVisible, toggleRole } = useRoleVisibility();
   const { phase } = useCurrentPhase();
+  const round = useGameStore((s) => s.state?.game?.round ?? 1);
 
   const myAction = useGameStore((s) => (s.changingDecision ? null : (s.state?.myAction ?? null)));
   const actionPending = useGameStore((s) => s.actionPending);
@@ -27,7 +28,7 @@ export default function VotingContainer() {
     role: currentPlayer.role || undefined,
   };
 
-  const viewState: VotingViewState = { roleVisible, toggleRole, phase };
+  const viewState: VotingViewState = { roleVisible, toggleRole, phase, round };
 
   const voteState: VoteState = {
     players,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { PublicPlayer } from "@/db";
 import type { Role, ActionType } from "@/db/types";
 import type { ActionState, MafiaState } from "@/features/game/types";
@@ -7,7 +8,7 @@ import { ACTION_CONFIRMED } from "@/lib/constants";
 import { cn } from "@/lib/cn";
 import MafiaConsensusStatus from "@/features/game/components/shared/MafiaConsensusStatus";
 import ActionConfirmation from "@/features/game/components/shared/ActionConfirmation";
-import { Button, Stamp } from "@/components/ui";
+import { Button, Stamp, ConfirmDialog } from "@/components/ui";
 
 interface NightActionPanelProps {
   role: Role | null;
@@ -66,6 +67,10 @@ export default function NightActionPanel({
 }: NightActionPanelProps) {
   const { pending, error, onAction, onChangeDecision } = actionState;
   const { teamActions: mafiaTeamActions, currentNickname } = mafiaState;
+  const [pendingAction, setPendingAction] = useState<{
+    type: ActionType;
+    target: PublicPlayer;
+  } | null>(null);
 
   if (myAction) {
     if (role === "mafia" && !roleHidden && mafiaTeamActions) {
@@ -174,7 +179,7 @@ export default function NightActionPanel({
             <button
               key={p.playerId}
               disabled={pending || isBlocked}
-              onClick={() => onAction(action.type, p.playerId)}
+              onClick={() => setPendingAction({ type: action.type, target: p })}
               className={cn(
                 "flex items-center gap-3 p-3 border transition-colors text-left",
                 isBlocked
@@ -202,6 +207,33 @@ export default function NightActionPanel({
           );
         })}
       </div>
+
+      {/* Confirmation dialog */}
+      {pendingAction && (
+        <ConfirmDialog
+          isOpen={!!pendingAction}
+          onClose={() => setPendingAction(null)}
+          onConfirm={() => {
+            onAction(pendingAction.type, pendingAction.target.playerId);
+          }}
+          title="POTWIERDŹ ROZKAZ"
+          message={(() => {
+            switch (pendingAction.type) {
+              case "kill":
+                return `Czy na pewno chcesz wytypować ${pendingAction.target.nickname} jako ofiarę nocy?`;
+              case "investigate":
+                return `Czy na pewno chcesz przesłuchać ${pendingAction.target.nickname}?`;
+              case "protect":
+                return `Czy na pewno chcesz chronić ${pendingAction.target.nickname} tej nocy?`;
+              default:
+                return `Czy na pewno chcesz wykonać akcję na ${pendingAction.target.nickname}?`;
+            }
+          })()}
+          confirmText="ZATWIERDŹ ROZKAZ"
+          cancelText="ANULUJ"
+          variant={pendingAction.type === "kill" ? "danger" : "primary"}
+        />
+      )}
     </div>
   );
 }

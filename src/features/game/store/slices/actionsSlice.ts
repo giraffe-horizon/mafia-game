@@ -12,7 +12,11 @@ import { getErrorMessage } from "@/lib/errors";
 export interface ActionsSlice {
   submitAction: (type: ActionType, targetPlayerId?: string) => Promise<ActionResult>;
   advancePhase: (phase: GamePhase) => Promise<ActionResult>;
-  startGame: (gameMode: "full" | "simple", mafiaCount: number) => Promise<ActionResult>;
+  startGame: (
+    gameMode: "full" | "simple",
+    mafiaCount: number,
+    secretVoting?: boolean
+  ) => Promise<ActionResult>;
   kickPlayer: (playerId: string) => Promise<ActionResult>;
   leaveGame: () => Promise<LeaveResult>;
   rematchGame: (mafiaCountSetting?: number) => Promise<RematchResult>;
@@ -70,7 +74,11 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsSlice> =
     }
   },
 
-  startGame: async (gameMode: "full" | "simple", mafiaCount: number): Promise<ActionResult> => {
+  startGame: async (
+    gameMode: "full" | "simple",
+    mafiaCount: number,
+    secretVoting?: boolean
+  ): Promise<ActionResult> => {
     const { _gameService, _token } = get();
     if (!_gameService || !_token) return { success: false, error: "No service initialized" };
 
@@ -78,6 +86,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsSlice> =
     try {
       const opts: StartGameOpts = { mode: gameMode };
       if (mafiaCount > 0) opts.mafiaCount = mafiaCount;
+      if (typeof secretVoting === "boolean") opts.secretVoting = secretVoting;
 
       const result = await _gameService.startGame(_token, opts);
       if (result.success) {

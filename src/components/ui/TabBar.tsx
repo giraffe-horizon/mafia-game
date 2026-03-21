@@ -10,10 +10,11 @@ export interface TabBarProps {
   tabs: Tab[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
+  notifications?: Record<string, boolean>;
   className?: string;
 }
 
-export function TabBar({ tabs, activeTab, onTabChange, className }: TabBarProps) {
+export function TabBar({ tabs, activeTab, onTabChange, notifications, className }: TabBarProps) {
   return (
     <nav
       role="tablist"
@@ -31,6 +32,7 @@ export function TabBar({ tabs, activeTab, onTabChange, className }: TabBarProps)
     >
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
+        const hasNotification = notifications?.[tab.id] === true;
         return (
           <button
             key={tab.id}
@@ -38,7 +40,7 @@ export function TabBar({ tabs, activeTab, onTabChange, className }: TabBarProps)
             aria-selected={isActive}
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              "flex-1 flex flex-col items-center justify-center gap-0.5",
+              "flex-1 flex flex-col items-center justify-center gap-0.5 relative",
               "min-h-[48px]",
               "font-display text-[9px] font-bold uppercase tracking-widest",
               "transition-colors duration-[0.1s]",
@@ -61,7 +63,12 @@ export function TabBar({ tabs, activeTab, onTabChange, className }: TabBarProps)
                   }
             }
           >
-            <span className="material-symbols-outlined text-[20px] leading-none">{tab.icon}</span>
+            <div className="relative">
+              <span className="material-symbols-outlined text-[20px] leading-none">{tab.icon}</span>
+              {hasNotification && !isActive && (
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border border-surface animate-pulse" />
+              )}
+            </div>
             <span>{tab.label}</span>
           </button>
         );

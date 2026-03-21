@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import type { PublicPlayer } from "@/db";
-import { Stamp } from "@/components/ui";
+import { Stamp, ConfirmDialog } from "@/components/ui";
 
 export default function VotePanel({
   targets,
@@ -18,6 +19,7 @@ export default function VotePanel({
   onVote: (targetId: string) => void;
   onChangeDecision: () => void;
 }) {
+  const [pendingVoteTarget, setPendingVoteTarget] = useState<PublicPlayer | null>(null);
   if (myAction) {
     const targetName =
       targets.find((p) => p.playerId === myAction.targetPlayerId)?.nickname ??
@@ -66,7 +68,7 @@ export default function VotePanel({
           <button
             key={p.playerId}
             disabled={pending}
-            onClick={() => onVote(p.playerId)}
+            onClick={() => setPendingVoteTarget(p)}
             className="flex items-center gap-3 p-3 border border-surface-highest hover:border-primary/40 hover:bg-primary/5 active:opacity-70 transition-colors text-left"
           >
             <span className="material-symbols-outlined text-[16px] text-on-surface/50">person</span>
@@ -76,6 +78,22 @@ export default function VotePanel({
           </button>
         ))}
       </div>
+
+      {/* Confirmation dialog */}
+      <ConfirmDialog
+        isOpen={!!pendingVoteTarget}
+        onClose={() => setPendingVoteTarget(null)}
+        onConfirm={() => {
+          if (pendingVoteTarget) {
+            onVote(pendingVoteTarget.playerId);
+          }
+        }}
+        title="POTWIERDŹ OSKARŻENIE"
+        message={`Czy na pewno chcesz oskarżyć ${pendingVoteTarget?.nickname}? To będzie twój ostateczny głos w tej rundzie.`}
+        confirmText="OSKARŻAM"
+        cancelText="ANULUJ"
+        variant="danger"
+      />
     </div>
   );
 }

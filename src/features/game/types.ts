@@ -61,6 +61,7 @@ export interface VotingViewState {
   roleVisible: boolean;
   toggleRole: () => void;
   phase: string;
+  round: number;
 }
 
 export interface VoteState {

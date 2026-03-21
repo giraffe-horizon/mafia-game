@@ -279,9 +279,41 @@ export async function getGameState(
   // Get mafia team actions (mafia only)
   const mafiaTeamActions = await getMafiaTeamActions(db, playerRow, gameRow, allPlayers);
 
-  // Get vote tally (visible during voting phase)
-  const voteTally =
-    gameRow.phase === "voting" ? await getVoteTally(db, gameRow, allPlayers) : undefined;
+  // Parse lobby settings and game config from config
+  let lobbySettings: { mode: "full" | "simple"; mafiaCount: number } | undefined;
+  let gameConfig: { secretVoting?: boolean };
+  try {
+    const config = JSON.parse(gameRow.config || "{}");
+    if (config.mode) {
+      lobbySettings = {
+        mode: config.mode === "simple" ? "simple" : "full",
+        mafiaCount: typeof config.mafiaCount === "number" ? config.mafiaCount : 0,
+      };
+    }
+    gameConfig = {
+      secretVoting: typeof config.secretVoting === "boolean" ? config.secretVoting : false, // default: false
+    };
+  } catch {
+    // ignore malformed config, use defaults
+    gameConfig = { secretVoting: false };
+  }
+
+  // Get vote tally (visible during voting phase, filtered for secret voting)
+  let voteTally: GameStateResponse["voteTally"] = undefined;
+  if (gameRow.phase === "voting") {
+    const fullVoteTally = await getVoteTally(db, gameRow, allPlayers);
+
+    // Filter results for secret voting: players see only count, GM sees all
+    if (gameConfig.secretVoting && !isHost) {
+      voteTally = {
+        totalVoters: fullVoteTally.totalVoters,
+        votedCount: fullVoteTally.votedCount,
+        results: [], // Hide individual vote breakdown
+      };
+    } else {
+      voteTally = fullVoteTally;
+    }
+  }
 
   // Host-only data
   let hostActions = undefined;
@@ -436,20 +468,6 @@ export async function getGameState(
     }
   }
 
-  // Parse lobby settings from config
-  let lobbySettings: { mode: "full" | "simple"; mafiaCount: number } | undefined;
-  try {
-    const config = JSON.parse(gameRow.config || "{}");
-    if (config.mode) {
-      lobbySettings = {
-        mode: config.mode === "simple" ? "simple" : "full",
-        mafiaCount: typeof config.mafiaCount === "number" ? config.mafiaCount : 0,
-      };
-    }
-  } catch {
-    // ignore malformed config
-  }
-
   // Vote history from previous rounds (for GŁOSY tab)
   let voteHistory: GameStateResponse["voteHistory"] = undefined;
   if (gameRow.status === "playing" || gameRow.status === "finished") {
@@ -567,6 +585,7 @@ export async function getGameState(
       phase: gameRow.phase as GamePhase,
       round: gameRow.round,
       winner: gameRow.winner,
+      config: gameConfig,
     },
     currentPlayer: {
       playerId: playerRow.player_id,

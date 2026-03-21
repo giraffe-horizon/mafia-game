@@ -23,7 +23,7 @@ export default function VotingView({
   viewState,
   voteState,
 }: VotingViewProps) {
-  const { roleVisible, toggleRole, phase } = viewState;
+  const { roleVisible, toggleRole, phase, round } = viewState;
   const { players, myAction, actionPending, actionError, setChangingDecision, onVote, voteTally } =
     voteState;
   return (
@@ -53,7 +53,12 @@ export default function VotingView({
 
       {/* Dead spectator view */}
       {!isHost && !currentPlayer.isAlive && (
-        <DeadSpectatorView currentPlayer={currentPlayer} players={players} />
+        <DeadSpectatorView
+          currentPlayer={currentPlayer}
+          players={players}
+          phase={phase}
+          round={round}
+        />
       )}
 
       {/* Vote tally — dossier style */}
@@ -94,6 +99,18 @@ export default function VotingView({
                   </span>
                 </div>
               ))}
+            </div>
+          ) : voteTally.votedCount > 0 ? (
+            <div className="p-4 text-center">
+              <span className="material-symbols-outlined text-[20px] text-on-surface/40 mb-2 block">
+                visibility_off
+              </span>
+              <p className="font-display text-on-surface/60 text-xs uppercase tracking-widest">
+                Głosy są tajne
+              </p>
+              <p className="font-display text-on-surface/30 text-[10px] uppercase tracking-widest mt-1">
+                {voteTally.votedCount}/{voteTally.totalVoters} zagłosowało
+              </p>
             </div>
           ) : (
             <p className="font-display text-on-surface/30 text-xs text-center p-4 uppercase tracking-widest">

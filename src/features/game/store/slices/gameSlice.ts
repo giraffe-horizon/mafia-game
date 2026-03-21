@@ -209,6 +209,17 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
         else if (newPhase === "day") get().setActiveTab("day");
         else if (newPhase === "voting") get().setActiveTab("votes");
         // review/ended: stay on current tab
+
+        // Set notification badges for inactive tabs when phase changes
+        const currentTab = get().activeTab;
+        if (newPhase === "day" && currentTab !== "night") {
+          // Nowe wyniki nocy - badge na "Noc" tab
+          get().setTabNotification("night", true);
+        }
+        if (newPhase === "voting" && currentTab !== "votes") {
+          // Nowe głosowanie - badge na "Głosy" tab
+          get().setTabNotification("votes", true);
+        }
       }
 
       const prevRound = get().state?.game?.round;
@@ -232,6 +243,13 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
             _shownMessageIds.add(msg.id);
             const newToast = { id: msg.id, content: msg.content };
             newToasts.push(newToast);
+
+            // Set notification badge for "agents" tab if new message appears
+            const currentTab = get().activeTab;
+            if (currentTab !== "agents" && !msg.eventType) {
+              // Regular GM message (not system event) - badge on "Agenci" tab
+              get().setTabNotification("agents", true);
+            }
 
             const timeoutId = setTimeout(() => {
               get()._toastTimeouts.delete(msg.id);

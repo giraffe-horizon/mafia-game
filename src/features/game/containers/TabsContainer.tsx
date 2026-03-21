@@ -17,6 +17,7 @@ const TABS = [
 export default function TabsContainer() {
   const activeTab = useGameStore((s) => s.activeTab);
   const setActiveTab = useGameStore((s) => s.setActiveTab);
+  const tabNotifications = useGameStore((s) => s.tabNotifications);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -33,6 +34,7 @@ export default function TabsContainer() {
         tabs={[...TABS]}
         activeTab={activeTab}
         onTabChange={(id) => setActiveTab(id as "night" | "day" | "votes" | "agents")}
+        notifications={tabNotifications}
       />
     </div>
   );

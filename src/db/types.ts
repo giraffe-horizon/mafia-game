@@ -127,6 +127,9 @@ export interface GameStateResponse {
     phase: GamePhase;
     round: number;
     winner: string | null;
+    config: {
+      secretVoting?: boolean;
+    };
   };
   currentPlayer: {
     playerId: string;

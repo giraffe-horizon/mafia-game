@@ -23,6 +23,8 @@ interface LobbyViewProps {
   setGameMode: (mode: "full" | "simple") => void;
   mafiaCount: number;
   setMafiaCount: (count: number) => void;
+  secretVoting: boolean;
+  setSecretVoting: (secretVoting: boolean) => void;
   starting: boolean;
   onStart: () => void;
   onTransferGm: (playerId: string) => void;
@@ -40,6 +42,8 @@ export default function LobbyView({
   setGameMode,
   mafiaCount,
   setMafiaCount,
+  secretVoting,
+  setSecretVoting,
   starting,
   onStart,
   onTransferGm,
@@ -231,6 +235,49 @@ export default function LobbyView({
                 </div>
                 <p className="text-stamp-green/70 text-xs mt-2 font-mono">
                   {gameMode === "full" ? "+ 1 policjant, 1 lekarz, reszta cywile" : "reszta cywile"}
+                </p>
+              </div>
+            )}
+            {nonHostPlayers.length >= minPlayers && (
+              <div
+                className="p-4 card-lifted crt-monitor"
+                style={{
+                  background:
+                    "linear-gradient(155deg, #3D4D3D 0%, #6B7D62 35%, #8FA085 55%, #5A6A52 80%, #3D4D3D 100%)",
+                }}
+              >
+                <SectionHeader
+                  className="relative z-10"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    color: "#A0B89A",
+                    padding: "4px 8px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Ustawienia głosowania
+                </SectionHeader>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSecretVoting(!secretVoting)}
+                    className={`flex items-center gap-2 px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${
+                      secretVoting
+                        ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green"
+                        : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"
+                    }`}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-[16px] ${secretVoting ? "text-stamp-green" : "text-stamp-green/60"}`}
+                    >
+                      {secretVoting ? "visibility_off" : "visibility"}
+                    </span>
+                    Tajne głosowanie
+                  </button>
+                </div>
+                <p className="text-stamp-green/70 text-xs mt-2 font-mono">
+                  {secretVoting
+                    ? "Głosy będą ukryte do końca fazy"
+                    : "Głosy widoczne na żywo dla wszystkich"}
                 </p>
               </div>
             )}
