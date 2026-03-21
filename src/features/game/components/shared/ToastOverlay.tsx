@@ -24,9 +24,9 @@ export default function ToastOverlay() {
           <div
             key={t.id}
             className={cn(
-              "shadow-lg pointer-events-auto",
+              "shadow-xl pointer-events-auto",
               isMission
-                ? "bg-primary/10 border border-primary/40 px-3 py-2.5"
+                ? "bg-background border border-primary px-3 py-2.5"
                 : "bg-secondary text-on-secondary px-3 py-2.5"
             )}
             style={{ transform: `rotate(${i % 2 === 0 ? -0.5 : 0.5}deg)` }}
