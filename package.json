@@ -12,6 +12,7 @@
     "lint": "eslint src/",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
+    "typecheck:workers": "tsc --noEmit -p workers/tsconfig.json",
     "test": "vitest run",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/",
@@ -32,6 +33,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260317.1",
     "@eslint/js": "^10.0.1",
     "@opennextjs/cloudflare": "^1.17.1",
     "@semantic-release/changelog": "^6.0.3",

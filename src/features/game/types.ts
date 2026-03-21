@@ -4,6 +4,17 @@ export type { GameStateResponse, PublicPlayer, GameStatus, GamePhase, Role } fro
 import type { PublicPlayer, GameStateResponse, ActionType } from "@/db";
 
 // ---------------------------------------------------------------------------
+// WebSocket message types (shared between client and worker)
+// ---------------------------------------------------------------------------
+
+export type WsClientMessage = { type: "auth"; token: string } | { type: "ping" };
+
+export type WsServerMessage =
+  | { type: "state"; payload: GameStateResponse; seq: number }
+  | { type: "error"; code: string; message: string }
+  | { type: "pong" };
+
+// ---------------------------------------------------------------------------
 // Night phase types
 // ---------------------------------------------------------------------------
 

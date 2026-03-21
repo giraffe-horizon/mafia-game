@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import type { GameStateResponse } from "@/db";
-import type { WsServerMessage } from "../../../../workers/types";
+import type { WsServerMessage } from "../types";
 
 export interface UseWebSocketParams {
   gameId: string;
