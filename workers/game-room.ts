@@ -2,9 +2,10 @@
 // GameRoom Durable Object - WebSocket Hibernation API implementation
 // ---------------------------------------------------------------------------
 
+import { DurableObject } from "cloudflare:workers";
 import type { WsClientMessage, WsServerMessage, ConnectionState, Env } from "./types";
 
-export class GameRoom extends DurableObject {
+export class GameRoom extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
   }
