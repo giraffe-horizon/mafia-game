@@ -1,25 +1,21 @@
-import React from "react";
+import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "highlighted" | "danger";
-  children: React.ReactNode;
+export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "paper" | "highlighted" | "danger" | "crt";
 }
 
-const cardVariants = {
-  default: "bg-black/40 border border-slate-700",
-  highlighted: "bg-black/60 border border-primary/20 hover:border-primary/40",
-  danger: "bg-black/40 border border-red-900/40",
-};
-
-export default function Card({ variant = "default", children, className, ...props }: CardProps) {
+export function Card({ variant = "default", className, children, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        // Base styles
-        "rounded-xl p-4",
-        // Variant styles
-        cardVariants[variant],
+        // Base — no border-radius, depth by layering
+        "p-4",
+        variant === "default" && "bg-surface-low text-on-surface",
+        variant === "paper" && "bg-paper text-on-paper",
+        variant === "highlighted" && "bg-surface-low border-l-2 border-stamp text-on-surface",
+        variant === "danger" && "bg-surface-low border-l-2 border-stamp text-on-surface",
+        variant === "crt" && "bg-accent-green border border-accent-green-bright text-stamp-green",
         className
       )}
       {...props}
@@ -29,4 +25,4 @@ export default function Card({ variant = "default", children, className, ...prop
   );
 }
 
-export type { CardProps };
+export default Card;

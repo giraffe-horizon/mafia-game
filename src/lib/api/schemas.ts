@@ -32,6 +32,7 @@ export const phaseSchema = z.object({
 export const startGameSchema = z.object({
   mafiaCount: z.number().int().positive().optional(),
   mode: gameMode.optional(),
+  secretVoting: z.boolean().optional(),
 });
 
 export const messageSchema = z.object({

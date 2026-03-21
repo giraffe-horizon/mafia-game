@@ -16,6 +16,13 @@ export const ROLE_COLORS: Record<Role | "gm" | string, string> = {
   gm: "text-amber-400",
 };
 
+export const ROLE_BADGE_COLORS: Record<string, string> = {
+  mafia: "text-red-400 border-red-800/50 bg-red-950/20",
+  detective: "text-blue-400 border-blue-800/50 bg-blue-950/20",
+  doctor: "text-green-400 border-green-800/50 bg-green-950/20",
+  civilian: "text-on-surface/60 border-surface-highest bg-surface-highest/20",
+};
+
 export const ROLE_ICONS: Record<Role | "gm" | string, string> = {
   mafia: "masks",
   detective: "search",

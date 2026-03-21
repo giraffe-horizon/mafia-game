@@ -1,11 +1,13 @@
+"use client";
+
 import { useState, useCallback } from "react";
-import Link from "next/link";
 import { PHASE_LABELS } from "@/lib/constants";
 
 interface GameHeaderProps {
   phase: string;
   round: number;
   isHost: boolean;
+  gameCode?: string;
   currentPlayer: {
     character?: {
       id: string;
@@ -15,80 +17,76 @@ interface GameHeaderProps {
     } | null;
   };
   onShowSettings: () => void;
-  onShowRanking: () => void;
 }
 
 export default function GameHeader({
   phase,
   round,
   isHost,
+  gameCode,
   currentPlayer,
   onShowSettings,
-  onShowRanking,
 }: GameHeaderProps) {
   const [imgError, setImgError] = useState(false);
   const handleImgError = useCallback(() => setImgError(true), []);
 
   return (
-    <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-800">
-      <div className="flex items-center gap-1">
-        <Link
-          href="/"
-          className="size-9 flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
-        >
-          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-        </Link>
+    <div
+      className="relative z-20 flex items-center justify-between px-4 py-2 border-b border-surface-highest"
+      style={{ backgroundColor: "rgba(28, 28, 28, 0.95)" }}
+    >
+      {/* Left: spacer for balance */}
+      <div className="w-8" />
+
+      {/* Center: Faza + Runda + Kod sesji */}
+      <div className="flex-1 text-center">
+        <div className="flex items-center justify-center gap-1.5 text-xs font-display font-black uppercase tracking-widest">
+          <span className={isHost ? "text-primary" : "text-on-surface/60"}>
+            {isHost ? "MG" : (PHASE_LABELS[phase] ?? phase)}
+          </span>
+          {round > 0 && <span className="text-on-surface/40">·</span>}
+          {round > 0 && <span className="text-on-surface/60">R{round}</span>}
+          {gameCode && <span className="text-on-surface/40">·</span>}
+          {gameCode && <span className="text-primary tracking-[0.2em]">{gameCode}</span>}
+        </div>
+      </div>
+
+      {/* Right: Settings/avatar button */}
+      {isHost ? (
         <button
-          onClick={onShowRanking}
-          className="size-9 flex items-center justify-center text-slate-500 hover:text-amber-400 transition-colors"
-          title="Ranking sesji"
+          onClick={onShowSettings}
+          className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 bg-surface-highest/20 flex items-center justify-center transition-colors"
         >
-          <span className="material-symbols-outlined text-[18px]">leaderboard</span>
+          <span className="material-symbols-outlined text-[16px] text-on-surface/40">settings</span>
         </button>
-      </div>
-      <div className="text-center">
-        <h2 className="font-typewriter text-white text-sm font-semibold">{PHASE_LABELS[phase]}</h2>
-        {round > 0 && <p className="text-slate-500 text-xs font-typewriter">Runda {round}</p>}
-      </div>
-      <div className="size-9 flex items-center justify-center">
-        {isHost ? (
-          <button
-            onClick={onShowSettings}
-            className="w-8 h-8 rounded-full border-2 border-primary/50 hover:border-primary transition-colors bg-primary/10 flex items-center justify-center"
-          >
-            <span className="material-symbols-outlined text-[16px] text-primary">
-              manage_accounts
+      ) : currentPlayer.character ? (
+        <button
+          onClick={onShowSettings}
+          className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 transition-colors overflow-hidden flex items-center justify-center"
+        >
+          {currentPlayer.character.avatarUrl && !imgError ? (
+            <img
+              src={currentPlayer.character.avatarUrl}
+              alt={currentPlayer.character.namePl}
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-cover"
+              onError={handleImgError}
+            />
+          ) : (
+            <span className="font-display font-black text-xs text-on-surface/60">
+              {currentPlayer.character.namePl.charAt(0).toUpperCase()}
             </span>
-          </button>
-        ) : currentPlayer.character ? (
-          <button
-            onClick={onShowSettings}
-            className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors overflow-hidden flex items-center justify-center"
-          >
-            {currentPlayer.character.avatarUrl && !imgError ? (
-              <img
-                src={currentPlayer.character.avatarUrl}
-                alt={currentPlayer.character.namePl}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover"
-                onError={handleImgError}
-              />
-            ) : (
-              <div className="w-full h-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
-                {currentPlayer.character.namePl.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </button>
-        ) : (
-          <button
-            onClick={onShowSettings}
-            className="w-8 h-8 rounded-full border-2 border-slate-600 hover:border-slate-400 transition-colors bg-slate-800 flex items-center justify-center"
-          >
-            <span className="material-symbols-outlined text-[16px] text-slate-400">person</span>
-          </button>
-        )}
-      </div>
+          )}
+        </button>
+      ) : (
+        <button
+          onClick={onShowSettings}
+          className="w-8 h-8 border border-surface-highest hover:border-on-surface/40 transition-colors bg-surface-highest/20 flex items-center justify-center"
+        >
+          <span className="material-symbols-outlined text-[16px] text-on-surface/40">person</span>
+        </button>
+      )}
     </div>
   );
 }

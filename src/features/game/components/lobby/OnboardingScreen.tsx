@@ -1,7 +1,7 @@
 "use client";
 
 import CharacterPicker from "@/components/CharacterPicker";
-import { Button, PageLayout, FormField } from "@/components/ui";
+import { PageLayout } from "@/components/ui";
 
 export interface FormData {
   onboardingNickname: string;
@@ -49,7 +49,7 @@ export default function OnboardingScreen({
     <PageLayout>
       <div className="relative z-20 flex items-center p-4 pb-2 justify-between">
         <div className="size-12 shrink-0 opacity-0 pointer-events-none" />
-        <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-typewriter text-primary drop-shadow-[0_0_8px_rgba(218,11,11,0.5)]">
+        <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-display text-stamp drop-shadow-[0_0_8px_rgba(255,180,172,0.5)]">
           DOŁĄCZANIE DO GRY
         </h2>
         <div className="size-12 shrink-0" />
@@ -57,65 +57,94 @@ export default function OnboardingScreen({
 
       <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
         <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 rounded-full border-2 border-primary/40 flex items-center justify-center bg-background-dark/80 shadow-[0_0_30px_rgba(218,11,11,0.2)] relative overflow-hidden">
-            <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl" />
-            <span className="material-symbols-outlined text-[48px] text-primary relative z-10 drop-shadow-md">
+          <div className="w-28 h-28 border-2 border-stamp/50 flex items-center justify-center bg-stamp/5 shadow-[0_0_40px_rgba(255,180,172,0.3)] relative overflow-hidden paper-grain">
+            <div className="absolute inset-0 bg-gradient-radial from-stamp/20 to-transparent" />
+            <span className="material-symbols-outlined text-[56px] text-stamp relative z-10 drop-shadow-lg opacity-90">
               person_add
             </span>
           </div>
         </div>
 
-        <p className="text-slate-300 text-center font-typewriter mb-8 leading-relaxed">
-          Kod sesji: <span className="text-primary font-bold">{gameCode}</span>
+        <p className="text-on-surface text-center font-display mb-8 leading-relaxed">
+          Kod sesji: <span className="text-stamp font-bold">{gameCode}</span>
           <br />
           Wybierz swoje imię i postać
         </p>
 
-        <div className="flex flex-col gap-4 w-full mb-6">
-          <FormField label="Twoje imię">
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-slate-500">
-                <span className="material-symbols-outlined text-[20px]">person</span>
-              </span>
-              <input
-                className="flex w-full rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/30 bg-black/40 backdrop-blur-sm h-14 placeholder:text-slate-600 pl-12 pr-4 text-lg font-medium leading-normal transition-all"
-                placeholder="Policjant..."
-                type="text"
-                value={onboardingNickname}
-                onChange={(e) => onNicknameChange(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-              />
-            </div>
-          </FormField>
+        <div
+          className="flex flex-col gap-4 w-full mb-6 p-4 border border-stamp/20"
+          style={{ backgroundColor: "#D5C4B1" }}
+        >
+          <div className="flex flex-col">
+            <label
+              className="block font-display text-[16px] font-bold uppercase mb-2"
+              style={{ color: "#1A1A1A" }}
+            >
+              PSEUDONIM OPERACYJNY:
+            </label>
+            <input
+              className="flex w-full bg-transparent border-none focus:outline-none h-14 pr-4 text-lg font-medium leading-normal transition-all font-display"
+              style={{
+                borderBottom: "1px solid #1A1A1A",
+                color: "#1A1A1A",
+              }}
+              placeholder="Agent..."
+              type="text"
+              value={onboardingNickname}
+              onChange={(e) => onNicknameChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+            />
+          </div>
 
           {characters.length > 0 && (
-            <FormField label="Wybierz postać" className="[&>p]:pb-3">
-              <CharacterPicker
-                characters={characters}
-                selectedId={selectedCharacterId}
-                onSelect={onCharacterSelect}
-                disabledIds={takenCharacterIds}
-              />
-            </FormField>
+            <div className="flex flex-col">
+              <label
+                className="block font-display text-[16px] font-bold uppercase mb-3"
+                style={{ color: "#1A1A1A" }}
+              >
+                DOSTĘPNE WIZERUNKI OPERACYJNE:
+              </label>
+              <div className="max-h-[45vh] overflow-y-auto">
+                <CharacterPicker
+                  characters={characters}
+                  selectedId={selectedCharacterId}
+                  onSelect={onCharacterSelect}
+                  disabledIds={takenCharacterIds}
+                />
+              </div>
+            </div>
           )}
 
           {onboardingError && (
-            <p className="text-primary text-sm font-typewriter pl-1 animate-pulse">
+            <p className="text-sm font-display pl-1 animate-pulse" style={{ color: "#D94F3B" }}>
               {onboardingError}
             </p>
           )}
         </div>
 
-        <Button
+        <button
           onClick={onSubmit}
           disabled={onboardingLoading || !onboardingNickname.trim() || !selectedCharacterId}
-          size="lg"
-          loading={onboardingLoading}
-          icon="login"
-          className="w-full"
+          className="w-full h-16 font-bold transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          style={{
+            backgroundColor: "#F0B8AE",
+            color: "#D4564C",
+            fontSize: "32px",
+            fontWeight: 700,
+            letterSpacing: "6px",
+          }}
         >
-          {onboardingLoading ? "Dołączam..." : "Dołącz do gry"}
-        </Button>
+          {onboardingLoading && (
+            <span className="material-symbols-outlined text-[32px]">hourglass_empty</span>
+          )}
+          <span className="uppercase font-display">
+            {onboardingLoading ? "DOŁĄCZAM..." : "DOŁĄCZ"}
+          </span>
+        </button>
+
+        <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/40 text-center mt-4">
+          ZATWIERDZENIE PIECZĘCIĄ GŁÓWNĄ // V.3
+        </p>
       </div>
     </PageLayout>
   );

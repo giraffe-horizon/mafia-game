@@ -4,19 +4,282 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary: #da0b0b;
-  --color-background-light: #f8f5f5;
-  --color-background-dark: #1a0c0c;
-  --font-display: "Be Vietnam Pro", sans-serif;
-  --font-typewriter: "Special Elite", monospace;
-  --radius: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-full: 9999px;
+  /* Core palette — Analog Intelligence Dossier */
+  --color-background: #131313;
+  --color-surface-low: #1c1b1b;
+  --color-surface-lowest: #0e0e0e;
+  --color-surface-highest: #353534;
+
+  --color-paper: #d7c3b0;
+  --color-paper-dim: #c4af9d;
+  --color-stamp: #ffb4ac;
+  --color-stamp-dark: #e8938a;
+  --color-stamp-green: #7ab87a;
+  --color-stamp-blue: #7ab8d4;
+  --color-stamp-gold: #c8a84b;
+
+  --color-on-surface: #e8e0d8;
+  --color-on-surface-dim: #a09890;
+  --color-on-paper: #1a1a1a;
+  --color-on-paper-dim: #3a3530;
+
+  /* Aliases for secondary (= paper) */
+  --color-secondary: #d7c3b0;
+  --color-on-secondary: #1a1a1a;
+
+  --color-accent-green: #2a3a2a;
+  --color-accent-green-bright: #3d5c3d;
+
+  /* Legacy aliases for backward compatibility */
+  --color-primary: #ffb4ac;
+  --color-primary-dark: #e8938a;
+  --color-background-dark: #131313;
+  --color-background-light: #d7c3b0;
+
+  /* Typography — Space Grotesk only */
+  --font-display: "Space Grotesk", sans-serif;
+  --font-typewriter: "Space Grotesk", monospace;
+  --font-body: "Space Grotesk", sans-serif;
+
+  /* Zero border-radius — paper has sharp edges */
+  --radius: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-full: 0;
 }
 
 @layer base {
   body {
+    background: radial-gradient(ellipse at center, #2a2a2a 0%, #111111 100%);
+    background-attachment: fixed;
+    color: #e8e0d8;
+    font-family: "Space Grotesk", sans-serif;
     min-height: max(844px, 100dvh);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* App-specific border-radius reset (avoid breaking third-party components) */
+  .mafia-app *,
+  .mafia-app *:before,
+  .mafia-app *:after {
+    border-radius: 0 !important;
+  }
+
+  ::selection {
+    background-color: rgb(255 180 172 / 0.3);
+  }
+}
+
+@layer utilities {
+  /* Grain texture overlay */
+  .grain {
+    position: relative;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    z-index: 1;
+    border-radius: 0;
+  }
+
+  /* Paper grain texture - lighter, higher opacity for paper elements */
+  .paper-grain {
+    position: relative;
+  }
+  .paper-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 180px 180px;
+    z-index: 1;
+    border-radius: 0;
+  }
+
+  /* Rubber stamp utility */
+  .stamp {
+    display: inline-block;
+    font-family: "Space Grotesk", monospace;
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 2px solid currentColor;
+    padding: 2px 8px;
+    opacity: 0.9;
+    transform: rotate(-2deg);
+    mix-blend-mode: multiply;
+    border-radius: 0 !important;
+  }
+
+  .stamp-red {
+    color: #e8938a;
+    border-color: #e8938a;
+  }
+
+  .stamp-green {
+    color: #7ab87a;
+    border-color: #7ab87a;
+  }
+
+  .stamp-gold {
+    color: #c8a84b;
+    border-color: #c8a84b;
+  }
+
+  /* Paper card — aged document */
+  .paper-card {
+    background-color: #d7c3b0;
+    color: #1a1a1a;
+    border-radius: 0 !important;
+    position: relative;
+  }
+
+  /* Paper cards automatically get grain texture */
+  .paper-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 180px 180px;
+    z-index: 1;
+    border-radius: 0;
+  }
+
+  /* Redacted / loading state */
+  .redacted {
+    background-color: #1a1a1a;
+    color: transparent;
+    user-select: none;
+    border-radius: 0 !important;
+  }
+
+  /* Tape corner effect */
+  .tape-corner {
+    position: relative;
+  }
+  .tape-corner::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-1deg);
+    width: 48px;
+    height: 16px;
+    background: rgb(215 195 176 / 0.5);
+    border-left: 1px solid rgb(215 195 176 / 0.3);
+    border-right: 1px solid rgb(215 195 176 / 0.3);
+    z-index: 10;
+    border-radius: 0 !important;
+  }
+
+  /* Step animations instead of smooth */
+  .step-transition {
+    transition-timing-function: steps(3, end);
+    transition-duration: 0.15s;
+  }
+
+  /* CRT surface for GM panel */
+  .crt-surface {
+    background: linear-gradient(
+      155deg,
+      #3d4d3d 0%,
+      #6b7d62 35%,
+      #8fa085 55%,
+      #5a6a52 80%,
+      #3d4d3d 100%
+    );
+    border: 1px solid #3d5c3d;
+    border-radius: 0 !important;
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(61, 92, 61, 0.3);
+  }
+
+  /* CRT scanlines overlay */
+  .crt-surface::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.06) 2px,
+      rgba(0, 0, 0, 0.06) 4px
+    );
+    z-index: 1;
+  }
+
+  /* CRT Monitor — realistyczny efekt */
+  .crt-monitor {
+    position: relative;
+    background: radial-gradient(ellipse at 50% 50%, #0a2a0a 0%, #061806 60%, #020802 100%);
+    color: #33ff33;
+    font-family: "Space Grotesk", monospace;
+    text-shadow:
+      0 0 4px rgba(51, 255, 51, 0.6),
+      0 0 8px rgba(51, 255, 51, 0.3);
+    overflow: hidden;
+    box-shadow:
+      inset 0 0 60px rgba(0, 30, 0, 0.5),
+      inset 0 0 4px rgba(51, 255, 51, 0.05);
+  }
+  .crt-monitor::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.15) 2px,
+      rgba(0, 0, 0, 0.15) 4px
+    );
+    z-index: 2;
+  }
+  .crt-monitor::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+    z-index: 3;
+  }
+
+  /* Card lifted — fizyczny cień na ciemnym tle */
+  .card-lifted {
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.5),
+      0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Rubber stamp — nierówny odcisk */
+  .rubber-stamp {
+    display: inline-block;
+    position: relative;
+    font-family: "Space Grotesk", monospace;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: 3px solid currentColor;
+    padding: 4px 14px;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='4' seed='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 18 -7'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23s)'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='4' seed='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 18 -7'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23s)'/%3E%3C/svg%3E");
+    -webkit-mask-size: 200px 200px;
+    mask-size: 200px 200px;
+    opacity: 0.85;
   }
 }

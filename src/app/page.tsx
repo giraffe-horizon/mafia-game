@@ -4,50 +4,108 @@ export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (
-    <div className="relative flex min-h-screen w-full md:max-w-lg flex-col bg-background-light dark:bg-background-dark group overflow-hidden">
-      {/* Noir atmospheric background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-background-dark/40 via-background-dark/70 to-background-dark z-10" />
-        <div
-          className="w-full h-full bg-cover bg-center bg-no-repeat opacity-20 dark:opacity-15"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse at 50% 30%, rgba(218,11,11,0.15) 0%, transparent 70%), radial-gradient(ellipse at 80% 80%, rgba(50,0,0,0.8) 0%, transparent 50%)",
-          }}
-        />
-      </div>
+    <div
+      className="relative flex min-h-[100dvh] w-full md:max-w-lg flex-col overflow-y-auto grain"
+      style={{
+        background:
+          "linear-gradient(160deg, #5E8F6D 0%, #8BA87A 15%, #B5B478 30%, #CBBC7A 45%, #D4B06E 55%, #D49E68 70%, #D48E5C 85%, #D08558 100%)",
+      }}
+    >
+      {/* Vignette na cały ekran */}
+      <div
+        className="absolute inset-0 pointer-events-none z-[1]"
+        style={{
+          background: "radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(0,0,0,0.15) 100%)",
+        }}
+      />
 
-      {/* Top bar */}
-      <div className="relative z-20 flex items-center p-4 pb-2 justify-between">
+      {/* Top bar — przezroczysty na gradient tle */}
+      <div
+        className="relative z-20 flex items-center p-4 pb-2 justify-between"
+        style={{ borderBottom: "1px solid rgba(0,0,0,0.1)" }}
+      >
         <div className="size-12 shrink-0 opacity-0 pointer-events-none" />
-        <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center font-typewriter text-primary drop-shadow-[0_0_8px_rgba(218,11,11,0.5)]">
+        <h2
+          className="text-lg font-bold leading-tight tracking-widest flex-1 text-center font-display uppercase"
+          style={{ color: "#2B2B2B" }}
+        >
           MAFIA
         </h2>
         <div className="size-12 shrink-0" />
       </div>
 
-      <div className="relative z-20 flex-1 flex flex-col justify-center px-6 pt-12 pb-8">
-        {/* Hero icon */}
-        <div className="flex justify-center mb-8">
-          <div className="w-32 h-32 rounded-full border-2 border-primary/40 flex items-center justify-center bg-background-dark/80 shadow-[0_0_30px_rgba(218,11,11,0.2)] relative overflow-hidden">
-            <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl" />
-            <span className="material-symbols-outlined text-[64px] text-primary relative z-10 drop-shadow-md">
-              local_police
-            </span>
+      {/* Main content — flex-1, justify-start, content od góry */}
+      <div className="relative z-20 flex-1 flex flex-col items-center px-6 pt-4 pb-6">
+        {/* Pieczątka — wycentrowana nad czaszką, nie nachodzi na MAFIA */}
+        <div className="z-30" style={{ transform: "rotate(-12deg)", marginBottom: "-10px" }}>
+          <div
+            className="font-display font-bold uppercase px-4 py-1.5 border-[3px]"
+            style={{
+              color: "rgba(224, 144, 144, 0.75)",
+              borderColor: "rgba(224, 144, 144, 0.75)",
+              fontSize: "14px",
+              letterSpacing: "0.15em",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ŚCIŚLE TAJNE
           </div>
         </div>
 
-        {/* Heading */}
-        <h1 className="text-white tracking-tight text-[40px] font-bold leading-none text-center pb-8 font-typewriter drop-shadow-md uppercase">
-          Witamy w
-          <br />
-          <span className="text-primary text-[48px] drop-shadow-[0_0_12px_rgba(218,11,11,0.6)]">
-            Mieście
-          </span>
+        {/* Czaszka — zmniejszona z 100px na 72px */}
+        <span
+          className="material-symbols-outlined mb-3"
+          style={{
+            fontSize: "72px",
+            lineHeight: 1,
+            color: "#D94F3B",
+            filter: "drop-shadow(0 0 20px rgba(217,79,59,0.4))",
+          }}
+        >
+          skull
+        </span>
+
+        {/* Tytuł MAFIA — zmniejszony z 52px na 40px */}
+        <h1
+          className="font-display font-black leading-none uppercase mb-2"
+          style={{ color: "#2B2B2B", fontSize: "40px", letterSpacing: "4px" }}
+        >
+          MAFIA
         </h1>
 
-        {/* Client interactive content */}
-        <HomeClient />
+        {/* OPERACJA line — zmniejszony mb z 6 na 4 */}
+        <p
+          className="font-display text-[14px] uppercase mb-4"
+          style={{ color: "#6B6B5A", letterSpacing: "0.25em" }}
+        >
+          OPERACJA:{" "}
+          <span
+            style={{
+              backgroundColor: "#2B2B2B",
+              color: "transparent",
+              userSelect: "none",
+              padding: "0 2px",
+            }}
+          >
+            ████████
+          </span>{" "}
+          1954
+        </p>
+
+        {/* HomeClient — przyciski WEWNĄTRZ gradientu */}
+        <div className="w-full">
+          <HomeClient />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="relative z-20 pb-4">
+        <p
+          className="font-display text-[8px] uppercase text-center"
+          style={{ color: "#8A8A7A", letterSpacing: "0.2em" }}
+        >
+          ODDZIAŁ KONTRWYWIADU // DOKUMENT NR X-ALPHA
+        </p>
       </div>
     </div>
   );

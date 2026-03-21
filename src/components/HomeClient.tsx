@@ -105,7 +105,15 @@ function CodeInput({
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
           autoFocus={i === 0}
-          className="w-12 h-14 text-center text-xl font-bold font-typewriter uppercase rounded-lg bg-black/40 border border-primary/30 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+          className="text-center text-xl font-bold font-display uppercase focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          style={{
+            width: "40px",
+            height: "44px",
+            border: "2px solid #3A3A30",
+            borderRadius: "4px",
+            backgroundColor: "transparent",
+            color: "#2B2B2B",
+          }}
         />
       ))}
     </div>
@@ -174,37 +182,59 @@ export default function HomeClient() {
   return (
     <>
       {/* Inputs */}
-      <div className="flex flex-col gap-3 w-full mb-6">
-        {joinMode && (
-          <div className="flex flex-col w-full">
-            <p className="text-slate-400 text-sm font-typewriter leading-normal pb-2 uppercase tracking-widest pl-1">
-              Kod sesji
+      {joinMode && (
+        <div
+          className="flex flex-col gap-3 w-full mb-3 p-4"
+          style={{ border: "2px dashed #5A5A4A" }}
+        >
+          <p
+            className="text-xs font-display leading-normal uppercase tracking-widest"
+            style={{ color: "#3A3A30" }}
+          >
+            KOD SESJI
+          </p>
+          <CodeInput
+            value={sessionCode}
+            onChange={setSessionCode}
+            onComplete={handleJoin}
+            length={6}
+          />
+          {error && (
+            <p
+              className="text-sm font-display animate-pulse text-center"
+              style={{ color: "#D94F3B" }}
+            >
+              {error}
             </p>
-            <CodeInput
-              value={sessionCode}
-              onChange={setSessionCode}
-              onComplete={handleJoin}
-              length={6}
-            />
-          </div>
-        )}
-
-        {error && (
-          <p className="text-primary text-sm font-typewriter pl-1 animate-pulse">{error}</p>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+      {!joinMode && (
+        <div className="w-full mb-3">
+          {error && (
+            <p className="text-sm font-display pl-1 animate-pulse" style={{ color: "#D94F3B" }}>
+              {error}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Action buttons */}
-      <div className="flex flex-col gap-4 w-full mt-auto">
+      <div className="flex flex-col gap-3 w-full mt-4">
         {!joinMode && (
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] hover:shadow-[0_6px_20px_rgba(218,11,11,0.23)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-12 font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-base"
+            style={{
+              backgroundColor: "#D94B3E",
+              color: "white",
+              borderRadius: "0",
+            }}
           >
             <span className="material-symbols-outlined mr-2 text-[20px]">add_circle</span>
-            <span className="truncate uppercase font-typewriter tracking-wider">
-              {loading ? "Tworzę..." : "Stwórz grę"}
+            <span className="truncate uppercase font-display tracking-wider">
+              {loading ? "Tworzę..." : "STWÓRZ GRĘ"}
             </span>
           </button>
         )}
@@ -212,11 +242,16 @@ export default function HomeClient() {
         <button
           onClick={handleJoin}
           disabled={loading}
-          className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 bg-transparent border-2 border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white text-lg font-bold leading-normal tracking-[0.02em] transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex w-full cursor-pointer items-center justify-center overflow-hidden h-12 font-bold leading-normal transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-base"
+          style={{
+            border: "2px dashed #5A5A4A",
+            color: "#2B2B2B",
+            backgroundColor: "transparent",
+          }}
         >
           <span className="material-symbols-outlined mr-2 text-[20px]">login</span>
-          <span className="truncate uppercase font-typewriter tracking-wider">
-            {joinMode ? (loading ? "Dołączam..." : "Wejdź do gry") : "Dołącz do gry"}
+          <span className="truncate uppercase font-display tracking-wider">
+            {joinMode ? (loading ? "Dołączam..." : "WEJDŹ DO GRY") : "DOŁĄCZ DO GRY"}
           </span>
         </button>
 
@@ -227,7 +262,8 @@ export default function HomeClient() {
               setSessionCode("");
               setError("");
             }}
-            className="text-slate-500 hover:text-slate-300 text-sm font-typewriter uppercase tracking-widest transition-colors text-center"
+            className="text-sm font-display uppercase tracking-widest transition-colors text-center"
+            style={{ color: "#6B6B5A" }}
           >
             ← Wróć
           </button>

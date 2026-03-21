@@ -48,25 +48,31 @@ export default function SettingsModal({
   const { onSave, onLeaveGame } = modalActions;
 
   return (
-    <Modal isOpen={isVisible} onClose={onClose} title="Ustawienia gracza">
-      <div className="space-y-4">
+    <Modal isOpen={isVisible} onClose={onClose} title="Ustawienia">
+      <div className="flex flex-col gap-4">
         <div>
-          <label className="block text-slate-400 text-sm mb-2 font-typewriter">Nazwa</label>
+          <label className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/40 block mb-2">
+            Pseudonim operacyjny
+          </label>
           <input
             type="text"
             value={playerNickname || ""}
             readOnly
-            className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white"
+            className="w-full bg-transparent border-b border-on-surface/20 pb-1 pt-1 font-display text-sm text-on-surface focus:outline-none"
           />
         </div>
         {characters.length > 0 && !currentPlayer.isHost && (
           <div>
-            <label className="block text-slate-400 text-sm mb-3 font-typewriter">Postać</label>
-            <CharacterPicker
-              characters={characters}
-              selectedId={selectedCharacterId}
-              onSelect={onCharacterSelect}
-            />
+            <label className="font-display font-black text-[10px] uppercase tracking-widest text-on-surface/40 block mb-3">
+              Postać
+            </label>
+            <div className="max-h-[40vh] overflow-y-auto">
+              <CharacterPicker
+                characters={characters}
+                selectedId={selectedCharacterId}
+                onSelect={onCharacterSelect}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -95,7 +101,7 @@ export default function SettingsModal({
           icon="logout"
           className="w-full mt-4"
         >
-          Opuść grę
+          Opuść operację
         </Button>
       )}
     </Modal>

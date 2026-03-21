@@ -23,6 +23,8 @@ interface LobbyViewProps {
   setGameMode: (mode: "full" | "simple") => void;
   mafiaCount: number;
   setMafiaCount: (count: number) => void;
+  secretVoting: boolean;
+  setSecretVoting: (secretVoting: boolean) => void;
   starting: boolean;
   onStart: () => void;
   onTransferGm: (playerId: string) => void;
@@ -40,6 +42,8 @@ export default function LobbyView({
   setGameMode,
   mafiaCount,
   setMafiaCount,
+  secretVoting,
+  setSecretVoting,
   starting,
   onStart,
   onTransferGm,
@@ -52,15 +56,31 @@ export default function LobbyView({
       {isHost && (
         <>
           {/* QR Code and sharing section */}
-          <div className="mx-5 mt-5 p-4 rounded-xl bg-black/40 border border-primary/20">
-            <SectionHeader>Kod sesji — udostępnij graczom</SectionHeader>
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <span className="font-typewriter text-2xl font-bold text-white tracking-widest drop-shadow-[0_0_8px_rgba(218,11,11,0.3)]">
+          <div
+            className="mx-5 mt-5 p-4 card-lifted crt-monitor relative"
+            style={{
+              background:
+                "linear-gradient(155deg, #3D4D3D 0%, #6B7D62 35%, #8FA085 55%, #5A6A52 80%, #3D4D3D 100%)",
+            }}
+          >
+            <SectionHeader
+              className="relative z-10"
+              style={{
+                backgroundColor: "rgba(0,0,0,0.45)",
+                color: "#A0B89A",
+                padding: "4px 8px",
+                marginBottom: "12px",
+              }}
+            >
+              PARAMETRY MISJI — udostępnij graczom
+            </SectionHeader>
+            <div className="flex items-center justify-between gap-3 mb-4 relative z-10">
+              <span className="font-display text-2xl font-bold text-stamp-green tracking-widest drop-shadow-[0_0_8px_rgba(122,184,122,0.4)] font-mono">
                 {gameCode}
               </span>
               <button
                 onClick={copyCode}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary text-sm font-typewriter uppercase tracking-wider transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 bg-stamp-green/10 hover:bg-stamp-green/20 border border-stamp-green/30 text-stamp-green text-sm font-display uppercase tracking-wider transition-all"
               >
                 <span className="material-symbols-outlined text-[16px]">
                   {copied ? "check" : "content_copy"}
@@ -82,20 +102,45 @@ export default function LobbyView({
                     setCopied(true),
                     setTimeout(() => setCopied(false), COPY_FEEDBACK_MS))
               }
-              className="w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white text-sm font-typewriter uppercase tracking-wider transition-all"
+              className="w-full flex items-center justify-center gap-2 h-11 bg-accent-green hover:bg-accent-green-bright border border-stamp-green/30 text-stamp-green hover:text-stamp-green text-sm font-display uppercase tracking-wider transition-all relative z-10"
             >
               <span className="material-symbols-outlined text-[18px]">share</span>
               Udostępnij link
             </button>
-            <div className="flex flex-col items-center gap-2 pt-3 border-t border-slate-800 mt-3">
-              <p className="text-slate-600 text-xs font-typewriter uppercase tracking-widest mb-1">
-                Zeskanuj aby dołączyć
-              </p>
-              <div className="p-3 bg-white rounded-xl">
-                <QRCode value={joinUrl} size={160} bgColor="#ffffff" fgColor="#1a0c0c" />
+
+            {/* QR code — full width dossier document */}
+            <div
+              className="mt-4 p-4 relative z-10"
+              style={{
+                background: "linear-gradient(135deg, #d7c3b0 0%, #c4af9d 50%, #b89e8a 100%)",
+                boxShadow: "2px 3px 8px rgba(0,0,0,0.4), inset 0 0 20px rgba(0,0,0,0.05)",
+              }}
+            >
+              {/* Tape effect top */}
+              <div
+                className="absolute -top-2 left-1/2 -translate-x-1/2 pointer-events-none z-20"
+                style={{
+                  width: "56px",
+                  height: "14px",
+                  background:
+                    "linear-gradient(180deg, rgba(215,195,176,0.5) 0%, rgba(215,195,176,0.35) 100%)",
+                  transform: "translateX(-50%) rotate(-1deg)",
+                }}
+              />
+              <div className="flex justify-center">
+                <QRCode
+                  value={joinUrl}
+                  size={180}
+                  bgColor="#d7c3b0"
+                  fgColor="#1a1a1a"
+                  style={{ width: "100%", height: "auto", maxWidth: "180px" }}
+                />
               </div>
-              <p className="text-slate-700 text-[10px] font-typewriter text-center mt-1 break-all px-2">
-                {joinUrl}
+              <p
+                className="font-display text-[9px] uppercase tracking-[0.2em] text-center mt-3"
+                style={{ color: "#5A5A4A" }}
+              >
+                SKANUJ ABY DOŁĄCZYĆ // KOD: {gameCode}
               </p>
             </div>
           </div>
@@ -103,18 +148,38 @@ export default function LobbyView({
           {/* Start button section */}
           <div className="mx-5 mt-6 flex flex-col gap-3">
             {nonHostPlayers.length < minPlayers && (
-              <p className="text-slate-500 text-sm font-typewriter text-center">
+              <p className="text-on-surface-dim text-sm font-display text-center">
                 Potrzeba minimum {minPlayers} graczy ({nonHostPlayers.length}/{minPlayers})
               </p>
             )}
-            <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
-              <SectionHeader className="text-slate-400">Tryb gry</SectionHeader>
+            <div
+              className="p-4 card-lifted crt-monitor"
+              style={{
+                background:
+                  "linear-gradient(155deg, #3D4D3D 0%, #6B7D62 35%, #8FA085 55%, #5A6A52 80%, #3D4D3D 100%)",
+              }}
+            >
+              <SectionHeader
+                className="relative z-10"
+                style={{
+                  backgroundColor: "rgba(0,0,0,0.45)",
+                  color: "#A0B89A",
+                  padding: "4px 8px",
+                  marginBottom: "12px",
+                }}
+              >
+                Tryb gry
+              </SectionHeader>
               <div className="flex gap-2">
                 {(["full", "simple"] as const).map((mode) => (
                   <button
                     key={mode}
                     onClick={() => setGameMode(mode)}
-                    className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-typewriter border transition-all text-center ${gameMode === mode ? "bg-primary/20 border-primary/50 text-primary" : "border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                    className={`flex-1 px-3 py-2.5 text-sm font-display font-bold border-2 transition-all text-center uppercase tracking-wider ${
+                      gameMode === mode
+                        ? "bg-[rgba(255,180,172,0.25)] border-[#F0B8AE] text-[#F0B8AE] shadow-[0_0_12px_rgba(240,184,174,0.2)]"
+                        : "bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.25)] text-[rgba(255,255,255,0.7)] hover:border-[rgba(255,255,255,0.4)]"
+                    }`}
                   >
                     <span className="block font-bold">
                       {mode === "full" ? "Pełny" : "Uproszczony"}
@@ -130,12 +195,28 @@ export default function LobbyView({
               </div>
             </div>
             {nonHostPlayers.length >= minPlayers && (
-              <div className="p-4 rounded-xl bg-black/40 border border-slate-700">
-                <SectionHeader className="text-slate-400">Liczba mafii</SectionHeader>
+              <div
+                className="p-4 card-lifted crt-monitor"
+                style={{
+                  background:
+                    "linear-gradient(155deg, #3D4D3D 0%, #6B7D62 35%, #8FA085 55%, #5A6A52 80%, #3D4D3D 100%)",
+                }}
+              >
+                <SectionHeader
+                  className="relative z-10"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    color: "#A0B89A",
+                    padding: "4px 8px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Liczba mafii
+                </SectionHeader>
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setMafiaCount(0)}
-                    className={`px-3 py-2 rounded-lg text-sm font-typewriter uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-primary/20 border-primary/50 text-primary" : "border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                    className={`px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"}`}
                   >
                     Auto ({autoMafiaCount(nonHostPlayers.length)})
                   </button>
@@ -146,28 +227,78 @@ export default function LobbyView({
                     <button
                       key={n}
                       onClick={() => setMafiaCount(n)}
-                      className={`w-10 h-10 rounded-lg text-sm font-bold font-typewriter border transition-all ${mafiaCount === n ? "bg-primary/20 border-primary/50 text-primary" : "border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                      className={`w-10 h-10 text-sm font-bold font-display border transition-all ${mafiaCount === n ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"}`}
                     >
                       {n}
                     </button>
                   ))}
                 </div>
-                <p className="text-slate-600 text-xs mt-2">
+                <p className="text-stamp-green/70 text-xs mt-2 font-mono">
                   {gameMode === "full" ? "+ 1 policjant, 1 lekarz, reszta cywile" : "reszta cywile"}
+                </p>
+              </div>
+            )}
+            {nonHostPlayers.length >= minPlayers && (
+              <div
+                className="p-4 card-lifted crt-monitor"
+                style={{
+                  background:
+                    "linear-gradient(155deg, #3D4D3D 0%, #6B7D62 35%, #8FA085 55%, #5A6A52 80%, #3D4D3D 100%)",
+                }}
+              >
+                <SectionHeader
+                  className="relative z-10"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    color: "#A0B89A",
+                    padding: "4px 8px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  Ustawienia głosowania
+                </SectionHeader>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSecretVoting(!secretVoting)}
+                    className={`flex items-center gap-2 px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${
+                      secretVoting
+                        ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green"
+                        : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"
+                    }`}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-[16px] ${secretVoting ? "text-stamp-green" : "text-stamp-green/60"}`}
+                    >
+                      {secretVoting ? "visibility_off" : "visibility"}
+                    </span>
+                    Tajne głosowanie
+                  </button>
+                </div>
+                <p className="text-stamp-green/70 text-xs mt-2 font-mono">
+                  {secretVoting
+                    ? "Głosy będą ukryte do końca fazy"
+                    : "Głosy widoczne na żywo dla wszystkich"}
                 </p>
               </div>
             )}
             <button
               onClick={onStart}
               disabled={starting || nonHostPlayers.length < minPlayers}
-              className="flex w-full items-center justify-center rounded-lg h-14 bg-primary hover:bg-primary/90 text-white text-lg font-bold transition-all shadow-[0_4px_14px_0_rgba(218,11,11,0.39)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-typewriter uppercase tracking-wider"
+              className="flex w-full items-center justify-center h-14 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed font-display uppercase tracking-wider"
+              style={{
+                backgroundColor: "#C94A42",
+                color: "white",
+              }}
             >
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
               {starting ? "Startuję..." : "Rozpocznij grę"}
             </button>
-            <div className="mt-4 pt-4 border-t border-slate-800">
+            <div className="mt-4 pt-4 border-t border-surface-highest">
               <LobbyTransferGm players={nonHostPlayers} onTransfer={onTransferGm} />
             </div>
+            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/40 text-center mt-2">
+              OP: MAFIA_HELPER // V.3.0.1
+            </p>
           </div>
         </>
       )}
@@ -176,9 +307,9 @@ export default function LobbyView({
       {!isHost && (
         <InfoCard
           icon="hourglass_empty"
-          iconClassName="text-[36px] text-primary/60 mb-2 animate-pulse"
+          iconClassName="text-[36px] text-stamp/60 mb-2 animate-pulse"
           title="Czekaj na start"
-          titleClassName="text-sm text-slate-400"
+          titleClassName="text-sm text-on-surface-dim"
           description="Mistrz gry niedługo rozpocznie rozgrywkę"
           className="mx-5 mt-5 p-5"
         />

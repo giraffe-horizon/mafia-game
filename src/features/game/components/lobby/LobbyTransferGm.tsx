@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import type { PublicPlayer } from "@/db";
 
@@ -14,13 +16,16 @@ export default function LobbyTransferGm({ players, onTransfer }: LobbyTransferGm
     <div>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-center gap-2 h-10 rounded-lg border border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-500 font-typewriter uppercase tracking-wider text-xs transition-all"
+        className="w-full flex items-center justify-center gap-2 h-10 border border-stamp/30 text-stamp/60 hover:text-stamp hover:border-stamp/50 font-display uppercase tracking-wider text-xs transition-all bg-stamp/5"
       >
         <span className="material-symbols-outlined text-[16px]">manage_accounts</span>
-        Przekaż rolę MG
+        Lista agentów
       </button>
       {open && (
-        <div className="mt-2 rounded-lg border border-slate-700 bg-black/30 overflow-hidden">
+        <div className="mt-2 paper-card p-3">
+          <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-paper/50 mb-2">
+            PERSONEL OPERACYJNY — PRZEKAŻ DOWODZENIE
+          </p>
           {players.map((p) => (
             <button
               key={p.playerId}
@@ -28,10 +33,10 @@ export default function LobbyTransferGm({ players, onTransfer }: LobbyTransferGm
                 onTransfer(p.playerId);
                 setOpen(false);
               }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 border-b border-slate-800 last:border-b-0 hover:bg-primary/5 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-2 py-2 border-b border-on-paper/10 last:border-b-0 hover:bg-stamp/10 transition-colors text-left"
             >
-              <span className="material-symbols-outlined text-[16px] text-slate-500">person</span>
-              <span className="text-white text-sm">{p.nickname}</span>
+              <span className="font-display text-[10px] text-on-paper/60 w-4">#</span>
+              <span className="text-on-paper text-sm font-display">{p.nickname}</span>
             </button>
           ))}
         </div>

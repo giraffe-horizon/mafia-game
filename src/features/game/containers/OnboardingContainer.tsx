@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useGameStore } from "@/features/game/store/gameStore";
 import { useOnboarding } from "@/features/game/hooks/useOnboarding";
@@ -29,11 +29,16 @@ export default function OnboardingContainer() {
     handleSetup,
   } = useOnboarding({ token, refetch, gameService });
 
+  // Sync character selection from server once on initial load only.
+  // Using a ref prevents polling updates from overriding local selections.
+  const initialSyncDone = useRef(false);
+  const characterId = state?.currentPlayer?.character?.id;
   useEffect(() => {
-    if (state?.currentPlayer?.character) {
-      setSelectedCharacterId(state.currentPlayer.character.id);
+    if (characterId && !initialSyncDone.current && !selectedCharacterId) {
+      setSelectedCharacterId(characterId);
+      initialSyncDone.current = true;
     }
-  }, [state?.currentPlayer?.character, setSelectedCharacterId]);
+  }, [characterId, setSelectedCharacterId, selectedCharacterId]);
 
   if (!state) return null;
 

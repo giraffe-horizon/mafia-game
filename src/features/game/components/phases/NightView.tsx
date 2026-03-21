@@ -7,6 +7,7 @@ import type {
 import NightActionPanel from "@/features/game/components/NightActionPanel";
 import DeadSpectatorView from "@/features/game/components/shared/DeadSpectatorView";
 import RoleCard from "@/features/game/components/shared/RoleCard";
+import CivilianNightView from "@/features/game/components/shared/CivilianNightView";
 
 export type { PlayerState, NightViewState, NightActionData };
 
@@ -16,6 +17,7 @@ interface NightViewProps {
   viewState: NightViewState;
   actionData: NightActionData;
   players: PublicPlayer[];
+  round: number;
 }
 
 export default function NightView({
@@ -24,6 +26,7 @@ export default function NightView({
   viewState,
   actionData,
   players,
+  round,
 }: NightViewProps) {
   const { roleVisible, toggleRole } = viewState;
   const {
@@ -36,28 +39,39 @@ export default function NightView({
   } = actionData;
   return (
     <>
-      {/* Role card for non-host players */}
-      {!isHost && (
+      {/* Role card for alive non-host players (dead players see all roles via DeadSpectatorView) */}
+      {!isHost && currentPlayer.isAlive && (
         <RoleCard role={currentPlayer.role} roleVisible={roleVisible} onToggle={toggleRole} />
       )}
 
       {/* Night action panel for alive players */}
       {!isHost && currentPlayer.isAlive && (
-        <NightActionPanel
-          role={roleVisible ? (currentPlayer.role as Role) || null : null}
-          targets={actionTargets}
-          myAction={myAction}
-          roleHidden={!roleVisible}
-          actionState={actionState}
-          mafiaState={mafiaState}
-          doctorLastTargetId={doctorLastTargetId}
-          investigatedPlayerIds={investigatedPlayerIds}
-        />
+        <>
+          {roleVisible && currentPlayer.role === "civilian" ? (
+            <CivilianNightView round={round} />
+          ) : (
+            <NightActionPanel
+              role={roleVisible ? (currentPlayer.role as Role) || null : null}
+              targets={actionTargets}
+              myAction={myAction}
+              roleHidden={!roleVisible}
+              actionState={actionState}
+              mafiaState={mafiaState}
+              doctorLastTargetId={doctorLastTargetId}
+              investigatedPlayerIds={investigatedPlayerIds}
+            />
+          )}
+        </>
       )}
 
       {/* Dead spectator view */}
       {!isHost && !currentPlayer.isAlive && (
-        <DeadSpectatorView currentPlayer={currentPlayer} players={players} />
+        <DeadSpectatorView
+          currentPlayer={currentPlayer}
+          players={players}
+          phase="night"
+          round={round}
+        />
       )}
     </>
   );

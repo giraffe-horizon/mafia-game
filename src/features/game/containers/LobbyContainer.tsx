@@ -16,6 +16,8 @@ export default function LobbyContainer() {
   const [copied, setCopied] = useState(false);
   const [mafiaCount, setMafiaCount] = useState(0);
   const [gameMode, setGameMode] = useState<"full" | "simple">("full");
+  const [secretVoting, setSecretVoting] = useState(false);
+  const [joinUrl, setJoinUrl] = useState("");
 
   const lobbySettings = state?.lobbySettings;
   useEffect(() => {
@@ -25,9 +27,20 @@ export default function LobbyContainer() {
     }
   }, [lobbySettings]);
 
-  if (!state) return null;
+  // Initialize secretVoting from current game config
+  useEffect(() => {
+    if (state?.game.config?.secretVoting !== undefined) {
+      setSecretVoting(state.game.config.secretVoting);
+    }
+  }, [state?.game.config?.secretVoting]);
 
-  const joinUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/?code=${state.game.code}`;
+  useEffect(() => {
+    if (state?.game.code) {
+      setJoinUrl(`${window.location.origin}/?code=${state.game.code}`);
+    }
+  }, [state?.game.code]);
+
+  if (!state) return null;
 
   function copyCode() {
     navigator.clipboard.writeText(state!.game.code);
@@ -48,8 +61,10 @@ export default function LobbyContainer() {
       setGameMode={setGameMode}
       mafiaCount={mafiaCount}
       setMafiaCount={setMafiaCount}
+      secretVoting={secretVoting}
+      setSecretVoting={setSecretVoting}
       starting={starting}
-      onStart={() => startGame(gameMode, mafiaCount)}
+      onStart={() => startGame(gameMode, mafiaCount, secretVoting)}
       onTransferGm={(playerId: string) => transferGameMaster(playerId)}
     />
   );

@@ -49,6 +49,8 @@ export interface MessageRow {
   content: string;
   is_read: number;
   created_at: string;
+  event_type: string | null;
+  round: number | null;
 }
 
 export interface GameActionRow {
@@ -105,6 +107,7 @@ export type GameStatus = "lobby" | "playing" | "finished";
 export type GamePhase = "lobby" | "night" | "day" | "voting" | "review" | "ended";
 export type Role = "mafia" | "detective" | "doctor" | "civilian";
 export type ActionType = "kill" | "investigate" | "protect" | "vote" | "wait";
+export type EventType = "night_result" | "vote_result" | "game_start" | "game_end";
 
 export interface PublicPlayer {
   playerId: string;
@@ -124,6 +127,9 @@ export interface GameStateResponse {
     phase: GamePhase;
     round: number;
     winner: string | null;
+    config: {
+      secretVoting?: boolean;
+    };
   };
   currentPlayer: {
     playerId: string;
@@ -137,7 +143,7 @@ export interface GameStateResponse {
   };
   takenCharacterIds: string[];
   players: PublicPlayer[];
-  messages: { id: string; content: string; createdAt: string }[];
+  messages: { id: string; content: string; createdAt: string; eventType?: string | null }[];
   missions: {
     id: string;
     description: string;
@@ -206,4 +212,29 @@ export interface GameStateResponse {
     nickname?: string;
     role?: string;
   };
+  // History of votes from previous rounds (for GŁOSY tab)
+  voteHistory?: {
+    round: number;
+    results: {
+      nickname: string;
+      playerId: string;
+      votes: number;
+      eliminated: boolean;
+    }[];
+  }[];
+  // Summary of last night's events (for NOC tab during day/voting)
+  lastNightSummary?: {
+    round: number;
+    killedNickname: string | null;
+    savedByDoctor: boolean;
+  };
+  // System event messages grouped per round (for LOGI tab)
+  gameLog?: {
+    round: number;
+    events: {
+      type: "night_result" | "vote_result" | "game_start" | "game_end";
+      description: string;
+      timestamp: string;
+    }[];
+  }[];
 }

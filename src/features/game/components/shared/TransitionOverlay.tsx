@@ -91,11 +91,11 @@ export default function TransitionOverlay() {
         <span className="material-symbols-outlined text-[64px] text-primary animate-pulse">
           {screen.icon}
         </span>
-        <h1 className="font-typewriter text-3xl font-bold uppercase tracking-widest text-white">
+        <h1 className="font-display text-3xl font-bold uppercase tracking-widest text-on-surface">
           {screen.title}
         </h1>
         {screen.subtitle && (
-          <p className="font-typewriter text-lg text-slate-400">{screen.subtitle}</p>
+          <p className="font-display text-lg text-on-surface/60">{screen.subtitle}</p>
         )}
       </div>
 
@@ -105,8 +105,8 @@ export default function TransitionOverlay() {
           {transition.screens.map((_, i) => (
             <div
               key={`dot-${transition.type}-${i}`}
-              className={`h-2 w-2 rounded-full transition-colors duration-300 ${
-                i === currentScreenIndex ? "bg-primary" : "bg-slate-600"
+              className={`h-2 w-2 transition-colors duration-300 ${
+                i === currentScreenIndex ? "bg-primary" : "bg-surface-highest"
               }`}
             />
           ))}
@@ -117,7 +117,7 @@ export default function TransitionOverlay() {
       {isHost && (
         <button
           type="button"
-          className="absolute bottom-24 font-typewriter uppercase text-sm tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+          className="absolute bottom-24 font-display uppercase text-sm tracking-wider text-on-surface/40 hover:text-on-surface/70 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             clearTransition();

@@ -6,6 +6,7 @@ import type {
   GameStatus,
   GamePhase,
   Role,
+  EventType,
   PublicPlayer,
 } from "@/db/types";
 import { generateSessionCode, now, nanoid } from "@/db/helpers";
@@ -160,7 +161,8 @@ export async function getGameState(
         if (gameRow.status !== "playing") return null;
         if (p.token === token) return p.role as Role | null; // own role
         if (isHost) return p.role as Role | null; // GM sees all
-        if (p.is_alive === 0) return p.role as Role | null; // dead players revealed
+        if (playerRow.is_alive === 0) return p.role as Role | null; // dead spectator sees ALL roles
+        if (p.is_alive === 0) return p.role as Role | null; // dead players revealed to everyone
         if (playerRow.role === "mafia" && p.role === "mafia") return p.role as Role | null; // mafia sees teammates
         return null;
       })(),
@@ -179,10 +181,10 @@ export async function getGameState(
   // Get messages for current player
   const { results: messages } = await db
     .prepare(
-      "SELECT id, content, created_at FROM messages WHERE game_id = ? AND to_player_id = ? ORDER BY created_at DESC LIMIT 10"
+      "SELECT id, content, created_at, event_type FROM messages WHERE game_id = ? AND to_player_id = ? ORDER BY created_at DESC LIMIT 10"
     )
     .bind(playerRow.game_id, playerRow.player_id)
-    .all<{ id: string; content: string; created_at: string }>();
+    .all<{ id: string; content: string; created_at: string; event_type: string | null }>();
 
   // Get missions for current player
   const { results: missions } = await db
@@ -277,9 +279,41 @@ export async function getGameState(
   // Get mafia team actions (mafia only)
   const mafiaTeamActions = await getMafiaTeamActions(db, playerRow, gameRow, allPlayers);
 
-  // Get vote tally (visible during voting phase)
-  const voteTally =
-    gameRow.phase === "voting" ? await getVoteTally(db, gameRow, allPlayers) : undefined;
+  // Parse lobby settings and game config from config
+  let lobbySettings: { mode: "full" | "simple"; mafiaCount: number } | undefined;
+  let gameConfig: { secretVoting?: boolean };
+  try {
+    const config = JSON.parse(gameRow.config || "{}");
+    if (config.mode) {
+      lobbySettings = {
+        mode: config.mode === "simple" ? "simple" : "full",
+        mafiaCount: typeof config.mafiaCount === "number" ? config.mafiaCount : 0,
+      };
+    }
+    gameConfig = {
+      secretVoting: typeof config.secretVoting === "boolean" ? config.secretVoting : false, // default: false
+    };
+  } catch {
+    // ignore malformed config, use defaults
+    gameConfig = { secretVoting: false };
+  }
+
+  // Get vote tally (visible during voting phase, filtered for secret voting)
+  let voteTally: GameStateResponse["voteTally"] = undefined;
+  if (gameRow.phase === "voting") {
+    const fullVoteTally = await getVoteTally(db, gameRow, allPlayers);
+
+    // Filter results for secret voting: players see only count, GM sees all
+    if (gameConfig.secretVoting && !isHost) {
+      voteTally = {
+        totalVoters: fullVoteTally.totalVoters,
+        votedCount: fullVoteTally.votedCount,
+        results: [], // Hide individual vote breakdown
+      };
+    } else {
+      voteTally = fullVoteTally;
+    }
+  }
 
   // Host-only data
   let hostActions = undefined;
@@ -434,18 +468,113 @@ export async function getGameState(
     }
   }
 
-  // Parse lobby settings from config
-  let lobbySettings: { mode: "full" | "simple"; mafiaCount: number } | undefined;
-  try {
-    const config = JSON.parse(gameRow.config || "{}");
-    if (config.mode) {
-      lobbySettings = {
-        mode: config.mode === "simple" ? "simple" : "full",
-        mafiaCount: typeof config.mafiaCount === "number" ? config.mafiaCount : 0,
-      };
+  // Vote history from previous rounds (for GŁOSY tab)
+  let voteHistory: GameStateResponse["voteHistory"] = undefined;
+  if (gameRow.status === "playing" || gameRow.status === "finished") {
+    const maxRound = gameRow.phase === "voting" ? gameRow.round - 1 : gameRow.round;
+    if (maxRound >= 1) {
+      const { results: voteRows } = await db
+        .prepare(
+          `SELECT ga.target_player_id, COUNT(*) as votes, ga.round, gp.nickname
+           FROM game_actions ga
+           JOIN game_players gp ON ga.target_player_id = gp.player_id AND ga.game_id = gp.game_id
+           WHERE ga.game_id = ? AND ga.phase = 'voting' AND ga.action_type = 'vote' AND ga.round <= ?
+           GROUP BY ga.round, ga.target_player_id
+           ORDER BY ga.round DESC, votes DESC`
+        )
+        .bind(gameRow.id, maxRound)
+        .all<{ target_player_id: string; votes: number; round: number; nickname: string }>();
+
+      if (voteRows.length > 0) {
+        const roundMap = new Map<number, typeof voteRows>();
+        for (const row of voteRows) {
+          if (!roundMap.has(row.round)) roundMap.set(row.round, []);
+          roundMap.get(row.round)!.push(row);
+        }
+        voteHistory = Array.from(roundMap.entries())
+          .sort((a, b) => b[0] - a[0])
+          .map(([round, rows]) => {
+            const maxV = rows[0].votes;
+            const tied = rows.filter((r) => r.votes === maxV);
+            const eliminatedId = tied.length === 1 ? tied[0].target_player_id : null;
+            return {
+              round,
+              results: rows.map((r) => ({
+                nickname: r.nickname,
+                playerId: r.target_player_id,
+                votes: r.votes,
+                eliminated: r.target_player_id === eliminatedId,
+              })),
+            };
+          });
+      }
     }
-  } catch {
-    // ignore malformed config
+  }
+
+  // Last night summary (for NOC tab during day/voting)
+  let lastNightSummary: GameStateResponse["lastNightSummary"] = undefined;
+  if (gameRow.status === "playing" && (gameRow.phase === "day" || gameRow.phase === "voting")) {
+    const nightResultMsg = await db
+      .prepare(
+        "SELECT content FROM messages WHERE game_id = ? AND to_player_id = ? AND event_type = 'night_result' AND round = ? LIMIT 1"
+      )
+      .bind(gameRow.id, playerRow.player_id, gameRow.round)
+      .first<{ content: string }>();
+
+    if (nightResultMsg) {
+      const killedNickname = nightResultMsg.content.startsWith("Tej nocy zginął:")
+        ? nightResultMsg.content.replace("Tej nocy zginął: ", "").trim()
+        : null;
+      const { results: killActions } = await db
+        .prepare(
+          "SELECT target_player_id FROM game_actions WHERE game_id = ? AND round = ? AND action_type = 'kill' LIMIT 1"
+        )
+        .bind(gameRow.id, gameRow.round)
+        .all<{ target_player_id: string }>();
+      const savedByDoctor = killActions.length > 0 && killedNickname === null;
+      lastNightSummary = { round: gameRow.round, killedNickname, savedByDoctor };
+    }
+  }
+
+  // Game log — system event messages grouped per round (for LOGI tab)
+  let gameLog: GameStateResponse["gameLog"] = undefined;
+  if (gameRow.status === "playing" || gameRow.status === "finished") {
+    const { results: eventMsgs } = await db
+      .prepare(
+        "SELECT content, created_at, event_type, round FROM messages WHERE game_id = ? AND to_player_id = ? AND event_type IS NOT NULL ORDER BY round ASC, created_at ASC"
+      )
+      .bind(gameRow.id, playerRow.player_id)
+      .all<{
+        content: string;
+        created_at: string;
+        event_type: string | null;
+        round: number | null;
+      }>();
+
+    const validEventTypes: EventType[] = ["night_result", "vote_result", "game_start", "game_end"];
+    const isValidEventType = (val: string | null): val is EventType =>
+      val !== null && validEventTypes.includes(val as EventType);
+
+    if (eventMsgs.length > 0) {
+      const roundMap = new Map<number, typeof eventMsgs>();
+      for (const msg of eventMsgs) {
+        const r = msg.round ?? 0;
+        if (!roundMap.has(r)) roundMap.set(r, []);
+        roundMap.get(r)!.push(msg);
+      }
+      gameLog = Array.from(roundMap.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([round, msgs]) => ({
+          round,
+          events: msgs
+            .filter((m) => isValidEventType(m.event_type))
+            .map((m) => ({
+              type: m.event_type as EventType,
+              description: m.content,
+              timestamp: m.created_at,
+            })),
+        }));
+    }
   }
 
   return {
@@ -456,6 +585,7 @@ export async function getGameState(
       phase: gameRow.phase as GamePhase,
       round: gameRow.round,
       winner: gameRow.winner,
+      config: gameConfig,
     },
     currentPlayer: {
       playerId: playerRow.player_id,
@@ -480,6 +610,7 @@ export async function getGameState(
       id: m.id,
       content: m.content,
       createdAt: m.created_at,
+      eventType: m.event_type,
     })),
     missions: missions.map((m) => ({
       id: m.id,
@@ -500,6 +631,9 @@ export async function getGameState(
     lobbySettings,
     showPoints,
     lastPhaseResult,
+    voteHistory,
+    lastNightSummary,
+    gameLog,
   };
 }
 

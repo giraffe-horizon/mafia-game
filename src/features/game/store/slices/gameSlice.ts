@@ -3,6 +3,7 @@ import type { GameStateResponse } from "@/db";
 import type { GameService } from "@/features/game/service";
 import type { GameState } from "@/features/game/store/gameStore";
 import { getErrorMessage } from "@/lib/errors";
+import { ApiError } from "@/lib/api-client";
 import { buildTransition } from "@/features/game/store/buildTransition";
 
 // Polling constants
@@ -178,9 +179,10 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
   },
 
   refetch: async () => {
-    const { _gameService, _token, _shownMessageIds, _isFetching } = get();
+    const { _gameService, _token, _shownMessageIds } = get();
     if (!_gameService || !_token) return;
-    if (_isFetching) return;
+    // Atomic check-and-set to prevent concurrent fetches
+    if (get()._isFetching) return;
     set({ _isFetching: true });
 
     try {
@@ -200,6 +202,23 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
         );
         if (transition) {
           set({ transition });
+        }
+
+        // Auto-switch active tab on phase change
+        if (newPhase === "night") get().setActiveTab("night");
+        else if (newPhase === "day") get().setActiveTab("day");
+        else if (newPhase === "voting") get().setActiveTab("votes");
+        // review/ended: stay on current tab
+
+        // Set notification badges for inactive tabs when phase changes
+        const currentTab = get().activeTab;
+        if (newPhase === "day" && currentTab !== "night") {
+          // Nowe wyniki nocy - badge na "Noc" tab
+          get().setTabNotification("night", true);
+        }
+        if (newPhase === "voting" && currentTab !== "votes") {
+          // Nowe głosowanie - badge na "Głosy" tab
+          get().setTabNotification("votes", true);
         }
       }
 
@@ -225,6 +244,13 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
             const newToast = { id: msg.id, content: msg.content };
             newToasts.push(newToast);
 
+            // Set notification badge for "agents" tab if new message appears
+            const currentTab = get().activeTab;
+            if (currentTab !== "agents" && !msg.eventType) {
+              // Regular GM message (not system event) - badge on "Agenci" tab
+              get().setTabNotification("agents", true);
+            }
+
             const timeoutId = setTimeout(() => {
               get()._toastTimeouts.delete(msg.id);
               set((state) => ({
@@ -245,7 +271,7 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
         }
       }
     } catch (error) {
-      if (error instanceof Error && error.message.includes("404")) {
+      if (error instanceof ApiError && error.status === 404) {
         set({ error: "Sesja nie istnieje" });
         return;
       }

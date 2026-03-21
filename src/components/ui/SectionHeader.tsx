@@ -1,16 +1,16 @@
-import React from "react";
+import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-interface SectionHeaderProps extends React.HTMLAttributes<HTMLParagraphElement> {
+export interface SectionHeaderProps extends HTMLAttributes<HTMLParagraphElement> {
   icon?: string;
   children: React.ReactNode;
 }
 
-export default function SectionHeader({ icon, children, className, ...props }: SectionHeaderProps) {
+export function SectionHeader({ icon, children, className, ...props }: SectionHeaderProps) {
   return (
     <p
       className={cn(
-        "text-slate-500 text-xs font-typewriter uppercase tracking-widest mb-2",
+        "text-on-surface-dim text-xs font-display font-bold uppercase tracking-widest mb-2",
         className
       )}
       {...props}
@@ -23,4 +23,4 @@ export default function SectionHeader({ icon, children, className, ...props }: S
   );
 }
 
-export type { SectionHeaderProps };
+export default SectionHeader;

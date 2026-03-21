@@ -6,17 +6,19 @@ import { startGame } from "@/db";
 export const POST = withApiHandler(async (req: NextRequest, { db, token }) => {
   let mafiaCount: number | undefined;
   let mode: "full" | "simple" = "full";
+  let secretVoting: boolean = false;
 
   try {
     const body = await req.json();
     const validatedData = startGameSchema.parse(body);
     mafiaCount = validatedData.mafiaCount;
     mode = validatedData.mode ?? "full";
+    secretVoting = validatedData.secretVoting ?? false;
   } catch {
     // no body = use defaults
   }
 
-  const result = await startGame(db, token, mafiaCount, mode);
+  const result = await startGame(db, token, mafiaCount, mode, secretVoting);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

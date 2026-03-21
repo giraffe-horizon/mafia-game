@@ -6,7 +6,8 @@ export async function startGame(
   db: D1Database,
   token: string,
   customMafiaCount?: number,
-  mode: "full" | "simple" = "full"
+  mode: "full" | "simple" = "full",
+  secretVoting: boolean = false
 ): Promise<{ success: boolean; error?: string }> {
   const playerRow = await db
     .prepare("SELECT * FROM game_players WHERE token = ?")
@@ -48,7 +49,7 @@ export async function startGame(
       )
       .bind(
         gameRow.round + 1,
-        JSON.stringify({ mode, mafiaCount: customMafiaCount || 0 }),
+        JSON.stringify({ mode, mafiaCount: customMafiaCount || 0, secretVoting }),
         playerRow.game_id
       ),
     db
@@ -229,7 +230,7 @@ export async function resolveNight(
     }
   }
 
-  // Send night message to all players
+  // Send night result message to all players (tagged as system event)
   const { results: allPlayers } = await db
     .prepare("SELECT player_id FROM game_players WHERE game_id = ?")
     .bind(gameRow.id)
@@ -238,15 +239,16 @@ export async function resolveNight(
   const messagePromises = allPlayers.map((player) =>
     db
       .prepare(
-        "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)"
+        "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at, event_type, round) VALUES (?, ?, ?, ?, ?, 0, ?, 'night_result', ?)"
       )
       .bind(
-        crypto.randomUUID(),
+        nanoid(),
         gameRow.id,
         hostPlayer.player_id,
         player.player_id,
         nightMsg,
-        now()
+        now(),
+        gameRow.round
       )
       .run()
   );
@@ -300,15 +302,16 @@ export async function resolveVoting(
     const messagePromises = allPlayers.map((player) =>
       db
         .prepare(
-          "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)"
+          "INSERT INTO messages (id, game_id, from_player_id, to_player_id, content, is_read, created_at, event_type, round) VALUES (?, ?, ?, ?, ?, 0, ?, 'vote_result', ?)"
         )
         .bind(
-          crypto.randomUUID(),
+          nanoid(),
           gameRow.id,
           hostPlayer.player_id,
           player.player_id,
           eliminationMsg,
-          now()
+          now(),
+          gameRow.round
         )
         .run()
     );
