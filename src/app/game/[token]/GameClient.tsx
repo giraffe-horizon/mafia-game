@@ -12,7 +12,6 @@ import { createHttpGameService, type GameService } from "@/features/game/service
 import OnboardingContainer from "@/features/game/containers/OnboardingContainer";
 import TabsContainer from "@/features/game/containers/TabsContainer";
 
-import EndContainer from "@/features/game/containers/EndContainer";
 import ToastOverlay from "@/features/game/components/shared/ToastOverlay";
 import TransitionOverlay from "@/features/game/components/shared/TransitionOverlay";
 import GameHeader from "@/features/game/components/GameHeader";
@@ -38,7 +37,7 @@ export default function GameClient() {
   const setChangingDecision = useGameStore((s) => s.setChangingDecision);
 
   // Derived-state hooks
-  const { phase, isFinished, round } = useCurrentPhase();
+  const { phase, round } = useCurrentPhase();
   const { isHost } = usePlayerState();
 
   // WebSocket store selectors
@@ -195,12 +194,9 @@ export default function GameClient() {
         onShowSettings={() => setShowSettingsModal(true)}
       />
 
-      {/* Tab-based layout (always rendered — EndContainer overlays on top when game ends) */}
+      {/* Tab-based layout — EndScreen is now rendered inline within TabsContainer */}
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
         <TabsContainer />
-
-        {/* End screen overlay — absolutely covers tab content when game is finished */}
-        {isFinished && <EndContainer />}
       </div>
 
       <SettingsModal

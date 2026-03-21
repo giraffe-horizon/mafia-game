@@ -11,7 +11,7 @@ interface MissionsListProps {
 }
 
 export default function MissionsList({ missions, showPoints }: MissionsListProps) {
-  if (missions.length === 0 || !showPoints) return null;
+  if (missions.length === 0) return null;
 
   return (
     <div className="mx-5 mt-4">
@@ -36,7 +36,7 @@ export default function MissionsList({ missions, showPoints }: MissionsListProps
                 {m.description}
               </p>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                {m.points > 0 && (
+                {showPoints && m.points > 0 && (
                   <span
                     className={`text-xs font-display font-bold ${m.isCompleted ? "text-stamp-green" : "text-primary"}`}
                   >

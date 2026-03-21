@@ -49,7 +49,7 @@ export default function EndScreen(_props: Record<string, never> = {}) {
     (game.winner === "town" && currentPlayer.role !== "mafia");
 
   return (
-    <div className="absolute inset-0 z-20 bg-background flex flex-col overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto bg-background">
       {/* Winner stamp section */}
       <div className="flex flex-col items-center justify-center py-10 px-6 border-b border-surface-highest gap-4">
         <span className={`material-symbols-outlined text-[64px] ${winnerColor}`}>{winnerIcon}</span>

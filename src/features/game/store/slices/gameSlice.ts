@@ -30,6 +30,7 @@ export interface GameSlice {
   _intervalRef: NodeJS.Timeout | null;
   _backoffDelay: number;
   _shownMessageIds: Set<string>;
+  _shownMissionIds: Set<string>;
   _toastTimeouts: Map<string, NodeJS.Timeout>;
   _isFetching: boolean;
   _scheduleNext: () => void;
@@ -54,6 +55,7 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
   _intervalRef: null,
   _backoffDelay: POLL_INTERVAL,
   _shownMessageIds: new Set(),
+  _shownMissionIds: new Set(),
   _toastTimeouts: new Map(),
   _isFetching: false,
 
@@ -91,6 +93,7 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
       _token: token,
       _backoffDelay: POLL_INTERVAL,
       _shownMessageIds: new Set(),
+      _shownMissionIds: new Set(),
       state: null,
       toasts: [],
       characters: [],
@@ -205,7 +208,9 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
         }
 
         // Auto-switch active tab on phase change
-        if (newPhase === "night") get().setActiveTab("night");
+        // GM doesn't have night tab — fall back to day
+        const isHost = data.currentPlayer?.isHost ?? false;
+        if (newPhase === "night") get().setActiveTab(isHost ? "day" : "night");
         else if (newPhase === "day") get().setActiveTab("day");
         else if (newPhase === "voting") get().setActiveTab("archive");
         // review/ended: stay on current tab
@@ -268,6 +273,37 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
         // Mark messages as shown so they don't appear as toasts later
         for (const msg of data.messages) {
           _shownMessageIds.add(msg.id);
+        }
+      }
+
+      // Detect new missions and show toast + badge
+      const { _shownMissionIds } = get();
+      for (const mission of data.missions) {
+        if (!_shownMissionIds.has(mission.id)) {
+          _shownMissionIds.add(mission.id);
+
+          // Only show toast if this is not the first fetch (state was already loaded)
+          if (prevPhase != null) {
+            const missionToast = {
+              id: `mission-${mission.id}`,
+              content: `Nowa misja: ${mission.description}`,
+            };
+            set((s) => ({ toasts: [...s.toasts, missionToast] }));
+
+            const timeoutId = setTimeout(() => {
+              get()._toastTimeouts.delete(missionToast.id);
+              set((s) => ({
+                toasts: s.toasts.filter((t) => t.id !== missionToast.id),
+              }));
+            }, TOAST_DURATION);
+            get()._toastTimeouts.set(missionToast.id, timeoutId);
+
+            // Badge on "Agenci" tab
+            const currentTab = get().activeTab;
+            if (currentTab !== "agents") {
+              get().setTabNotification("agents", true);
+            }
+          }
         }
       }
     } catch (error) {
