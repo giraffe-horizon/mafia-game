@@ -63,8 +63,8 @@ export default function LobbyView({
             <SectionHeader
               className="relative z-10"
               style={{
-                backgroundColor: "rgba(0,0,0,0.45)",
-                color: "#A0B89A",
+                backgroundColor: "rgba(0,0,0,0.65)",
+                color: "#E8F5E0",
                 padding: "4px 8px",
                 marginBottom: "12px",
               }}
@@ -145,7 +145,7 @@ export default function LobbyView({
           {/* Start button section */}
           <div className="mx-5 mt-6 flex flex-col gap-3">
             {nonHostPlayers.length < minPlayers && (
-              <p className="text-on-surface text-sm font-display text-center">
+              <p className="text-white/70 text-sm font-display text-center">
                 Potrzeba minimum {minPlayers} graczy ({nonHostPlayers.length}/{minPlayers})
               </p>
             )}
@@ -159,8 +159,8 @@ export default function LobbyView({
               <SectionHeader
                 className="relative z-10"
                 style={{
-                  backgroundColor: "rgba(0,0,0,0.55)",
-                  color: "#C0D8BA",
+                  backgroundColor: "rgba(0,0,0,0.65)",
+                  color: "#E8F5E0",
                   padding: "4px 8px",
                   marginBottom: "12px",
                 }}
@@ -202,8 +202,8 @@ export default function LobbyView({
                 <SectionHeader
                   className="relative z-10"
                   style={{
-                    backgroundColor: "rgba(0,0,0,0.45)",
-                    color: "#A0B89A",
+                    backgroundColor: "rgba(0,0,0,0.65)",
+                    color: "#E8F5E0",
                     padding: "4px 8px",
                     marginBottom: "12px",
                   }}
@@ -213,7 +213,7 @@ export default function LobbyView({
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setMafiaCount(0)}
-                    className={`px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/80 hover:border-stamp-green/50"}`}
+                    className={`px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/40 text-stamp-green hover:border-stamp-green/50"}`}
                   >
                     Auto ({autoMafiaCount(nonHostPlayers.length)})
                   </button>
@@ -224,13 +224,13 @@ export default function LobbyView({
                     <button
                       key={n}
                       onClick={() => setMafiaCount(n)}
-                      className={`w-10 h-10 text-sm font-bold font-display border transition-all ${mafiaCount === n ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/80 hover:border-stamp-green/50"}`}
+                      className={`w-10 h-10 text-sm font-bold font-display border transition-all ${mafiaCount === n ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/40 text-stamp-green hover:border-stamp-green/50"}`}
                     >
                       {n}
                     </button>
                   ))}
                 </div>
-                <p className="text-stamp-green/90 text-xs mt-2 font-mono">
+                <p className="text-white/80 text-xs mt-2 font-mono">
                   {gameMode === "full" ? "+ 1 policjant, 1 lekarz, reszta cywile" : "reszta cywile"}
                 </p>
               </div>
@@ -246,8 +246,8 @@ export default function LobbyView({
                 <SectionHeader
                   className="relative z-10"
                   style={{
-                    backgroundColor: "rgba(0,0,0,0.45)",
-                    color: "#A0B89A",
+                    backgroundColor: "rgba(0,0,0,0.65)",
+                    color: "#E8F5E0",
                     padding: "4px 8px",
                     marginBottom: "12px",
                   }}
@@ -260,18 +260,18 @@ export default function LobbyView({
                     className={`flex items-center gap-2 px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${
                       secretVoting
                         ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green"
-                        : "border-stamp-green/30 text-stamp-green/80 hover:border-stamp-green/50"
+                        : "border-stamp-green/40 text-stamp-green hover:border-stamp-green/50"
                     }`}
                   >
                     <span
-                      className={`material-symbols-outlined text-[16px] ${secretVoting ? "text-stamp-green" : "text-stamp-green/80"}`}
+                      className={`material-symbols-outlined text-[16px] ${secretVoting ? "text-stamp-green" : "text-stamp-green"}`}
                     >
                       {secretVoting ? "visibility_off" : "visibility"}
                     </span>
                     Tajne głosowanie
                   </button>
                 </div>
-                <p className="text-stamp-green/90 text-xs mt-2 font-mono">
+                <p className="text-white/80 text-xs mt-2 font-mono">
                   {secretVoting
                     ? "Głosy będą ukryte do końca fazy"
                     : "Głosy widoczne na żywo dla wszystkich"}
@@ -290,7 +290,7 @@ export default function LobbyView({
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
               {starting ? "Startuję..." : "Rozpocznij grę"}
             </button>
-            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/40 text-center mt-2">
+            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/60 text-center mt-2">
               OP: MAFIA_HELPER // V.3.0.1
             </p>
           </div>
