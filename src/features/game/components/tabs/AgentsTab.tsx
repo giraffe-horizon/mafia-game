@@ -6,6 +6,7 @@ import { usePlayerState } from "@/features/game/hooks/usePlayerState";
 import PlayersListContainer from "@/features/game/containers/PlayersListContainer";
 import MissionsList from "@/features/game/components/players/MissionsList";
 import ReviewContainer from "@/features/game/containers/ReviewContainer";
+import RankingInline from "@/features/game/components/shared/RankingInline";
 
 export default function AgentsTab() {
   const { isLobby, phase } = useCurrentPhase();
@@ -99,6 +100,11 @@ export default function AgentsTab() {
         {/* Lista graczy */}
         <div className="border-b border-surface-highest">
           <PlayersListContainer />
+        </div>
+
+        {/* Ranking */}
+        <div className="border-b border-surface-highest">
+          <RankingInline />
         </div>
 
         {/* Missions for non-host */}
