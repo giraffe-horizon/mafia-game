@@ -36,6 +36,8 @@ jobs:
 
       - name: Build with OpenNext
         run: pnpm build:cf
+        env:
+          NEXT_PUBLIC_WS_URL: https://mafia-game-ws-staging.liske.workers.dev
 
       - name: Deploy to staging
         uses: cloudflare/wrangler-action@v3
