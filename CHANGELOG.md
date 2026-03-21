@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.9.0...v1.10.0) (2026-03-21)
+
+
+### Features
+
+* Redesign v2 — full UX overhaul, enterprise wiki, 196 tests ([#32](https://github.com/giraffe-horizon/mafia-game/issues/32)) ([131d9a9](https://github.com/giraffe-horizon/mafia-game/commit/131d9a9f15c06859ffa1aa4e6825b7651cbafef6)), closes [#2B2B2B](https://github.com/giraffe-horizon/mafia-game/issues/2B2B2B) [#E09090](https://github.com/giraffe-horizon/mafia-game/issues/E09090) [#D5C4B1](https://github.com/giraffe-horizon/mafia-game/issues/D5C4B1) [#1C1C1C](https://github.com/giraffe-horizon/mafia-game/issues/1C1C1C) [#F0B8AE](https://github.com/giraffe-horizon/mafia-game/issues/F0B8AE) [#3A3A30](https://github.com/giraffe-horizon/mafia-game/issues/3A3A30) [#F0B8AE](https://github.com/giraffe-horizon/mafia-game/issues/F0B8AE)
+
 # [1.9.0](https://github.com/giraffe-horizon/mafia-game/compare/v1.8.2...v1.9.0) (2026-03-19)
 
 
