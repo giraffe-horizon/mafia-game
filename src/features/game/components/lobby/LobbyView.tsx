@@ -3,6 +3,7 @@
 import QRCode from "react-qr-code";
 import type { PublicPlayer } from "@/db";
 import { SectionHeader, InfoCard } from "@/components/ui";
+import { version } from "../../../../../package.json";
 import {
   autoMafiaCount,
   MIN_PLAYERS_FULL,
@@ -331,7 +332,7 @@ export default function LobbyView({
               {starting ? "Startuję..." : "Rozpocznij grę"}
             </button>
             <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/60 text-center mt-2">
-              OP: MAFIA_HELPER // V.3.0.1
+              OP: MAFIA_HELPER // V.{version}
             </p>
           </div>
         </>
