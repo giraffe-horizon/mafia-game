@@ -29,12 +29,20 @@ export function useGameConnection({
   const setWsError = useGameStore((s) => s.setWsError);
   const startPolling = useGameStore((s) => s.startPolling);
   const stopPolling = useGameStore((s) => s.stopPolling);
+  const setPhaseDeadline = useGameStore((s) => s.setPhaseDeadline);
 
   const onWsStateUpdate = useCallback(
     (payload: GameStateResponse) => {
       handleWsStateUpdate(payload);
     },
     [handleWsStateUpdate]
+  );
+
+  const onTimerUpdate = useCallback(
+    (deadline: string, remainingMs: number) => {
+      setPhaseDeadline(deadline, remainingMs);
+    },
+    [setPhaseDeadline]
   );
 
   const onWsError = useCallback(
@@ -49,6 +57,7 @@ export function useGameConnection({
     token,
     wsUrl: WS_URL,
     onStateUpdate: onWsStateUpdate,
+    onTimerUpdate,
     onError: onWsError,
     enabled: !!WS_URL && !!gameId,
   });

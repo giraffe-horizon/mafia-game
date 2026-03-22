@@ -91,6 +91,10 @@ export interface GameService {
     }>;
   }>;
 
+  // Timer management
+  setTimer(token: string, durationSeconds: number): Promise<ActionResult & { deadline?: string }>;
+  clearTimer(token: string): Promise<ActionResult>;
+
   // Mission management
   createMission(
     token: string,
@@ -180,6 +184,12 @@ export function createHttpGameService(): GameService {
         ...(targetPlayerId && { targetPlayerId }),
       });
     },
+
+    setTimer: async (token: string, durationSeconds: number) => {
+      return apiClient.setTimer(token, durationSeconds);
+    },
+
+    clearTimer: apiClient.clearTimer,
 
     createMission: async (
       token: string,

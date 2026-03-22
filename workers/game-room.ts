@@ -231,6 +231,12 @@ export class GameRoom extends DurableObject<Env> {
         payload: gameState,
         seq,
       });
+
+      // Send current timer if active
+      const timerMsg = await this.getTimerMessage(state.gameId);
+      if (timerMsg) {
+        this.sendMessage(ws, timerMsg);
+      }
     } catch (error) {
       console.error("Auth error:", error);
       this.sendMessage(ws, { type: "error", code: "AUTH_ERROR", message: "Authentication failed" });
@@ -255,6 +261,9 @@ export class GameRoom extends DurableObject<Env> {
     const gameState = await this.getGameState(gameId);
     const seq = await this.nextSeq();
 
+    // Check for active phase_deadline
+    const timerMsg = await this.getTimerMessage(gameId);
+
     for (const ws of this.ctx.getWebSockets()) {
       const state = this.getState(ws);
       if (state?.authenticated && state.gameId === gameId) {
@@ -263,7 +272,35 @@ export class GameRoom extends DurableObject<Env> {
           payload: gameState,
           seq,
         });
+        // Send timer update alongside state if deadline is active
+        if (timerMsg) {
+          this.sendMessage(ws, timerMsg);
+        }
       }
+    }
+  }
+
+  // Build a timer message from the game's phase_deadline
+  private async getTimerMessage(gameId: string): Promise<WsServerMessage | null> {
+    try {
+      const row = await this.env.DB.prepare("SELECT phase_deadline FROM games WHERE id = ?")
+        .bind(gameId)
+        .first<{ phase_deadline: string | null }>();
+
+      if (!row?.phase_deadline) return null;
+
+      const deadlineMs = new Date(row.phase_deadline).getTime();
+      const remainingMs = Math.max(0, deadlineMs - Date.now());
+
+      if (remainingMs <= 0) return null;
+
+      return {
+        type: "timer",
+        deadline: row.phase_deadline,
+        remainingMs,
+      };
+    } catch {
+      return null;
     }
   }
 

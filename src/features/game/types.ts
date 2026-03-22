@@ -14,6 +14,7 @@ export type WsClientMessage = { type: "auth"; token: string } | { type: "ping" }
 
 export type WsServerMessage =
   | { type: "state"; payload: GameStateResponse; seq: number }
+  | { type: "timer"; deadline: string; remainingMs: number }
   | { type: "error"; code: string; message: string }
   | { type: "pong" };
 

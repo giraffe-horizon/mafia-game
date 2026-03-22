@@ -11,6 +11,7 @@ export type WsClientMessage = { type: "auth"; token: string } | { type: "ping" }
 // Server -> Client messages
 export type WsServerMessage =
   | { type: "state"; payload: any; seq: number }
+  | { type: "timer"; deadline: string; remainingMs: number }
   | { type: "error"; code: string; message: string }
   | { type: "pong" };
 

@@ -25,6 +25,11 @@ export function processStateUpdate(
   const newPhase = newData.game?.phase;
   const phaseChanged = prevPhase != null && newPhase != null && prevPhase !== newPhase;
 
+  // Clear phase timer on phase change (new phase starts fresh)
+  if (phaseChanged) {
+    get().clearPhaseDeadline();
+  }
+
   // Set transition BEFORE updating state so the overlay blocks the view
   if (phaseChanged) {
     const transition = buildTransition(

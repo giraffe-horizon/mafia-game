@@ -27,6 +27,8 @@ export interface ActionsSlice {
     targetPlayerId?: string
   ) => Promise<ActionResult>;
   finalizeGame: () => Promise<ActionResult>;
+  setPhaseTimer: (durationSeconds: number) => Promise<ActionResult>;
+  clearPhaseTimer: () => Promise<ActionResult>;
 }
 
 export const createActionsSlice: StateCreator<GameState, [], [], ActionsSlice> = (set, get) => ({
@@ -214,6 +216,36 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsSlice> =
     } catch (error) {
       const errorMsg = getErrorMessage(error);
       return { success: false, error: errorMsg };
+    }
+  },
+
+  setPhaseTimer: async (durationSeconds: number): Promise<ActionResult> => {
+    const { _gameService, _token } = get();
+    if (!_gameService || !_token) return { success: false, error: "No service initialized" };
+
+    try {
+      const result = await _gameService.setTimer(_token, durationSeconds);
+      if (result.success && result.deadline) {
+        get().setPhaseDeadline(result.deadline, durationSeconds * 1000);
+      }
+      return result;
+    } catch (error) {
+      return { success: false, error: getErrorMessage(error) };
+    }
+  },
+
+  clearPhaseTimer: async (): Promise<ActionResult> => {
+    const { _gameService, _token } = get();
+    if (!_gameService || !_token) return { success: false, error: "No service initialized" };
+
+    try {
+      const result = await _gameService.clearTimer(_token);
+      if (result.success) {
+        get().clearPhaseDeadline();
+      }
+      return result;
+    } catch (error) {
+      return { success: false, error: getErrorMessage(error) };
     }
   },
 });

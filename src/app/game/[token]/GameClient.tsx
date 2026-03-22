@@ -7,6 +7,7 @@ import { useCurrentPhase } from "@/features/game/hooks/useCurrentPhase";
 import { usePlayerState } from "@/features/game/hooks/usePlayerState";
 import { useOnboarding } from "@/features/game/hooks/useOnboarding";
 import { useGameConnection } from "@/features/game/hooks/useGameConnection";
+import { useSoundEffects } from "@/features/game/hooks/useSoundEffects";
 import { useGameStore } from "@/features/game/store/gameStore";
 import { createHttpGameService, type GameService } from "@/features/game/service";
 import OnboardingContainer from "@/features/game/containers/OnboardingContainer";
@@ -43,6 +44,9 @@ export default function GameClient() {
 
   // WebSocket + polling fallback — managed by useGameConnection
   useGameConnection({ token, gameId });
+
+  // Procedural sound effects (phase changes, missions, timer events)
+  useSoundEffects();
 
   // UI state
   const [showSettingsModal, setShowSettingsModal] = useState(false);

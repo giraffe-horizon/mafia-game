@@ -9,6 +9,7 @@ export interface UseWebSocketParams {
   token: string;
   wsUrl: string;
   onStateUpdate: (payload: GameStateResponse) => void;
+  onTimerUpdate?: (deadline: string, remainingMs: number) => void;
   onError?: (error: string) => void;
   enabled?: boolean;
 }
@@ -29,6 +30,7 @@ export function useWebSocket({
   token,
   wsUrl,
   onStateUpdate,
+  onTimerUpdate,
   onError,
   enabled = true,
 }: UseWebSocketParams): UseWebSocketReturn {
@@ -46,6 +48,8 @@ export function useWebSocket({
   // Keep callbacks fresh without triggering reconnects
   const onStateUpdateRef = useRef(onStateUpdate);
   onStateUpdateRef.current = onStateUpdate;
+  const onTimerUpdateRef = useRef(onTimerUpdate);
+  onTimerUpdateRef.current = onTimerUpdate;
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
 
@@ -134,6 +138,11 @@ export function useWebSocket({
           clearTimeout(pongTimeoutRef.current);
           pongTimeoutRef.current = null;
         }
+        return;
+      }
+
+      if (msg.type === "timer") {
+        onTimerUpdateRef.current?.(msg.deadline, msg.remainingMs);
         return;
       }
 

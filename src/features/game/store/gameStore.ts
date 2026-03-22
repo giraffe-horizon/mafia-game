@@ -4,11 +4,19 @@ import { createActionsSlice, type ActionsSlice } from "./slices/actionsSlice";
 import { createUiSlice, type UiSlice } from "./slices/uiSlice";
 import { createScoringSlice, type ScoringSlice } from "./slices/scoringSlice";
 import { createWsSlice, type WsSlice } from "./slices/wsSlice";
+import { createTimerSlice, type TimerSlice } from "./slices/timerSlice";
+import { createSoundSlice, type SoundSlice } from "./slices/soundSlice";
 
 // Re-export Toast from uiSlice for backward compatibility
 export type { Toast } from "./slices/uiSlice";
 
-export type GameState = GameSlice & ActionsSlice & UiSlice & ScoringSlice & WsSlice;
+export type GameState = GameSlice &
+  ActionsSlice &
+  UiSlice &
+  ScoringSlice &
+  WsSlice &
+  TimerSlice &
+  SoundSlice;
 
 export const useGameStore = create<GameState>((...a) => ({
   ...createGameSlice(...a),
@@ -16,4 +24,6 @@ export const useGameStore = create<GameState>((...a) => ({
   ...createUiSlice(...a),
   ...createScoringSlice(...a),
   ...createWsSlice(...a),
+  ...createTimerSlice(...a),
+  ...createSoundSlice(...a),
 }));

@@ -186,6 +186,18 @@ export async function deleteMission(
   return deleteRequest(`/api/game/${token}/mission/${missionId}`);
 }
 
+// Timer management
+export async function setTimer(
+  token: string,
+  durationSeconds: number
+): Promise<{ success: boolean; deadline?: string; error?: string }> {
+  return postRequest(`/api/game/${token}/timer`, { durationSeconds });
+}
+
+export async function clearTimer(token: string): Promise<{ success: boolean; error?: string }> {
+  return deleteRequest(`/api/game/${token}/timer`);
+}
+
 // Round scores (per-round breakdown)
 export async function fetchRoundScores(token: string): Promise<{
   round: number;
