@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import type { ActionType, GamePhase } from "@/db/types";
+import type { ActionType } from "@/db/types";
+import type { PhaseInput } from "@/lib/api/schemas";
 import { useGameStore } from "@/features/game/store/gameStore";
 import { usePlayerState } from "@/features/game/hooks/usePlayerState";
 import { useCurrentPhase } from "@/features/game/hooks/useCurrentPhase";
@@ -98,7 +99,7 @@ export default function GMPanelContainer() {
     onDeleteMission: handleDeleteMission,
   };
 
-  const handlePhase = async (newPhase: GamePhase) => {
+  const handlePhase = async (newPhase: PhaseInput["phase"]) => {
     await advancePhase(newPhase);
   };
 

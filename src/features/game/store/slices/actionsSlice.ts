@@ -1,17 +1,18 @@
 import type { StateCreator } from "zustand";
-import type { ActionType, GamePhase } from "@/db";
+import type { ActionType } from "@/db";
 import type {
   ActionResult,
   RematchResult,
   LeaveResult,
   StartGameOpts,
 } from "@/features/game/service";
+import type { PhaseInput } from "@/lib/api/schemas";
 import type { GameState } from "@/features/game/store/gameStore";
 import { getErrorMessage } from "@/lib/errors";
 
 export interface ActionsSlice {
   submitAction: (type: ActionType, targetPlayerId?: string) => Promise<ActionResult>;
-  advancePhase: (phase: GamePhase) => Promise<ActionResult>;
+  advancePhase: (phase: PhaseInput["phase"]) => Promise<ActionResult>;
   startGame: (
     gameMode: "full" | "simple",
     mafiaCount: number,
@@ -54,7 +55,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsSlice> =
     }
   },
 
-  advancePhase: async (phase: GamePhase): Promise<ActionResult> => {
+  advancePhase: async (phase: PhaseInput["phase"]): Promise<ActionResult> => {
     const { _gameService, _token } = get();
     if (!_gameService || !_token) return { success: false, error: "No service initialized" };
 

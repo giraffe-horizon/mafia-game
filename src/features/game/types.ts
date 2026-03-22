@@ -7,13 +7,13 @@ import type { PublicPlayer, GameStateResponse, ActionType } from "@/db";
 // WebSocket message types (frontend mirror of workers/types.ts)
 // MIRROR: These types are duplicated in workers/types.ts (Durable Object worker).
 // Keep both files in sync when changing message shapes.
-// Frontend uses typed `payload: GameStateResponse`; worker uses `payload: any`.
+// WS only sends `refresh` triggers; full state is fetched via HTTP API.
 // ---------------------------------------------------------------------------
 
 export type WsClientMessage = { type: "auth"; token: string } | { type: "ping" };
 
 export type WsServerMessage =
-  | { type: "state"; payload: GameStateResponse; seq: number }
+  | { type: "refresh"; seq: number }
   | { type: "timer"; deadline: string; remainingMs: number }
   | { type: "error"; code: string; message: string }
   | { type: "pong" };

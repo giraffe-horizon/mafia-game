@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import type { GameStateResponse } from "@/db";
 import type { WsServerMessage } from "../types";
 
 export interface UseWebSocketParams {
   gameId: string;
   token: string;
   wsUrl: string;
-  onStateUpdate: (payload: GameStateResponse) => void;
+  onRefresh?: () => void;
   onTimerUpdate?: (deadline: string, remainingMs: number) => void;
   onError?: (error: string) => void;
   enabled?: boolean;
@@ -29,7 +28,7 @@ export function useWebSocket({
   gameId,
   token,
   wsUrl,
-  onStateUpdate,
+  onRefresh,
   onTimerUpdate,
   onError,
   enabled = true,
@@ -46,8 +45,8 @@ export function useWebSocket({
   const mountedRef = useRef(true);
 
   // Keep callbacks fresh without triggering reconnects
-  const onStateUpdateRef = useRef(onStateUpdate);
-  onStateUpdateRef.current = onStateUpdate;
+  const onRefreshRef = useRef(onRefresh);
+  onRefreshRef.current = onRefresh;
   const onTimerUpdateRef = useRef(onTimerUpdate);
   onTimerUpdateRef.current = onTimerUpdate;
   const onErrorRef = useRef(onError);
@@ -146,17 +145,17 @@ export function useWebSocket({
         return;
       }
 
-      if (msg.type === "state") {
-        // First state message = authenticated & connected
+      if (msg.type === "refresh") {
+        // First refresh message = authenticated & connected
         setIsConnected(true);
         backoffRef.current = 1000; // Reset backoff on successful connection
 
         if (msg.seq > lastSeqRef.current) {
           lastSeqRef.current = msg.seq;
-          onStateUpdateRef.current(msg.payload as GameStateResponse);
+          onRefreshRef.current?.();
         }
 
-        // Start ping interval after first state (connection is live)
+        // Start ping interval after first refresh (connection is live)
         if (!pingIntervalRef.current) {
           pingIntervalRef.current = setInterval(() => {
             if (wsRef.current?.readyState === WebSocket.OPEN) {

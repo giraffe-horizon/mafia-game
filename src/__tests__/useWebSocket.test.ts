@@ -61,7 +61,7 @@ const defaultParams: UseWebSocketParams = {
   gameId: "game-123",
   token: "token-abc",
   wsUrl: "wss://test.example.com",
-  onStateUpdate: vi.fn(),
+  onRefresh: vi.fn(),
   onError: vi.fn(),
   enabled: true,
 };
@@ -80,8 +80,8 @@ describe("useWebSocket", () => {
   });
 
   it("connects and authenticates on AUTH_REQUIRED", async () => {
-    const onStateUpdate = vi.fn();
-    renderHook(() => useWebSocket({ ...defaultParams, onStateUpdate }));
+    const onRefresh = vi.fn();
+    renderHook(() => useWebSocket({ ...defaultParams, onRefresh }));
 
     // Trigger the async onopen
     await vi.advanceTimersByTimeAsync(1);
@@ -98,11 +98,10 @@ describe("useWebSocket", () => {
     const authMsg = JSON.parse(ws.sentMessages[0]);
     expect(authMsg).toEqual({ type: "auth", token: "token-abc" });
 
-    // Server responds with state
-    const payload = { game: { id: "g1", phase: "lobby" } };
-    ws.simulateMessage({ type: "state", payload, seq: 1 });
+    // Server responds with refresh trigger
+    ws.simulateMessage({ type: "refresh", seq: 1 });
 
-    expect(onStateUpdate).toHaveBeenCalledWith(payload);
+    expect(onRefresh).toHaveBeenCalledTimes(1);
   });
 
   it("reconnects on close with exponential backoff", async () => {
@@ -127,48 +126,44 @@ describe("useWebSocket", () => {
     expect(MockWebSocket.instances).toHaveLength(3); // Now
   });
 
-  it("calls onStateUpdate with payload and tracks seq", () => {
-    const onStateUpdate = vi.fn();
-    renderHook(() => useWebSocket({ ...defaultParams, onStateUpdate }));
+  it("calls onRefresh and tracks seq", () => {
+    const onRefresh = vi.fn();
+    renderHook(() => useWebSocket({ ...defaultParams, onRefresh }));
 
     // Advance past async onopen
     vi.advanceTimersByTime(1);
 
     const ws = getLastWs();
 
-    const payload1 = { game: { id: "g1", phase: "night" } };
-    ws.simulateMessage({ type: "state", payload: payload1, seq: 1 });
-    expect(onStateUpdate).toHaveBeenCalledTimes(1);
-    expect(onStateUpdate).toHaveBeenCalledWith(payload1);
+    ws.simulateMessage({ type: "refresh", seq: 1 });
+    expect(onRefresh).toHaveBeenCalledTimes(1);
 
-    const payload2 = { game: { id: "g1", phase: "day" } };
-    ws.simulateMessage({ type: "state", payload: payload2, seq: 2 });
-    expect(onStateUpdate).toHaveBeenCalledTimes(2);
-    expect(onStateUpdate).toHaveBeenCalledWith(payload2);
+    ws.simulateMessage({ type: "refresh", seq: 2 });
+    expect(onRefresh).toHaveBeenCalledTimes(2);
   });
 
   it("ignores out-of-order seq messages", () => {
-    const onStateUpdate = vi.fn();
-    renderHook(() => useWebSocket({ ...defaultParams, onStateUpdate }));
+    const onRefresh = vi.fn();
+    renderHook(() => useWebSocket({ ...defaultParams, onRefresh }));
     vi.advanceTimersByTime(1);
 
     const ws = getLastWs();
 
     // Receive seq 5
-    ws.simulateMessage({ type: "state", payload: { v: 5 }, seq: 5 });
-    expect(onStateUpdate).toHaveBeenCalledTimes(1);
+    ws.simulateMessage({ type: "refresh", seq: 5 });
+    expect(onRefresh).toHaveBeenCalledTimes(1);
 
     // Receive seq 3 (out of order) — should be ignored
-    ws.simulateMessage({ type: "state", payload: { v: 3 }, seq: 3 });
-    expect(onStateUpdate).toHaveBeenCalledTimes(1);
+    ws.simulateMessage({ type: "refresh", seq: 3 });
+    expect(onRefresh).toHaveBeenCalledTimes(1);
 
     // Receive seq 5 again (duplicate) — should be ignored
-    ws.simulateMessage({ type: "state", payload: { v: 5 }, seq: 5 });
-    expect(onStateUpdate).toHaveBeenCalledTimes(1);
+    ws.simulateMessage({ type: "refresh", seq: 5 });
+    expect(onRefresh).toHaveBeenCalledTimes(1);
 
     // Receive seq 6 — should be accepted
-    ws.simulateMessage({ type: "state", payload: { v: 6 }, seq: 6 });
-    expect(onStateUpdate).toHaveBeenCalledTimes(2);
+    ws.simulateMessage({ type: "refresh", seq: 6 });
+    expect(onRefresh).toHaveBeenCalledTimes(2);
   });
 
   it("sends ping every 25s and handles pong", async () => {
@@ -177,8 +172,8 @@ describe("useWebSocket", () => {
 
     const ws = getLastWs();
 
-    // Authenticate first (ping starts after first state message)
-    ws.simulateMessage({ type: "state", payload: {}, seq: 1 });
+    // Authenticate first (ping starts after first refresh message)
+    ws.simulateMessage({ type: "refresh", seq: 1 });
 
     // No pings yet
     expect(ws.sentMessages).toHaveLength(0);
@@ -234,7 +229,7 @@ describe("useWebSocket", () => {
     const ws = getLastWs();
 
     // Authenticate to start ping timer
-    ws.simulateMessage({ type: "state", payload: {}, seq: 1 });
+    ws.simulateMessage({ type: "refresh", seq: 1 });
 
     // Advance 25s — ping sent
     await vi.advanceTimersByTimeAsync(25_000);

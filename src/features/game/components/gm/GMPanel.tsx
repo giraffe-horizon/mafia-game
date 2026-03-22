@@ -1,8 +1,9 @@
 "use client";
 
 import type { GameStateResponse, PublicPlayer } from "@/db";
-import type { GamePhase, ActionType } from "@/db/types";
+import type { ActionType, GamePhase } from "@/db/types";
 import type { MessageFormProps, MissionFormProps } from "@/features/game/types";
+import type { PhaseInput } from "@/lib/api/schemas";
 import GMGameTab from "@/features/game/components/gm/GMGameTab";
 import GMMessageTab from "@/features/game/components/gm/GMMessageTab";
 import GMMissionTab from "@/features/game/components/gm/GMMissionTab";
@@ -14,7 +15,7 @@ interface GMPanelProps {
   tab: "game" | "message" | "mission" | "settings";
   onTabChange: (t: "game" | "message" | "mission" | "settings") => void;
   phasePending: boolean;
-  onPhase: (p: GamePhase) => void;
+  onPhase: (p: PhaseInput["phase"]) => void;
   messageForm: MessageFormProps;
   missionForm: MissionFormProps & {
     hostMissions?: GameStateResponse["hostMissions"];
@@ -51,7 +52,7 @@ export default function GMPanel({
   onMafiaCountSettingChange,
 }: GMPanelProps) {
   const nextPhaseMap: Partial<
-    Record<GamePhase, { label: string; phase: GamePhase; icon: string }>
+    Record<GamePhase, { label: string; phase: PhaseInput["phase"]; icon: string }>
   > = {
     night: { label: "Przejdź do Dnia", phase: "day", icon: "wb_sunny" },
     day: { label: "Głosowanie", phase: "voting", icon: "how_to_vote" },

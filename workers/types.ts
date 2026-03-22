@@ -2,7 +2,7 @@
 // WebSocket message types (shared between client and worker)
 // MIRROR: These types are duplicated in src/features/game/types.ts (frontend).
 // Keep both files in sync when changing message shapes.
-// Worker uses `payload: any` because it cannot import GameStateResponse.
+// WS only sends `refresh` triggers; full state is fetched via HTTP API.
 // ---------------------------------------------------------------------------
 
 // Client -> Server messages
@@ -10,7 +10,7 @@ export type WsClientMessage = { type: "auth"; token: string } | { type: "ping" }
 
 // Server -> Client messages
 export type WsServerMessage =
-  | { type: "state"; payload: any; seq: number }
+  | { type: "refresh"; seq: number }
   | { type: "timer"; deadline: string; remainingMs: number }
   | { type: "error"; code: string; message: string }
   | { type: "pong" };

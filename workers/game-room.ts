@@ -64,7 +64,8 @@ export class GameRoom extends DurableObject<Env> {
       }
 
       // Rate limit — use getWebSockets() (survives hibernation)
-      if (this.ctx.getWebSockets().length >= 5) {
+      // 25 = 12 players + GM + reconnect buffer
+      if (this.ctx.getWebSockets().length >= 25) {
         this.metric("ws_rate_limit", { gameId });
         return new Response("Too many connections", { status: 429 });
       }
@@ -112,7 +113,7 @@ export class GameRoom extends DurableObject<Env> {
         return new Response("Missing gameId parameter", { status: 400 });
       }
 
-      await this.broadcastGameState(gameId);
+      await this.broadcastRefresh(gameId);
       return new Response("OK");
     }
 
@@ -302,13 +303,8 @@ export class GameRoom extends DurableObject<Env> {
 
       console.log(`Player ${playerRow.nickname} authenticated in game ${state.gameId}`);
 
-      const gameState = await this.getGameState(state.gameId);
       const seq = await this.nextSeq();
-      this.sendMessage(ws, {
-        type: "state",
-        payload: gameState,
-        seq,
-      });
+      this.sendMessage(ws, { type: "refresh", seq });
 
       // Send current timer if active
       const timerMsg = await this.getTimerMessage(state.gameId);
@@ -334,10 +330,9 @@ export class GameRoom extends DurableObject<Env> {
     }
   }
 
-  // Broadcast game state to all authenticated connections (uses getWebSockets, survives hibernation)
-  private async broadcastGameState(gameId: string): Promise<void> {
+  // Broadcast refresh trigger to all authenticated connections (uses getWebSockets, survives hibernation)
+  private async broadcastRefresh(gameId: string): Promise<void> {
     const broadcastStart = Date.now();
-    const gameState = await this.getGameState(gameId);
     const seq = await this.nextSeq();
 
     // Check for active phase_deadline
@@ -347,12 +342,8 @@ export class GameRoom extends DurableObject<Env> {
     for (const ws of this.ctx.getWebSockets()) {
       const state = this.getState(ws);
       if (state?.authenticated && state.gameId === gameId) {
-        this.sendMessage(ws, {
-          type: "state",
-          payload: gameState,
-          seq,
-        });
-        // Send timer update alongside state if deadline is active
+        this.sendMessage(ws, { type: "refresh", seq });
+        // Send timer update alongside refresh if deadline is active
         if (timerMsg) {
           this.sendMessage(ws, timerMsg);
         }
@@ -396,69 +387,6 @@ export class GameRoom extends DurableObject<Env> {
       return null;
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Game state query
-  // ---------------------------------------------------------------------------
-
-  private async getGameState(gameId: string): Promise<any> {
-    try {
-      const game = await this.env.DB.prepare(
-        "SELECT id, code, status, phase, phase_deadline, round, winner, config FROM games WHERE id = ?"
-      )
-        .bind(gameId)
-        .first<{
-          id: string;
-          code: string;
-          status: string;
-          phase: string;
-          phase_deadline: string | null;
-          round: number;
-          winner: string | null;
-          config: string;
-        }>();
-
-      if (!game) {
-        return { error: "Game not found" };
-      }
-
-      const { results: players } = await this.env.DB.prepare(
-        "SELECT player_id, nickname, role, is_alive, is_host FROM game_players WHERE game_id = ? ORDER BY is_host DESC, nickname ASC"
-      )
-        .bind(gameId)
-        .all<{
-          player_id: string;
-          nickname: string;
-          role: string | null;
-          is_alive: number;
-          is_host: number;
-        }>();
-
-      return {
-        game: {
-          id: game.id,
-          code: game.code,
-          status: game.status,
-          phase: game.phase,
-          round: game.round,
-          winner: game.winner,
-          phaseDeadline: game.phase_deadline,
-          config: JSON.parse(game.config || "{}"),
-        },
-        players: players.map((p) => ({
-          playerId: p.player_id,
-          nickname: p.nickname,
-          role: p.role,
-          isAlive: p.is_alive === 1,
-          isHost: p.is_host === 1,
-        })),
-        lastUpdate: Date.now(),
-      };
-    } catch (error) {
-      console.error("Failed to get game state:", error);
-      return { error: "Failed to get game state" };
-    }
-  }
 }
 
 /*
@@ -486,5 +414,6 @@ Manual Testing Instructions:
    - HTTP notify -> all authenticated clients receive updated state
 
 6. Rate limit test:
-   - Open 6+ connections to same gameId -> 6th should get 429 error
+   - Open 26+ connections to same gameId -> 26th should get 429 error
+   - Open 6+ connections from same IP -> 6th should get 429 from entry worker
 */

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { GameStateResponse, PublicPlayer } from "@/db";
 import type { Role, ActionType, GamePhase } from "@/db/types";
+import type { PhaseInput } from "@/lib/api/schemas";
 import { Button } from "@/components/ui";
 import Select from "@/components/ui/Select";
 
@@ -20,9 +21,9 @@ interface GMGameTabProps {
   phase: GamePhase;
   phaseProgress?: GameStateResponse["phaseProgress"];
   onGmAction: (forPlayerId: string, actionType: ActionType, targetPlayerId: string) => void;
-  onPhase: (p: GamePhase) => void;
+  onPhase: (p: PhaseInput["phase"]) => void;
   phasePending: boolean;
-  nextPhase?: { label: string; phase: GamePhase; icon: string };
+  nextPhase?: { label: string; phase: PhaseInput["phase"]; icon: string };
 }
 
 export default function GMGameTab({

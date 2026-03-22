@@ -8,7 +8,35 @@ import type { Env } from "./types";
 export { GameRoom };
 
 const WORKER_START = Date.now();
-const WORKER_VERSION = "1.10.0";
+const WORKER_VERSION = "1.11.0";
+
+// Per-IP WS connection rate limiting (TTL-based, cleaned every 5 minutes)
+const MAX_WS_PER_IP = 5;
+const IP_TTL_MS = 5 * 60 * 1000;
+const ipConnections = new Map<string, { count: number; firstSeen: number }>();
+
+function cleanStaleIpEntries(): void {
+  const now = Date.now();
+  for (const [ip, entry] of ipConnections) {
+    if (now - entry.firstSeen > IP_TTL_MS) {
+      ipConnections.delete(ip);
+    }
+  }
+}
+
+function checkIpRateLimit(ip: string): boolean {
+  cleanStaleIpEntries();
+  const entry = ipConnections.get(ip);
+  if (!entry) {
+    ipConnections.set(ip, { count: 1, firstSeen: Date.now() });
+    return true;
+  }
+  if (entry.count >= MAX_WS_PER_IP) {
+    return false;
+  }
+  entry.count++;
+  return true;
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -48,6 +76,12 @@ export default {
       // Check if WebSocket upgrade requested
       if (request.headers.get("Upgrade") !== "websocket") {
         return new Response("WebSocket upgrade required", { status: 426 });
+      }
+
+      // Per-IP rate limiting
+      const clientIp = request.headers.get("CF-Connecting-IP") || "unknown";
+      if (!checkIpRateLimit(clientIp)) {
+        return new Response("Too many connections from this IP", { status: 429 });
       }
 
       // Get Durable Object instance using deterministic ID (idFromName)

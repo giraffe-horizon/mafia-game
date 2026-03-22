@@ -233,5 +233,5 @@ export async function fetchRanking(token: string): Promise<{
   winner: string | null;
   round: number;
 }> {
-  return getRequest(`/api/ranking?token=${token}`);
+  return getRequest(`/api/game/${token}/ranking`);
 }
