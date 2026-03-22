@@ -7,6 +7,9 @@ import type { Env } from "./types";
 
 export { GameRoom };
 
+const WORKER_START = Date.now();
+const WORKER_VERSION = "1.10.0";
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -108,6 +111,8 @@ export default {
             status: "ok",
             timestamp: new Date().toISOString(),
             worker: "mafia-game-ws",
+            version: WORKER_VERSION,
+            uptimeMs: Date.now() - WORKER_START,
           }),
           {
             headers: { "Content-Type": "application/json" },
@@ -115,6 +120,44 @@ export default {
         ),
         origin
       );
+    }
+
+    // Deep health check — probes a sample DO and D1
+    if (url.pathname === "/health/deep") {
+      try {
+        const probeId = env.GAME_ROOM.idFromName("__health_probe__");
+        const stub = env.GAME_ROOM.get(probeId);
+        const doReq = new Request(`${url.origin}/health-check`, { method: "GET" });
+        const doRes = await stub.fetch(doReq);
+        const doBody = await doRes.json();
+
+        return addCorsHeaders(
+          new Response(
+            JSON.stringify({
+              status: "ok",
+              timestamp: new Date().toISOString(),
+              worker: "mafia-game-ws",
+              version: WORKER_VERSION,
+              uptimeMs: Date.now() - WORKER_START,
+              durableObject: doBody,
+            }),
+            { headers: { "Content-Type": "application/json" } }
+          ),
+          origin
+        );
+      } catch (error) {
+        return addCorsHeaders(
+          new Response(
+            JSON.stringify({
+              status: "error",
+              timestamp: new Date().toISOString(),
+              error: error instanceof Error ? error.message : "Deep health check failed",
+            }),
+            { status: 500, headers: { "Content-Type": "application/json" } }
+          ),
+          origin
+        );
+      }
     }
 
     return new Response("Not found", { status: 404 });

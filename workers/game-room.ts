@@ -6,8 +6,21 @@ import { DurableObject } from "cloudflare:workers";
 import type { WsClientMessage, WsServerMessage, ConnectionState, Env } from "./types";
 
 export class GameRoom extends DurableObject<Env> {
+  private startedAt = Date.now();
+
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Structured metric logging (parseable key=value format for CF Dashboard)
+  // ---------------------------------------------------------------------------
+
+  private metric(event: string, fields: Record<string, string | number | boolean>): void {
+    const parts = Object.entries(fields)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(" ");
+    console.log(`[metric] ${event} ${parts}`);
   }
 
   // ---------------------------------------------------------------------------
@@ -52,6 +65,7 @@ export class GameRoom extends DurableObject<Env> {
 
       // Rate limit — use getWebSockets() (survives hibernation)
       if (this.ctx.getWebSockets().length >= 5) {
+        this.metric("ws_rate_limit", { gameId });
         return new Response("Too many connections", { status: 429 });
       }
 
@@ -78,6 +92,11 @@ export class GameRoom extends DurableObject<Env> {
         message: "Send auth message within 5 seconds",
       });
 
+      this.metric("ws_connect", {
+        gameId,
+        connections: this.ctx.getWebSockets().length,
+      });
+
       // NOTE: No setTimeout — auth timeout is checked in webSocketMessage
 
       return new Response(null, {
@@ -95,6 +114,34 @@ export class GameRoom extends DurableObject<Env> {
 
       await this.broadcastGameState(gameId);
       return new Response("OK");
+    }
+
+    // Deep health check — called by entry worker /health/deep
+    if (request.method === "GET" && url.pathname === "/health-check") {
+      const start = Date.now();
+      try {
+        // D1 read check
+        const row = await this.env.DB.prepare("SELECT 1 AS ok").first<{ ok: number }>();
+        const d1Ms = Date.now() - start;
+        return new Response(
+          JSON.stringify({
+            status: "ok",
+            connections: this.ctx.getWebSockets().length,
+            uptimeMs: Date.now() - this.startedAt,
+            d1: { status: row?.ok === 1 ? "ok" : "error", latencyMs: d1Ms },
+          }),
+          { headers: { "Content-Type": "application/json" } }
+        );
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            status: "error",
+            error: error instanceof Error ? error.message : "D1 check failed",
+            d1LatencyMs: Date.now() - start,
+          }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
     return new Response("Not found", { status: 404 });
@@ -115,7 +162,7 @@ export class GameRoom extends DurableObject<Env> {
 
       // Auth timeout check (replaces setTimeout which doesn't survive hibernation)
       if (!state.authenticated && Date.now() - state.connectedAt > 5000) {
-        console.log(`Disconnecting unauthenticated connection for game ${state.gameId}`);
+        this.metric("ws_auth_timeout", { gameId: state.gameId });
         ws.close(1008, "Authentication timeout");
         return;
       }
@@ -156,7 +203,13 @@ export class GameRoom extends DurableObject<Env> {
           });
       }
     } catch (error) {
-      console.error("WebSocket message error:", error);
+      const state = this.getState(ws);
+      const msg = error instanceof Error ? error.message : String(error);
+      this.metric("ws_error", {
+        gameId: state?.gameId ?? "unknown",
+        code: "PARSE_ERROR",
+        message: msg,
+      });
       this.sendMessage(ws, { type: "error", code: "PARSE_ERROR", message: "Invalid JSON" });
     }
   }
@@ -164,18 +217,22 @@ export class GameRoom extends DurableObject<Env> {
   async webSocketClose(ws: WebSocket, code: number, reason: string): Promise<void> {
     const state = this.getState(ws);
     if (state) {
-      console.log(
-        `WebSocket closed for game ${state.gameId}, player ${state.playerId}, code: ${code}, reason: ${reason}`
-      );
+      const duration = Date.now() - state.connectedAt;
+      this.metric("ws_disconnect", {
+        gameId: state.gameId,
+        playerId: state.playerId || "unknown",
+        durationMs: duration,
+        code,
+        reason: reason || "none",
+      });
     }
   }
 
   async webSocketError(ws: WebSocket, error: unknown): Promise<void> {
-    console.error("WebSocket error:", error);
     const state = this.getState(ws);
-    if (state) {
-      console.log(`WebSocket error for game ${state.gameId}, player ${state.playerId}`);
-    }
+    const gameId = state?.gameId ?? "unknown";
+    const msg = error instanceof Error ? error.message : String(error);
+    this.metric("ws_error", { gameId, code: "WS_ERROR", message: msg });
   }
 
   // Alarm handler
@@ -258,12 +315,14 @@ export class GameRoom extends DurableObject<Env> {
 
   // Broadcast game state to all authenticated connections (uses getWebSockets, survives hibernation)
   private async broadcastGameState(gameId: string): Promise<void> {
+    const broadcastStart = Date.now();
     const gameState = await this.getGameState(gameId);
     const seq = await this.nextSeq();
 
     // Check for active phase_deadline
     const timerMsg = await this.getTimerMessage(gameId);
 
+    let recipients = 0;
     for (const ws of this.ctx.getWebSockets()) {
       const state = this.getState(ws);
       if (state?.authenticated && state.gameId === gameId) {
@@ -276,8 +335,16 @@ export class GameRoom extends DurableObject<Env> {
         if (timerMsg) {
           this.sendMessage(ws, timerMsg);
         }
+        recipients++;
       }
     }
+
+    this.metric("ws_broadcast", {
+      gameId,
+      recipients,
+      latencyMs: Date.now() - broadcastStart,
+      seq,
+    });
   }
 
   // Build a timer message from the game's phase_deadline

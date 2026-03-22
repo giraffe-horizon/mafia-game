@@ -260,6 +260,89 @@ npm run test -- --coverage     # Z raportem coverage
 - **Tests**: Nowe funkcje wymagają testów
 - **Commits**: Conventional Commits preferred
 
+## 📡 Monitoring & Rollback
+
+### WebSocket Worker Deploy
+
+```bash
+pnpm deploy:ws                # Deploy do produkcji
+pnpm deploy:ws:staging        # Deploy do stagingu
+pnpm deploy:ws:rollback       # Rollback do poprzedniej wersji
+```
+
+### Post-deploy Verification
+
+```bash
+pnpm smoke-test -- --url wss://mafia-game-ws-staging.liske.workers.dev
+pnpm smoke-test -- --url wss://mafia-game-ws.liske.workers.dev
+```
+
+### Load Testing
+
+```bash
+pnpm load-test -- --url wss://mafia-game-ws-staging.liske.workers.dev --concurrency 50
+```
+
+Pass criteria: p95 < 100ms, 0 dropped messages, all connections succeeded.
+
+### Metryki w Cloudflare Dashboard
+
+Worker loguje metryki w formacie `[metric] event_name key=value`:
+
+| Event | Pola | Opis |
+|---|---|---|
+| `ws_connect` | `gameId`, `connections` | Nowe połączenie WS |
+| `ws_disconnect` | `gameId`, `playerId`, `durationMs`, `code` | Rozłączenie |
+| `ws_broadcast` | `gameId`, `recipients`, `latencyMs`, `seq` | Broadcast state |
+| `ws_error` | `gameId`, `code`, `message` | Błąd WS |
+| `ws_auth_timeout` | `gameId` | Timeout autoryzacji (5s) |
+| `ws_rate_limit` | `gameId` | Przekroczony limit połączeń |
+
+Aby filtrować w CF Dashboard: **Workers & Pages → mafia-game-ws → Logs → Real-time** — szukaj `[metric]`.
+
+### Health Endpoints
+
+- `GET /health` — podstawowy (status, wersja, uptime)
+- `GET /health/deep` — rozszerzony (D1 read, DO probe, timing)
+
+### Ręczny Rollback
+
+```bash
+pnpm deploy:ws:rollback
+# lub bezpośrednio:
+wrangler rollback --config wrangler.ws.jsonc
+```
+
+### Auto-Rollback
+
+Skrypt `scripts/auto-rollback.ts` monitoruje CF Analytics API:
+
+```bash
+# Wymagane env vars:
+export CF_API_TOKEN=xxx
+export CF_ACCOUNT_ID=xxx
+export CF_WORKER_NAME=mafia-game-ws  # domyślnie
+
+# Ciągłe monitorowanie (co 30s):
+pnpm auto-rollback
+
+# Jednorazowy check:
+pnpm auto-rollback -- --once
+
+# Custom próg i interwał:
+pnpm auto-rollback -- --threshold 3 --check-interval 60
+```
+
+**Logika:** Jeśli error rate > 5% przez 2 kolejne checky (domyślnie ~1 min) → automatyczny rollback via CF API.
+
+### Alert Thresholds (issue #34)
+
+| Metryka | Warning | Critical | Akcja |
+|---|---|---|---|
+| Error rate | > 2% | > 5% | Auto-rollback |
+| p95 latency | > 80ms | > 150ms | Investigate |
+| Dropped messages | > 0 | > 0 | Investigate |
+
 ## 📝 Licencja
 
 Ten projekt jest licencjonowany na licencji MIT - zobacz [LICENSE](LICENSE) dla szczegółów.

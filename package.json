@@ -19,7 +19,13 @@
     "db:migrate:staging": "pnpx wrangler d1 migrations apply mafia-game-staging-db --remote --env staging",
     "db:migrate:prod": "pnpx wrangler d1 migrations apply mafia-game-db --remote",
     "db:migrate:local": "pnpx wrangler d1 migrations apply mafia-game-db --local",
-    "seed": "tsx scripts/seed-game.ts"
+    "seed": "tsx scripts/seed-game.ts",
+    "load-test": "tsx scripts/load-test.ts",
+    "smoke-test": "tsx scripts/smoke-test.ts",
+    "auto-rollback": "tsx scripts/auto-rollback.ts",
+    "deploy:ws": "wrangler deploy --config wrangler.ws.jsonc",
+    "deploy:ws:staging": "wrangler deploy --config wrangler.ws.jsonc --env staging",
+    "deploy:ws:rollback": "wrangler rollback --config wrangler.ws.jsonc"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -44,6 +50,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^4.1.0",
     "better-sqlite3": "^12.8.0",
     "eslint": "^10.0.3",
@@ -56,7 +63,8 @@
     "tsx": "^4.21.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.57.1",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.0",
+    "ws": "^8.20.0"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
