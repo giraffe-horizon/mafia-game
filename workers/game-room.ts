@@ -235,14 +235,35 @@ export class GameRoom extends DurableObject<Env> {
     this.metric("ws_error", { gameId, code: "WS_ERROR", message: msg });
   }
 
-  // Alarm handler
+  // Alarm handler — periodic timer broadcast (every 5s while deadline is active)
   async alarm(): Promise<void> {
     const sockets = this.ctx.getWebSockets();
-    console.log(`GameRoom alarm: ${sockets.length} active connections`);
+    if (sockets.length === 0) return;
 
-    if (sockets.length > 0) {
-      await this.ctx.storage.setAlarm(Date.now() + 10000);
+    // Find gameId from any authenticated connection
+    let gameId: string | null = null;
+    for (const ws of sockets) {
+      const state = this.getState(ws);
+      if (state?.authenticated && state.gameId) {
+        gameId = state.gameId;
+        break;
+      }
     }
+    if (!gameId) return;
+
+    const timerMsg = await this.getTimerMessage(gameId);
+    if (!timerMsg) return;
+
+    // Broadcast timer to all authenticated clients
+    for (const ws of sockets) {
+      const state = this.getState(ws);
+      if (state?.authenticated && state.gameId === gameId) {
+        this.sendMessage(ws, timerMsg);
+      }
+    }
+
+    // Schedule next alarm in 5 seconds
+    await this.ctx.storage.setAlarm(Date.now() + 5000);
   }
 
   // ---------------------------------------------------------------------------
@@ -345,6 +366,11 @@ export class GameRoom extends DurableObject<Env> {
       latencyMs: Date.now() - broadcastStart,
       seq,
     });
+
+    // Schedule periodic timer alarm if deadline is active and clients are connected
+    if (timerMsg && recipients > 0) {
+      await this.ctx.storage.setAlarm(Date.now() + 5000);
+    }
   }
 
   // Build a timer message from the game's phase_deadline
@@ -378,7 +404,7 @@ export class GameRoom extends DurableObject<Env> {
   private async getGameState(gameId: string): Promise<any> {
     try {
       const game = await this.env.DB.prepare(
-        "SELECT id, code, status, phase, round, winner, config FROM games WHERE id = ?"
+        "SELECT id, code, status, phase, phase_deadline, round, winner, config FROM games WHERE id = ?"
       )
         .bind(gameId)
         .first<{
@@ -386,6 +412,7 @@ export class GameRoom extends DurableObject<Env> {
           code: string;
           status: string;
           phase: string;
+          phase_deadline: string | null;
           round: number;
           winner: string | null;
           config: string;
@@ -415,6 +442,7 @@ export class GameRoom extends DurableObject<Env> {
           phase: game.phase,
           round: game.round,
           winner: game.winner,
+          phaseDeadline: game.phase_deadline,
           config: JSON.parse(game.config || "{}"),
         },
         players: players.map((p) => ({

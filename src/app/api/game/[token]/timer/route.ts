@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { withApiHandler } from "@/lib/api/handler";
+import { notifyDO } from "@/lib/notify-do";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,8 @@ export const POST = withApiHandler(async (req, { db, token }) => {
     .bind(deadline, playerRow.game_id)
     .run();
 
+  notifyDO(playerRow.game_id);
+
   return NextResponse.json({ success: true, deadline });
 });
 
@@ -55,6 +58,8 @@ export const DELETE = withApiHandler(async (_req, { db, token }) => {
     .prepare("UPDATE games SET phase_deadline = NULL WHERE id = ?")
     .bind(playerRow.game_id)
     .run();
+
+  notifyDO(playerRow.game_id);
 
   return NextResponse.json({ success: true });
 });

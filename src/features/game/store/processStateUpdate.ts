@@ -70,6 +70,22 @@ export function processStateUpdate(
     ...(roundChanged ? { roleVisible: false } : {}),
   });
 
+  // Sync timer from state when phase_deadline is present (polling fallback)
+  if (!phaseChanged) {
+    const deadline = newData.game.phaseDeadline;
+    if (deadline) {
+      const remainingMs = Math.max(0, new Date(deadline).getTime() - Date.now());
+      if (remainingMs > 0) {
+        get().setPhaseDeadline(deadline, remainingMs);
+      } else {
+        get().clearPhaseDeadline();
+      }
+    } else if (get().phaseDeadline) {
+      // Deadline was cleared server-side
+      get().clearPhaseDeadline();
+    }
+  }
+
   // Suppress toasts during phase transitions — the transition screens
   // already convey kill/vote results
   const { _shownMessageIds } = get();

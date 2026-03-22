@@ -260,7 +260,161 @@ describe("PhaseTimer component", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 6. Timer API route (unit-level validation)
+// 6. processStateUpdate sets timer from phase_deadline
+// ---------------------------------------------------------------------------
+describe("processStateUpdate timer sync", () => {
+  let useGameStore: typeof import("@/features/game/store/gameStore").useGameStore;
+  let processStateUpdate: typeof import("@/features/game/store/processStateUpdate").processStateUpdate;
+
+  const baseState = () =>
+    ({
+      game: {
+        id: "g1",
+        code: "ABC",
+        status: "playing" as const,
+        phase: "day" as const,
+        round: 1,
+        winner: null,
+        phaseDeadline: null,
+        config: {},
+      },
+      currentPlayer: {
+        playerId: "p1",
+        nickname: "Test",
+        token: "t1",
+        role: null,
+        isAlive: true,
+        isHost: false,
+        isSetupComplete: true,
+        character: null,
+      },
+      takenCharacterIds: [],
+      players: [],
+      messages: [],
+      missions: [],
+      detectiveResult: null,
+      myAction: null,
+      showPoints: false,
+    }) as import("@/db").GameStateResponse;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    const storeMod = await import("@/features/game/store/gameStore");
+    useGameStore = storeMod.useGameStore;
+    const psuMod = await import("@/features/game/store/processStateUpdate");
+    processStateUpdate = psuMod.processStateUpdate;
+
+    // Seed initial state so prevPhase is set
+    const initial = baseState();
+    useGameStore.setState({ state: initial });
+  });
+
+  it("sets phaseDeadline when state has active deadline", () => {
+    const deadline = new Date(Date.now() + 30000).toISOString();
+    const newData = baseState();
+    newData.game.phaseDeadline = deadline;
+
+    processStateUpdate(newData, useGameStore.getState, useGameStore.setState);
+
+    const { phaseDeadline, serverRemainingMs } = useGameStore.getState();
+    expect(phaseDeadline).toBe(deadline);
+    expect(serverRemainingMs).toBeGreaterThan(0);
+    expect(serverRemainingMs).toBeLessThanOrEqual(30000);
+  });
+
+  it("clears phaseDeadline when state has no deadline", () => {
+    // First set a deadline
+    useGameStore.getState().setPhaseDeadline(new Date(Date.now() + 30000).toISOString(), 30000);
+
+    const newData = baseState();
+    newData.game.phaseDeadline = null;
+
+    processStateUpdate(newData, useGameStore.getState, useGameStore.setState);
+
+    const { phaseDeadline, serverRemainingMs } = useGameStore.getState();
+    expect(phaseDeadline).toBeNull();
+    expect(serverRemainingMs).toBeNull();
+  });
+
+  it("clears phaseDeadline on phase change", () => {
+    useGameStore.getState().setPhaseDeadline(new Date(Date.now() + 30000).toISOString(), 30000);
+
+    const newData = baseState();
+    newData.game.phase = "voting";
+    newData.game.phaseDeadline = null;
+
+    processStateUpdate(newData, useGameStore.getState, useGameStore.setState);
+
+    expect(useGameStore.getState().phaseDeadline).toBeNull();
+  });
+
+  it("does not set deadline when remainingMs <= 0", () => {
+    const expiredDeadline = new Date(Date.now() - 1000).toISOString();
+    const newData = baseState();
+    newData.game.phaseDeadline = expiredDeadline;
+
+    processStateUpdate(newData, useGameStore.getState, useGameStore.setState);
+
+    expect(useGameStore.getState().phaseDeadline).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. notifyDO helper
+// ---------------------------------------------------------------------------
+describe("notifyDO", () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    vi.resetModules();
+    process.env.NEXT_PUBLIC_WS_URL = "https://ws.example.com";
+    process.env.WS_NOTIFY_SECRET = "test-secret";
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+    vi.restoreAllMocks();
+  });
+
+  it("sends POST to notify endpoint with correct headers", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("OK"));
+
+    const { notifyDO } = await import("@/lib/notify-do");
+    notifyDO("game123");
+
+    // fire-and-forget, give microtask a tick
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://ws.example.com/notify?gameId=game123",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "X-Notify-Secret": "test-secret" },
+      })
+    );
+  });
+
+  it("does nothing when WS_URL is not configured", async () => {
+    delete process.env.NEXT_PUBLIC_WS_URL;
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("OK"));
+
+    const { notifyDO } = await import("@/lib/notify-do");
+    notifyDO("game123");
+
+    await new Promise((r) => setTimeout(r, 0));
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("swallows fetch errors silently", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("network error"));
+
+    const { notifyDO } = await import("@/lib/notify-do");
+    expect(() => notifyDO("game123")).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 8. Timer API route (unit-level validation)
 // ---------------------------------------------------------------------------
 describe("timer API schema", () => {
   it("validates timer schema correctly", async () => {
