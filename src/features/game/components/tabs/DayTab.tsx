@@ -6,11 +6,17 @@ import LobbyContainer from "@/features/game/containers/LobbyContainer";
 import DayContainer from "@/features/game/containers/DayContainer";
 import VotingContainer from "@/features/game/containers/VotingContainer";
 import GMPanelContainer from "@/features/game/containers/GMPanelContainer";
+import EndScreen from "@/features/game/components/EndScreen";
 import { Stamp } from "@/components/ui";
 
 export default function DayTab() {
-  const { phase, isLobby } = useCurrentPhase();
+  const { phase, isLobby, isFinished } = useCurrentPhase();
   const { isHost } = usePlayerState();
+
+  // Show EndScreen when game is finished
+  if (isFinished) {
+    return <EndScreen />;
+  }
 
   if (isLobby) {
     return (

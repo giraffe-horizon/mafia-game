@@ -4,6 +4,8 @@ import type { Toast, TransitionData } from "@/features/game/types";
 
 export type { Toast };
 
+export type TabId = "night" | "day" | "archive" | "agents";
+
 export interface UiSlice {
   // Toasts
   toasts: Toast[];
@@ -15,8 +17,8 @@ export interface UiSlice {
   toggleRole: () => void;
 
   // Active tab (bottom navigation)
-  activeTab: "night" | "day" | "archive" | "agents";
-  setActiveTab: (tab: "night" | "day" | "archive" | "agents") => void;
+  activeTab: TabId;
+  setActiveTab: (tab: TabId) => void;
 
   // Tab notifications (badge counters)
   tabNotifications: Record<string, number>;

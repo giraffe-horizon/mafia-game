@@ -8,7 +8,7 @@ export interface UseWebSocketParams {
   gameId: string;
   token: string;
   wsUrl: string;
-  onStateUpdate: (payload: GameStateResponse, seq: number) => void;
+  onStateUpdate: (payload: GameStateResponse) => void;
   onError?: (error: string) => void;
   enabled?: boolean;
 }
@@ -144,7 +144,7 @@ export function useWebSocket({
 
         if (msg.seq > lastSeqRef.current) {
           lastSeqRef.current = msg.seq;
-          onStateUpdateRef.current(msg.payload as GameStateResponse, msg.seq);
+          onStateUpdateRef.current(msg.payload as GameStateResponse);
         }
 
         // Start ping interval after first state (connection is live)

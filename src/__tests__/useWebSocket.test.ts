@@ -102,7 +102,7 @@ describe("useWebSocket", () => {
     const payload = { game: { id: "g1", phase: "lobby" } };
     ws.simulateMessage({ type: "state", payload, seq: 1 });
 
-    expect(onStateUpdate).toHaveBeenCalledWith(payload, 1);
+    expect(onStateUpdate).toHaveBeenCalledWith(payload);
   });
 
   it("reconnects on close with exponential backoff", async () => {
@@ -139,12 +139,12 @@ describe("useWebSocket", () => {
     const payload1 = { game: { id: "g1", phase: "night" } };
     ws.simulateMessage({ type: "state", payload: payload1, seq: 1 });
     expect(onStateUpdate).toHaveBeenCalledTimes(1);
-    expect(onStateUpdate).toHaveBeenCalledWith(payload1, 1);
+    expect(onStateUpdate).toHaveBeenCalledWith(payload1);
 
     const payload2 = { game: { id: "g1", phase: "day" } };
     ws.simulateMessage({ type: "state", payload: payload2, seq: 2 });
     expect(onStateUpdate).toHaveBeenCalledTimes(2);
-    expect(onStateUpdate).toHaveBeenCalledWith(payload2, 2);
+    expect(onStateUpdate).toHaveBeenCalledWith(payload2);
   });
 
   it("ignores out-of-order seq messages", () => {

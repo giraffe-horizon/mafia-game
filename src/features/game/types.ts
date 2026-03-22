@@ -4,7 +4,10 @@ export type { GameStateResponse, PublicPlayer, GameStatus, GamePhase, Role } fro
 import type { PublicPlayer, GameStateResponse, ActionType } from "@/db";
 
 // ---------------------------------------------------------------------------
-// WebSocket message types (shared between client and worker)
+// WebSocket message types (frontend mirror of workers/types.ts)
+// MIRROR: These types are duplicated in workers/types.ts (Durable Object worker).
+// Keep both files in sync when changing message shapes.
+// Frontend uses typed `payload: GameStateResponse`; worker uses `payload: any`.
 // ---------------------------------------------------------------------------
 
 export type WsClientMessage = { type: "auth"; token: string } | { type: "ping" };

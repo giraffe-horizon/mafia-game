@@ -1,5 +1,8 @@
 // ---------------------------------------------------------------------------
 // WebSocket message types (shared between client and worker)
+// MIRROR: These types are duplicated in src/features/game/types.ts (frontend).
+// Keep both files in sync when changing message shapes.
+// Worker uses `payload: any` because it cannot import GameStateResponse.
 // ---------------------------------------------------------------------------
 
 // Client -> Server messages

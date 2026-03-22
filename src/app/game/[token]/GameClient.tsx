@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCurrentPhase } from "@/features/game/hooks/useCurrentPhase";
 import { usePlayerState } from "@/features/game/hooks/usePlayerState";
 import { useOnboarding } from "@/features/game/hooks/useOnboarding";
-import { useWebSocket } from "@/features/game/hooks/useWebSocket";
+import { useGameConnection } from "@/features/game/hooks/useGameConnection";
 import { useGameStore } from "@/features/game/store/gameStore";
 import { createHttpGameService, type GameService } from "@/features/game/service";
 import OnboardingContainer from "@/features/game/containers/OnboardingContainer";
@@ -20,8 +20,6 @@ import { PageLayout } from "@/components/ui";
 
 // Stateless service — safe to create at module level
 const gameService: GameService = createHttpGameService();
-
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "";
 
 export default function GameClient() {
   const { token } = useParams<{ token: string }>();
@@ -40,55 +38,11 @@ export default function GameClient() {
   const { phase, round } = useCurrentPhase();
   const { isHost } = usePlayerState();
 
-  // WebSocket store selectors
-  const handleWsStateUpdate = useGameStore((s) => s.handleWsStateUpdate);
-  const setWsConnected = useGameStore((s) => s.setWsConnected);
-  const setWsError = useGameStore((s) => s.setWsError);
-  const startPolling = useGameStore((s) => s.startPolling);
-  const stopPolling = useGameStore((s) => s.stopPolling);
-
-  // WebSocket callbacks
-  const onWsStateUpdate = useCallback(
-    (payload: import("@/db").GameStateResponse, seq: number) => {
-      handleWsStateUpdate(payload, seq);
-    },
-    [handleWsStateUpdate]
-  );
-
-  const onWsError = useCallback(
-    (errorMsg: string) => {
-      setWsError(errorMsg);
-    },
-    [setWsError]
-  );
-
   // Game ID from state (available after first fetch)
   const gameId = state?.game?.id ?? "";
 
-  // WebSocket connection — enabled only when WS_URL is set and we have a gameId
-  const { isConnected: wsIsConnected } = useWebSocket({
-    gameId,
-    token,
-    wsUrl: WS_URL,
-    onStateUpdate: onWsStateUpdate,
-    onError: onWsError,
-    enabled: !!WS_URL && !!gameId,
-  });
-
-  // Sync hook's isConnected → store's wsConnected + hybrid polling toggle
-  useEffect(() => {
-    if (!WS_URL) return; // No WS URL — pure polling mode
-
-    setWsConnected(wsIsConnected);
-
-    if (wsIsConnected) {
-      stopPolling();
-      setWsError(null);
-    } else {
-      // WS disconnected — fall back to polling
-      startPolling();
-    }
-  }, [wsIsConnected, stopPolling, startPolling, setWsConnected, setWsError]);
+  // WebSocket + polling fallback — managed by useGameConnection
+  useGameConnection({ token, gameId });
 
   // UI state
   const [showSettingsModal, setShowSettingsModal] = useState(false);

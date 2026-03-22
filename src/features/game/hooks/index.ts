@@ -1,5 +1,6 @@
 export * from "./useActionTargets";
 export * from "./useCurrentPhase";
+export * from "./useGameConnection";
 export * from "./useMessageForm";
 export * from "./useMissionForm";
 export * from "./useOnboarding";
