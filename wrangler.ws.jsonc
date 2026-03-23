@@ -1,0 +1,53 @@
+{
+  "name": "mafia-game-ws",
+  "account_id": "67ffcd3e6a0a421156f625214d812dbd",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "workers/game-ws.ts",
+
+  // Durable Object binding
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "GAME_ROOM",
+        "class_name": "GameRoom",
+        "script_name": "mafia-game-ws"
+      }
+    ]
+  },
+
+  // Durable Object migrations
+  "migrations": [{ "tag": "v1", "new_classes": ["GameRoom"] }],
+
+  // D1 database binding (same as main wrangler.jsonc)
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mafia-game-db",
+      "database_id": "2171f8bf-4d09-4176-91e3-ff643ded53bf"
+    }
+  ],
+
+  // Environment configuration
+  "env": {
+    "staging": {
+      "name": "mafia-game-ws-staging",
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "GAME_ROOM",
+            "class_name": "GameRoom",
+            "script_name": "mafia-game-ws-staging"
+          }
+        ]
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "mafia-game-staging-db",
+          "database_id": "90a576a5-ca00-4edb-b721-927725dfc65b"
+        }
+      ]
+    }
+  }
+}

@@ -4,11 +4,10 @@ import type { GameService } from "@/features/game/service";
 import type { GameState } from "@/features/game/store/gameStore";
 import { getErrorMessage } from "@/lib/errors";
 import { ApiError } from "@/lib/api-client";
-import { buildTransition } from "@/features/game/store/buildTransition";
+import { processStateUpdate } from "@/features/game/store/processStateUpdate";
 
 // Polling constants
 const POLL_INTERVAL = 2000;
-const TOAST_DURATION = 7000;
 const MAX_BACKOFF = 16000;
 
 export interface GameSlice {
@@ -30,6 +29,7 @@ export interface GameSlice {
   _intervalRef: NodeJS.Timeout | null;
   _backoffDelay: number;
   _shownMessageIds: Set<string>;
+  _shownMissionIds: Set<string>;
   _toastTimeouts: Map<string, NodeJS.Timeout>;
   _isFetching: boolean;
   _scheduleNext: () => void;
@@ -40,6 +40,7 @@ export interface GameSlice {
   startPolling: () => void;
   stopPolling: () => void;
   refetch: () => Promise<void>;
+  handleWsStateUpdate: (payload: GameStateResponse) => void;
   setError: (error: string) => void;
 }
 
@@ -54,6 +55,7 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
   _intervalRef: null,
   _backoffDelay: POLL_INTERVAL,
   _shownMessageIds: new Set(),
+  _shownMissionIds: new Set(),
   _toastTimeouts: new Map(),
   _isFetching: false,
 
@@ -91,6 +93,7 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
       _token: token,
       _backoffDelay: POLL_INTERVAL,
       _shownMessageIds: new Set(),
+      _shownMissionIds: new Set(),
       state: null,
       toasts: [],
       characters: [],
@@ -179,7 +182,7 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
   },
 
   refetch: async () => {
-    const { _gameService, _token, _shownMessageIds } = get();
+    const { _gameService, _token } = get();
     if (!_gameService || !_token) return;
     // Atomic check-and-set to prevent concurrent fetches
     if (get()._isFetching) return;
@@ -187,89 +190,8 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
 
     try {
       const data = await _gameService.fetchState(_token);
-      const prevPhase = get().state?.game?.phase;
-      const newPhase = data.game?.phase;
-      const phaseChanged = prevPhase != null && newPhase != null && prevPhase !== newPhase;
-
-      // Set transition BEFORE updating state so the overlay blocks the view
-      if (phaseChanged) {
-        const transition = buildTransition(
-          prevPhase,
-          newPhase,
-          data.game.round,
-          data.lastPhaseResult,
-          data.game.winner
-        );
-        if (transition) {
-          set({ transition });
-        }
-
-        // Auto-switch active tab on phase change
-        if (newPhase === "night") get().setActiveTab("night");
-        else if (newPhase === "day") get().setActiveTab("day");
-        else if (newPhase === "voting") get().setActiveTab("votes");
-        // review/ended: stay on current tab
-
-        // Set notification badges for inactive tabs when phase changes
-        const currentTab = get().activeTab;
-        if (newPhase === "day" && currentTab !== "night") {
-          // Nowe wyniki nocy - badge na "Noc" tab
-          get().setTabNotification("night", true);
-        }
-        if (newPhase === "voting" && currentTab !== "votes") {
-          // Nowe głosowanie - badge na "Głosy" tab
-          get().setTabNotification("votes", true);
-        }
-      }
-
-      const prevRound = get().state?.game?.round;
-      const newRound = data.game?.round;
-      const roundChanged =
-        prevRound !== undefined && newRound !== undefined && prevRound !== newRound;
-      set({
-        state: data,
-        _backoffDelay: POLL_INTERVAL,
-        ...(roundChanged ? { roleVisible: false } : {}),
-      });
-
-      // Suppress toasts during phase transitions — the transition screens
-      // already convey kill/vote results
-      if (!phaseChanged) {
-        const currentToasts = get().toasts;
-        const newToasts = [...currentToasts];
-
-        for (const msg of data.messages) {
-          if (!_shownMessageIds.has(msg.id)) {
-            _shownMessageIds.add(msg.id);
-            const newToast = { id: msg.id, content: msg.content };
-            newToasts.push(newToast);
-
-            // Set notification badge for "agents" tab if new message appears
-            const currentTab = get().activeTab;
-            if (currentTab !== "agents" && !msg.eventType) {
-              // Regular GM message (not system event) - badge on "Agenci" tab
-              get().setTabNotification("agents", true);
-            }
-
-            const timeoutId = setTimeout(() => {
-              get()._toastTimeouts.delete(msg.id);
-              set((state) => ({
-                toasts: state.toasts.filter((t) => t.id !== msg.id),
-              }));
-            }, TOAST_DURATION);
-            get()._toastTimeouts.set(msg.id, timeoutId);
-          }
-        }
-
-        if (newToasts.length > currentToasts.length) {
-          set({ toasts: newToasts });
-        }
-      } else {
-        // Mark messages as shown so they don't appear as toasts later
-        for (const msg of data.messages) {
-          _shownMessageIds.add(msg.id);
-        }
-      }
+      processStateUpdate(data, get, set);
+      set({ _backoffDelay: POLL_INTERVAL });
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) {
         set({ error: "Sesja nie istnieje" });
@@ -281,6 +203,10 @@ export const createGameSlice: StateCreator<GameState, [], [], GameSlice> = (set,
     } finally {
       set({ _isFetching: false });
     }
+  },
+
+  handleWsStateUpdate: (payload: GameStateResponse) => {
+    processStateUpdate(payload, get, set);
   },
 
   setError: (error: string) => set({ error }),

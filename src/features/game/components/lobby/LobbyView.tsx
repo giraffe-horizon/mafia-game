@@ -2,8 +2,8 @@
 
 import QRCode from "react-qr-code";
 import type { PublicPlayer } from "@/db";
-import LobbyTransferGm from "@/features/game/components/lobby/LobbyTransferGm";
 import { SectionHeader, InfoCard } from "@/components/ui";
+import { version } from "../../../../../package.json";
 import {
   autoMafiaCount,
   MIN_PLAYERS_FULL,
@@ -27,7 +27,6 @@ interface LobbyViewProps {
   setSecretVoting: (secretVoting: boolean) => void;
   starting: boolean;
   onStart: () => void;
-  onTransferGm: (playerId: string) => void;
 }
 
 export default function LobbyView({
@@ -46,7 +45,6 @@ export default function LobbyView({
   setSecretVoting,
   starting,
   onStart,
-  onTransferGm,
 }: LobbyViewProps) {
   const minPlayers = gameMode === "full" ? MIN_PLAYERS_FULL : MIN_PLAYERS_SIMPLE;
 
@@ -66,8 +64,8 @@ export default function LobbyView({
             <SectionHeader
               className="relative z-10"
               style={{
-                backgroundColor: "rgba(0,0,0,0.45)",
-                color: "#A0B89A",
+                backgroundColor: "rgba(0,0,0,0.65)",
+                color: "#E8F5E0",
                 padding: "4px 8px",
                 marginBottom: "12px",
               }}
@@ -148,7 +146,7 @@ export default function LobbyView({
           {/* Start button section */}
           <div className="mx-5 mt-6 flex flex-col gap-3">
             {nonHostPlayers.length < minPlayers && (
-              <p className="text-on-surface-dim text-sm font-display text-center">
+              <p className="text-white/70 text-sm font-display text-center">
                 Potrzeba minimum {minPlayers} graczy ({nonHostPlayers.length}/{minPlayers})
               </p>
             )}
@@ -162,8 +160,8 @@ export default function LobbyView({
               <SectionHeader
                 className="relative z-10"
                 style={{
-                  backgroundColor: "rgba(0,0,0,0.45)",
-                  color: "#A0B89A",
+                  backgroundColor: "rgba(0,0,0,0.65)",
+                  color: "#E8F5E0",
                   padding: "4px 8px",
                   marginBottom: "12px",
                 }}
@@ -178,16 +176,16 @@ export default function LobbyView({
                     className={`flex-1 px-3 py-2.5 text-sm font-display font-bold border-2 transition-all text-center uppercase tracking-wider ${
                       gameMode === mode
                         ? "bg-[rgba(255,180,172,0.25)] border-[#F0B8AE] text-[#F0B8AE] shadow-[0_0_12px_rgba(240,184,174,0.2)]"
-                        : "bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.25)] text-[rgba(255,255,255,0.7)] hover:border-[rgba(255,255,255,0.4)]"
+                        : "bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.3)] text-[rgba(255,255,255,0.88)] hover:border-[rgba(255,255,255,0.5)]"
                     }`}
                   >
                     <span className="block font-bold">
                       {mode === "full" ? "Pełny" : "Uproszczony"}
                     </span>
-                    <span className="block text-xs opacity-60 mt-0.5">
+                    <span className="block text-xs opacity-75 mt-0.5">
                       {mode === "full" ? "Mafia + Policjant + Lekarz" : "Mafia vs Cywile"}
                     </span>
-                    <span className="block text-xs opacity-40">
+                    <span className="block text-xs opacity-70">
                       min. {mode === "full" ? MIN_PLAYERS_FULL : MIN_PLAYERS_SIMPLE} graczy
                     </span>
                   </button>
@@ -205,8 +203,8 @@ export default function LobbyView({
                 <SectionHeader
                   className="relative z-10"
                   style={{
-                    backgroundColor: "rgba(0,0,0,0.45)",
-                    color: "#A0B89A",
+                    backgroundColor: "rgba(0,0,0,0.65)",
+                    color: "#E8F5E0",
                     padding: "4px 8px",
                     marginBottom: "12px",
                   }}
@@ -216,7 +214,7 @@ export default function LobbyView({
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setMafiaCount(0)}
-                    className={`px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${mafiaCount === 0 ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"}`}
+                    className={`px-3 py-2 text-sm font-display uppercase tracking-wider border-2 transition-all ${mafiaCount === 0 ? "bg-stamp-green/30 border-stamp-green text-white shadow-[0_0_10px_rgba(122,184,122,0.3)]" : "border-white/20 text-white/60 hover:border-white/40 hover:text-white/80"}`}
                   >
                     Auto ({autoMafiaCount(nonHostPlayers.length)})
                   </button>
@@ -227,13 +225,13 @@ export default function LobbyView({
                     <button
                       key={n}
                       onClick={() => setMafiaCount(n)}
-                      className={`w-10 h-10 text-sm font-bold font-display border transition-all ${mafiaCount === n ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green" : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"}`}
+                      className={`w-10 h-10 text-sm font-bold font-display border-2 transition-all ${mafiaCount === n ? "bg-stamp-green/30 border-stamp-green text-white shadow-[0_0_10px_rgba(122,184,122,0.3)]" : "border-white/20 text-white/60 hover:border-white/40 hover:text-white/80"}`}
                     >
                       {n}
                     </button>
                   ))}
                 </div>
-                <p className="text-stamp-green/70 text-xs mt-2 font-mono">
+                <p className="text-white/80 text-xs mt-2 font-mono">
                   {gameMode === "full" ? "+ 1 policjant, 1 lekarz, reszta cywile" : "reszta cywile"}
                 </p>
               </div>
@@ -249,8 +247,8 @@ export default function LobbyView({
                 <SectionHeader
                   className="relative z-10"
                   style={{
-                    backgroundColor: "rgba(0,0,0,0.45)",
-                    color: "#A0B89A",
+                    backgroundColor: "rgba(0,0,0,0.65)",
+                    color: "#E8F5E0",
                     padding: "4px 8px",
                     marginBottom: "12px",
                   }}
@@ -259,22 +257,62 @@ export default function LobbyView({
                 </SectionHeader>
                 <div className="flex items-center gap-3">
                   <button
+                    role="switch"
+                    aria-checked={secretVoting}
                     onClick={() => setSecretVoting(!secretVoting)}
-                    className={`flex items-center gap-2 px-3 py-2 text-sm font-display uppercase tracking-wider border transition-all ${
-                      secretVoting
-                        ? "bg-stamp-green/20 border-stamp-green/50 text-stamp-green"
-                        : "border-stamp-green/30 text-stamp-green/60 hover:border-stamp-green/50"
-                    }`}
+                    className="group flex items-center gap-3 cursor-pointer select-none"
                   >
-                    <span
-                      className={`material-symbols-outlined text-[16px] ${secretVoting ? "text-stamp-green" : "text-stamp-green/60"}`}
+                    {/* Track */}
+                    <div
+                      className={`relative w-12 h-6 border transition-all duration-300 flex-shrink-0 ${
+                        secretVoting
+                          ? "bg-stamp-green/20 border-stamp-green shadow-[0_0_8px_rgba(122,184,122,0.4)]"
+                          : "bg-black/40 border-white/20 group-hover:border-white/35"
+                      }`}
                     >
-                      {secretVoting ? "visibility_off" : "visibility"}
+                      {/* Corner marks — military feel */}
+                      <span
+                        className={`absolute top-0 left-0 w-1.5 h-1.5 border-t border-l transition-colors duration-300 ${secretVoting ? "border-stamp-green" : "border-white/30"}`}
+                      />
+                      <span
+                        className={`absolute top-0 right-0 w-1.5 h-1.5 border-t border-r transition-colors duration-300 ${secretVoting ? "border-stamp-green" : "border-white/30"}`}
+                      />
+                      <span
+                        className={`absolute bottom-0 left-0 w-1.5 h-1.5 border-b border-l transition-colors duration-300 ${secretVoting ? "border-stamp-green" : "border-white/30"}`}
+                      />
+                      <span
+                        className={`absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r transition-colors duration-300 ${secretVoting ? "border-stamp-green" : "border-white/30"}`}
+                      />
+
+                      {/* Knob */}
+                      <div
+                        className={`absolute top-0.5 w-5 h-5 transition-all duration-300 flex items-center justify-center ${
+                          secretVoting
+                            ? "left-[calc(100%-1.375rem)] bg-stamp-green shadow-[0_0_6px_rgba(122,184,122,0.7)]"
+                            : "left-0.5 bg-white/20"
+                        }`}
+                      >
+                        <span
+                          className={`material-symbols-outlined text-[11px] transition-colors duration-300 ${
+                            secretVoting ? "text-black" : "text-white/40"
+                          }`}
+                        >
+                          {secretVoting ? "visibility_off" : "visibility"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Label */}
+                    <span
+                      className={`font-display text-sm uppercase tracking-wider transition-colors duration-300 ${
+                        secretVoting ? "text-white" : "text-white/50 group-hover:text-white/70"
+                      }`}
+                    >
+                      Tajne głosowanie
                     </span>
-                    Tajne głosowanie
                   </button>
                 </div>
-                <p className="text-stamp-green/70 text-xs mt-2 font-mono">
+                <p className="text-white/80 text-xs mt-2 font-mono">
                   {secretVoting
                     ? "Głosy będą ukryte do końca fazy"
                     : "Głosy widoczne na żywo dla wszystkich"}
@@ -293,11 +331,8 @@ export default function LobbyView({
               <span className="material-symbols-outlined mr-2 text-[20px]">play_arrow</span>
               {starting ? "Startuję..." : "Rozpocznij grę"}
             </button>
-            <div className="mt-4 pt-4 border-t border-surface-highest">
-              <LobbyTransferGm players={nonHostPlayers} onTransfer={onTransferGm} />
-            </div>
-            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/40 text-center mt-2">
-              OP: MAFIA_HELPER // V.3.0.1
+            <p className="font-display text-[9px] uppercase tracking-[0.2em] text-on-surface/60 text-center mt-2">
+              OP: MAFIA_HELPER // V.{version}
             </p>
           </div>
         </>

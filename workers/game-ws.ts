@@ -1,0 +1,255 @@
+// ---------------------------------------------------------------------------
+// CF Worker entry point - WebSocket upgrade and routing
+// ---------------------------------------------------------------------------
+
+import { GameRoom } from "./game-room";
+import type { Env } from "./types";
+
+export { GameRoom };
+
+const WORKER_START = Date.now();
+// Keep in sync with package.json version — CF Workers can't import package.json at runtime.
+// TODO: Use wrangler `define` to inject version at build time.
+const WORKER_VERSION = "1.10.0";
+
+// Per-IP WS connection rate limiting (TTL-based, cleaned every 5 minutes)
+const MAX_WS_PER_IP = 5;
+const IP_TTL_MS = 5 * 60 * 1000;
+const ipConnections = new Map<string, { count: number; firstSeen: number }>();
+
+function cleanStaleIpEntries(): void {
+  const now = Date.now();
+  for (const [ip, entry] of ipConnections) {
+    if (now - entry.firstSeen > IP_TTL_MS) {
+      ipConnections.delete(ip);
+    }
+  }
+}
+
+function checkIpRateLimit(ip: string): boolean {
+  cleanStaleIpEntries();
+  const entry = ipConnections.get(ip);
+  if (!entry) {
+    ipConnections.set(ip, { count: 1, firstSeen: Date.now() });
+    return true;
+  }
+  if (entry.count >= MAX_WS_PER_IP) {
+    return false;
+  }
+  entry.count++;
+  return true;
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+
+    // Origin validation
+    const origin = request.headers.get("Origin");
+    if (origin && !allowedOrigins.has(origin)) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    // CORS preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": getAllowedOrigin(origin, allowedOrigins),
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Notify-Secret",
+          "Access-Control-Max-Age": "86400",
+        },
+      });
+    }
+
+    // WebSocket upgrade route: /ws/game?gameId=XXX
+    if (url.pathname === "/ws/game") {
+      const gameId = url.searchParams.get("gameId");
+      if (!gameId) {
+        return new Response("Missing gameId parameter", { status: 400 });
+      }
+
+      // Validate gameId format (should be nanoid: 21 chars, alphanumeric + underscore/hyphen)
+      if (!/^[A-Za-z0-9_-]{21}$/.test(gameId)) {
+        return new Response("Invalid gameId format", { status: 400 });
+      }
+
+      // Check if WebSocket upgrade requested
+      if (request.headers.get("Upgrade") !== "websocket") {
+        return new Response("WebSocket upgrade required", { status: 426 });
+      }
+
+      // Per-IP rate limiting
+      const clientIp = request.headers.get("CF-Connecting-IP") || "unknown";
+      if (!checkIpRateLimit(clientIp)) {
+        return new Response("Too many connections from this IP", { status: 429 });
+      }
+
+      // Get Durable Object instance using deterministic ID (idFromName)
+      const id = env.GAME_ROOM.idFromName(gameId);
+      const stub = env.GAME_ROOM.get(id);
+
+      // Forward request to Durable Object with added websocket path
+      const doRequest = new Request(`${url.origin}/websocket?gameId=${gameId}`, request);
+      const response = await stub.fetch(doRequest);
+
+      // Add CORS headers to response
+      if (response.status === 101) {
+        return new Response(null, {
+          status: 101,
+          webSocket: response.webSocket,
+          headers: {
+            "Access-Control-Allow-Origin": getAllowedOrigin(origin, allowedOrigins),
+          },
+        });
+      }
+
+      return addCorsHeaders(response, origin, allowedOrigins);
+    }
+
+    // HTTP notification route: /notify?gameId=XXX
+    if (url.pathname === "/notify" && request.method === "POST") {
+      // Validate shared secret at the entry worker level
+      const secret = request.headers.get("X-Notify-Secret");
+      if (!secret || secret !== env.NOTIFY_SECRET) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      const gameId = url.searchParams.get("gameId");
+      if (!gameId) {
+        return new Response("Missing gameId parameter", { status: 400 });
+      }
+
+      // Validate gameId format
+      if (!/^[A-Za-z0-9_-]{21}$/.test(gameId)) {
+        return new Response("Invalid gameId format", { status: 400 });
+      }
+
+      // Get Durable Object instance
+      const id = env.GAME_ROOM.idFromName(gameId);
+      const stub = env.GAME_ROOM.get(id);
+
+      // Forward notification to Durable Object (no secret needed — already validated)
+      const doRequest = new Request(`${url.origin}/notify?gameId=${gameId}`, {
+        method: "POST",
+      });
+
+      const response = await stub.fetch(doRequest);
+      return addCorsHeaders(response, origin, allowedOrigins);
+    }
+
+    // Health check
+    if (url.pathname === "/health") {
+      return addCorsHeaders(
+        new Response(
+          JSON.stringify({
+            status: "ok",
+            timestamp: new Date().toISOString(),
+            worker: "mafia-game-ws",
+            version: WORKER_VERSION,
+            uptimeMs: Date.now() - WORKER_START,
+          }),
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        ),
+        origin,
+        allowedOrigins
+      );
+    }
+
+    // Deep health check — probes a sample DO and D1
+    if (url.pathname === "/health/deep") {
+      try {
+        const probeId = env.GAME_ROOM.idFromName("__health_probe__");
+        const stub = env.GAME_ROOM.get(probeId);
+        const doReq = new Request(`${url.origin}/health-check`, { method: "GET" });
+        const doRes = await stub.fetch(doReq);
+        const doBody = await doRes.json();
+
+        return addCorsHeaders(
+          new Response(
+            JSON.stringify({
+              status: "ok",
+              timestamp: new Date().toISOString(),
+              worker: "mafia-game-ws",
+              version: WORKER_VERSION,
+              uptimeMs: Date.now() - WORKER_START,
+              durableObject: doBody,
+            }),
+            { headers: { "Content-Type": "application/json" } }
+          ),
+          origin,
+          allowedOrigins
+        );
+      } catch (error) {
+        return addCorsHeaders(
+          new Response(
+            JSON.stringify({
+              status: "error",
+              timestamp: new Date().toISOString(),
+              error: error instanceof Error ? error.message : "Deep health check failed",
+            }),
+            { status: 500, headers: { "Content-Type": "application/json" } }
+          ),
+          origin,
+          allowedOrigins
+        );
+      }
+    }
+
+    return new Response("Not found", { status: 404 });
+  },
+};
+
+// Default origins used when ALLOWED_ORIGINS env var is not set
+const DEFAULT_ORIGINS = [
+  "http://localhost:3000",
+  "https://localhost:3000",
+  "https://mafia-game.pages.dev",
+  "https://mafia-game-staging.pages.dev",
+  "https://mafia-game-staging.liske.workers.dev",
+];
+
+function parseAllowedOrigins(envValue?: string): Set<string> {
+  if (!envValue) return new Set(DEFAULT_ORIGINS);
+  return new Set(
+    envValue
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean)
+  );
+}
+
+function getAllowedOrigin(requestOrigin: string | null, allowedOrigins: Set<string>): string {
+  if (requestOrigin && allowedOrigins.has(requestOrigin)) {
+    return requestOrigin;
+  }
+  return "https://mafia-game.pages.dev"; // fallback
+}
+
+function addCorsHeaders(
+  response: Response,
+  requestOrigin: string | null,
+  allowedOrigins: Set<string>
+): Response {
+  const newResponse = new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+
+  newResponse.headers.set(
+    "Access-Control-Allow-Origin",
+    getAllowedOrigin(requestOrigin, allowedOrigins)
+  );
+  newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  newResponse.headers.set(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Notify-Secret"
+  );
+
+  return newResponse;
+}

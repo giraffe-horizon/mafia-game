@@ -11,28 +11,28 @@ export default function LobbyContainer() {
   const state = useGameStore((s) => s.state);
   const starting = useGameStore((s) => s.starting);
   const startGame = useGameStore((s) => s.startGame);
-  const transferGameMaster = useGameStore((s) => s.transferGameMaster);
 
   const [copied, setCopied] = useState(false);
   const [mafiaCount, setMafiaCount] = useState(0);
   const [gameMode, setGameMode] = useState<"full" | "simple">("full");
   const [secretVoting, setSecretVoting] = useState(false);
   const [joinUrl, setJoinUrl] = useState("");
+  const [userTouched, setUserTouched] = useState(false);
 
   const lobbySettings = state?.lobbySettings;
   useEffect(() => {
-    if (lobbySettings) {
+    if (lobbySettings && !userTouched) {
       setGameMode(lobbySettings.mode);
       setMafiaCount(lobbySettings.mafiaCount);
     }
-  }, [lobbySettings]);
+  }, [lobbySettings, userTouched]);
 
   // Initialize secretVoting from current game config
   useEffect(() => {
-    if (state?.game.config?.secretVoting !== undefined) {
+    if (state?.game.config?.secretVoting !== undefined && !userTouched) {
       setSecretVoting(state.game.config.secretVoting);
     }
-  }, [state?.game.config?.secretVoting]);
+  }, [state?.game.config?.secretVoting, userTouched]);
 
   useEffect(() => {
     if (state?.game.code) {
@@ -58,14 +58,22 @@ export default function LobbyContainer() {
       setCopied={setCopied}
       nonHostPlayers={nonHostPlayers}
       gameMode={gameMode}
-      setGameMode={setGameMode}
+      setGameMode={(mode) => {
+        setUserTouched(true);
+        setGameMode(mode);
+      }}
       mafiaCount={mafiaCount}
-      setMafiaCount={setMafiaCount}
+      setMafiaCount={(count) => {
+        setUserTouched(true);
+        setMafiaCount(count);
+      }}
       secretVoting={secretVoting}
-      setSecretVoting={setSecretVoting}
+      setSecretVoting={(value) => {
+        setUserTouched(true);
+        setSecretVoting(value);
+      }}
       starting={starting}
       onStart={() => startGame(gameMode, mafiaCount, secretVoting)}
-      onTransferGm={(playerId: string) => transferGameMaster(playerId)}
     />
   );
 }

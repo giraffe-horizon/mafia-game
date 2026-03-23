@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { createMockD1Database } from "./helpers/mockD1";
+import { createMockD1Database } from "@/__tests__/helpers/mockD1";
 import * as db from "@/db";
 
 // Mock nanoid to have predictable IDs in tests

@@ -12,7 +12,6 @@ export default function AgentsTab() {
   const { isLobby, phase } = useCurrentPhase();
   const { isHost } = usePlayerState();
   const state = useGameStore((s) => s.state);
-  const gameLog = useGameStore((s) => s.state?.gameLog);
 
   // LOBBY: Lista graczy + informacje o sesji
   if (isLobby) {
@@ -87,70 +86,41 @@ export default function AgentsTab() {
     );
   }
 
-  // ENDED — Pełny ranking + lista graczy z rolami
-  if (phase === "ended") {
-    return (
-      <div className="flex-1 flex flex-col">
-        <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
-          <span className="material-symbols-outlined text-[16px] text-primary">group</span>
-          <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
-            Agenci
-          </span>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {/* Pełny ranking na górze */}
-          <div className="border-b border-surface-highest">
-            <RankingInline />
-          </div>
-
-          {/* Lista graczy z odkrytymi rolami */}
-          <PlayersListContainer />
-        </div>
-      </div>
-    );
-  }
-
-  // W GRZE (night/day/voting): Lista graczy + ranking + logi
+  // W GRZE (night/day/voting/ended): Lista graczy + misje + wiadomości od MG
   return (
     <div className="flex-1 flex flex-col">
       <div className="px-4 pt-4 pb-2 border-b border-surface-highest flex items-center gap-2">
         <span className="material-symbols-outlined text-[16px] text-primary">group</span>
         <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
-          Centrum dowodzenia
+          {phase === "ended" ? "Agenci" : "Centrum dowodzenia"}
         </span>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* Lista graczy na górze */}
+        {/* Missions for non-host — first section */}
+        {!isHost && state && state.missions.length > 0 && (
+          <div className="border-b border-surface-highest">
+            <MissionsList missions={state.missions} showPoints={state.showPoints} />
+          </div>
+        )}
+
+        {/* Lista graczy */}
         <div className="border-b border-surface-highest">
           <PlayersListContainer />
         </div>
 
-        {/* Ranking inline pod listą graczy */}
+        {/* Ranking */}
         <div className="border-b border-surface-highest">
           <RankingInline />
         </div>
 
-        {/* LOGI — sekcja z wiadomościami GM + misje + historia */}
-        <div className="p-4">
-          <p className="font-display font-black text-xs uppercase tracking-widest text-on-surface/40 mb-4">
-            Logi operacyjne
-          </p>
-
-          {/* Missions for non-host */}
-          {!isHost && state && (
-            <div className="mb-4">
-              <MissionsList missions={state.missions} showPoints={state.showPoints} />
-            </div>
-          )}
-
-          {/* GM messages (non-system) */}
-          {state && state.messages.filter((m) => !m.eventType).length > 0 && (
-            <div className="mb-4 flex flex-col gap-2">
-              <p className="font-display font-black text-xs uppercase tracking-widest text-on-surface/40 mb-1">
-                Wiadomości od MG
-              </p>
+        {/* GM messages (non-system) */}
+        {state && state.messages.filter((m) => !m.eventType).length > 0 && (
+          <div className="p-4">
+            <p className="font-display font-black text-xs uppercase tracking-widest text-on-surface/40 mb-3">
+              Wiadomości od MG
+            </p>
+            <div className="flex flex-col gap-2">
               {state.messages
                 .filter((m) => !m.eventType)
                 .slice()
@@ -172,50 +142,8 @@ export default function AgentsTab() {
                   </div>
                 ))}
             </div>
-          )}
-
-          {/* Game log events */}
-          {gameLog && gameLog.length > 0 && (
-            <div className="flex flex-col gap-4">
-              <p className="font-display font-black text-xs uppercase tracking-widest text-on-surface/40">
-                Historia zdarzeń
-              </p>
-              {gameLog.map((roundData) => (
-                <div key={roundData.round} className="border border-surface-highest">
-                  <div className="bg-surface-highest/20 px-3 py-2">
-                    <span className="font-display font-black text-xs uppercase tracking-widest text-on-surface/60">
-                      Runda {roundData.round}
-                    </span>
-                  </div>
-                  <div className="p-3 flex flex-col gap-2">
-                    {roundData.events.map((event, i) => (
-                      <div key={i} className="flex items-start gap-2 text-sm">
-                        <span className="material-symbols-outlined text-[14px] text-on-surface/40 mt-0.5">
-                          {event.type === "night_result" ? "bedtime" : "how_to_vote"}
-                        </span>
-                        <p className="font-display text-on-surface/70">{event.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Empty state */}
-          {(!gameLog || gameLog.length === 0) &&
-            state?.messages.filter((m) => !m.eventType).length === 0 &&
-            isHost && (
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8">
-                <span className="material-symbols-outlined text-[48px] text-on-surface/40">
-                  assignment
-                </span>
-                <p className="font-display text-on-surface/40 text-xs uppercase tracking-widest text-center">
-                  Brak logów
-                </p>
-              </div>
-            )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

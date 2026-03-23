@@ -6,12 +6,13 @@ import Link from "next/link";
 import { useCurrentPhase } from "@/features/game/hooks/useCurrentPhase";
 import { usePlayerState } from "@/features/game/hooks/usePlayerState";
 import { useOnboarding } from "@/features/game/hooks/useOnboarding";
+import { useGameConnection } from "@/features/game/hooks/useGameConnection";
+import { useSoundEffects } from "@/features/game/hooks/useSoundEffects";
 import { useGameStore } from "@/features/game/store/gameStore";
 import { createHttpGameService, type GameService } from "@/features/game/service";
 import OnboardingContainer from "@/features/game/containers/OnboardingContainer";
 import TabsContainer from "@/features/game/containers/TabsContainer";
 
-import EndContainer from "@/features/game/containers/EndContainer";
 import ToastOverlay from "@/features/game/components/shared/ToastOverlay";
 import TransitionOverlay from "@/features/game/components/shared/TransitionOverlay";
 import GameHeader from "@/features/game/components/GameHeader";
@@ -35,8 +36,17 @@ export default function GameClient() {
   const setChangingDecision = useGameStore((s) => s.setChangingDecision);
 
   // Derived-state hooks
-  const { phase, isFinished, round } = useCurrentPhase();
+  const { phase, round } = useCurrentPhase();
   const { isHost } = usePlayerState();
+
+  // Game ID from state (available after first fetch)
+  const gameId = state?.game?.id ?? "";
+
+  // WebSocket + polling fallback — managed by useGameConnection
+  useGameConnection({ token, gameId });
+
+  // Procedural sound effects (phase changes, missions, timer events)
+  useSoundEffects();
 
   // UI state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -142,12 +152,9 @@ export default function GameClient() {
         onShowSettings={() => setShowSettingsModal(true)}
       />
 
-      {/* Tab-based layout (always rendered — EndContainer overlays on top when game ends) */}
+      {/* Tab-based layout — EndScreen is now rendered inline within TabsContainer */}
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
         <TabsContainer />
-
-        {/* End screen overlay — absolutely covers tab content when game is finished */}
-        {isFinished && <EndContainer />}
       </div>
 
       <SettingsModal

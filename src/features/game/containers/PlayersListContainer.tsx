@@ -12,6 +12,7 @@ export default function PlayersListContainer() {
   const { isPlaying, isFinished, isLobby } = useCurrentPhase();
   const { roleVisible } = useRoleVisibility();
   const kickPlayer = useGameStore((s) => s.kickPlayer);
+  const transferGameMaster = useGameStore((s) => s.transferGameMaster);
   const investigatedPlayersRaw = useGameStore((s) => s.state?.investigatedPlayers);
   const gameMode = useGameStore((s) => s.state?.lobbySettings?.mode || "full");
 
@@ -32,6 +33,9 @@ export default function PlayersListContainer() {
       currentPlayerRole={currentPlayer?.role || undefined}
       roleVisible={roleVisible}
       onKick={(playerId: string) => kickPlayer(playerId)}
+      onTransferGm={
+        isLobby && isHost ? (playerId: string) => transferGameMaster(playerId) : undefined
+      }
       investigatedPlayers={investigatedPlayers}
       minPlayers={minPlayers}
     />

@@ -4,6 +4,21 @@ export type { GameStateResponse, PublicPlayer, GameStatus, GamePhase, Role } fro
 import type { PublicPlayer, GameStateResponse, ActionType } from "@/db";
 
 // ---------------------------------------------------------------------------
+// WebSocket message types (frontend mirror of workers/types.ts)
+// MIRROR: These types are duplicated in workers/types.ts (Durable Object worker).
+// Keep both files in sync when changing message shapes.
+// WS only sends `refresh` triggers; full state is fetched via HTTP API.
+// ---------------------------------------------------------------------------
+
+export type WsClientMessage = { type: "auth"; token: string } | { type: "ping" };
+
+export type WsServerMessage =
+  | { type: "refresh"; seq: number }
+  | { type: "timer"; deadline: string; remainingMs: number }
+  | { type: "error"; code: string; message: string }
+  | { type: "pong" };
+
+// ---------------------------------------------------------------------------
 // Night phase types
 // ---------------------------------------------------------------------------
 
@@ -94,6 +109,9 @@ export interface HostMission {
 export interface Toast {
   id: string;
   content: string;
+  icon?: string;
+  action?: { label: string; tab: string };
+  variant?: "default" | "mission";
 }
 
 // ---------------------------------------------------------------------------

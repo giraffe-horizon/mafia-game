@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { PHASE_LABELS } from "@/lib/constants";
+import PhaseTimer from "@/features/game/components/shared/PhaseTimer";
 
 interface GameHeaderProps {
   phase: string;
@@ -38,7 +39,7 @@ export default function GameHeader({
       {/* Left: spacer for balance */}
       <div className="w-8" />
 
-      {/* Center: Faza + Runda + Kod sesji */}
+      {/* Center: Faza + Runda + Kod sesji + Timer */}
       <div className="flex-1 text-center">
         <div className="flex items-center justify-center gap-1.5 text-xs font-display font-black uppercase tracking-widest">
           <span className={isHost ? "text-primary" : "text-on-surface/60"}>
@@ -48,6 +49,7 @@ export default function GameHeader({
           {round > 0 && <span className="text-on-surface/60">R{round}</span>}
           {gameCode && <span className="text-on-surface/40">·</span>}
           {gameCode && <span className="text-primary tracking-[0.2em]">{gameCode}</span>}
+          <PhaseTimer />
         </div>
       </div>
 

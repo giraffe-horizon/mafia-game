@@ -11,13 +11,16 @@ interface MissionsListProps {
 }
 
 export default function MissionsList({ missions, showPoints }: MissionsListProps) {
-  if (missions.length === 0 || !showPoints) return null;
+  if (missions.length === 0) return null;
 
   return (
     <div className="mx-5 mt-4">
-      <p className="text-on-surface/40 text-xs font-display uppercase tracking-widest mb-2 pl-1">
-        Twoje misje
-      </p>
+      <div className="flex items-center gap-2 mb-2 pl-1">
+        <span className="material-symbols-outlined text-[16px] text-primary">task</span>
+        <p className="text-on-surface/40 text-xs font-display uppercase tracking-widest">
+          Twoje misje
+        </p>
+      </div>
       <div className="flex flex-col gap-2">
         {missions.map((m) => (
           <div
@@ -36,7 +39,7 @@ export default function MissionsList({ missions, showPoints }: MissionsListProps
                 {m.description}
               </p>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                {m.points > 0 && (
+                {showPoints && m.points > 0 && (
                   <span
                     className={`text-xs font-display font-bold ${m.isCompleted ? "text-stamp-green" : "text-primary"}`}
                   >

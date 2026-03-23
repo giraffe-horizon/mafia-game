@@ -10,6 +10,7 @@ interface PlayersListProps {
   currentPlayerRole?: string;
   roleVisible: boolean;
   onKick?: (playerId: string) => void;
+  onTransferGm?: (playerId: string) => void;
   investigatedPlayers?: { playerId: string; isMafia: boolean }[];
   minPlayers?: number;
 }
@@ -23,6 +24,7 @@ export default function PlayersList({
   currentPlayerRole,
   roleVisible,
   onKick,
+  onTransferGm,
   investigatedPlayers,
   minPlayers = 5,
 }: PlayersListProps) {
@@ -59,6 +61,7 @@ export default function PlayersList({
             currentPlayerRole={currentPlayerRole}
             roleVisible={roleVisible}
             onKick={isLobby && isHost ? onKick : undefined}
+            onTransferGm={isLobby && isHost ? onTransferGm : undefined}
             onRename={undefined}
             investigated={
               investigatedMap?.has(p.playerId) ? investigatedMap.get(p.playerId)! : undefined

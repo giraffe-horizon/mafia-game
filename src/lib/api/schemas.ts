@@ -20,13 +20,13 @@ export const joinGameSchema = z.object({
 });
 
 export const actionSchema = z.object({
-  type: nonEmptyString,
+  type: z.enum(["kill", "investigate", "protect", "vote", "wait"]),
   targetPlayerId: playerId.optional(),
   forPlayerId: playerId.optional(),
 });
 
 export const phaseSchema = z.object({
-  phase: nonEmptyString,
+  phase: z.enum(["night", "day", "voting", "review", "ended"]),
 });
 
 export const startGameSchema = z.object({

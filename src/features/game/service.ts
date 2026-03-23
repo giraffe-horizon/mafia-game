@@ -1,7 +1,8 @@
 // Transport-agnostic game service interface
 // In the future: replace HTTP implementation with WebSocket without changing consumers
 
-import type { GameStateResponse } from "@/db";
+import type { GameStateResponse, ActionType } from "@/db";
+import type { PhaseInput } from "@/lib/api/schemas";
 import * as apiClient from "@/lib/api-client";
 
 // Common result types
@@ -32,14 +33,14 @@ export interface GameService {
   >;
 
   // Player actions
-  submitAction(token: string, type: string, targetPlayerId?: string): Promise<ActionResult>;
+  submitAction(token: string, type: ActionType, targetPlayerId?: string): Promise<ActionResult>;
   setupPlayer(token: string, nickname: string, characterId: string): Promise<ActionResult>;
   renamePlayer(token: string, nickname: string): Promise<ActionResult>;
   updateCharacter(token: string, characterId: string): Promise<ActionResult>;
 
   // Game flow
   startGame(token: string, opts?: StartGameOpts): Promise<ActionResult>;
-  advancePhase(token: string, phase: string): Promise<ActionResult>;
+  advancePhase(token: string, phase: PhaseInput["phase"]): Promise<ActionResult>;
 
   // Communication
   sendMessage(token: string, target: string, content: string): Promise<ActionResult>;
@@ -55,7 +56,7 @@ export interface GameService {
   submitGmAction(
     token: string,
     forPlayerId: string,
-    actionType: string,
+    actionType: ActionType,
     targetPlayerId?: string
   ): Promise<ActionResult>;
 
@@ -91,6 +92,10 @@ export interface GameService {
     }>;
   }>;
 
+  // Timer management
+  setTimer(token: string, durationSeconds: number): Promise<ActionResult & { deadline?: string }>;
+  clearTimer(token: string): Promise<ActionResult>;
+
   // Mission management
   createMission(
     token: string,
@@ -111,7 +116,7 @@ export function createHttpGameService(): GameService {
 
     submitAction: async (
       token: string,
-      type: string,
+      type: ActionType,
       targetPlayerId?: string
     ): Promise<ActionResult> => {
       return apiClient.submitAction(token, { type, targetPlayerId });
@@ -137,7 +142,7 @@ export function createHttpGameService(): GameService {
       return apiClient.startGame(token, opts);
     },
 
-    advancePhase: async (token: string, phase: string): Promise<ActionResult> => {
+    advancePhase: async (token: string, phase: PhaseInput["phase"]): Promise<ActionResult> => {
       return apiClient.advancePhase(token, { phase });
     },
 
@@ -171,7 +176,7 @@ export function createHttpGameService(): GameService {
     submitGmAction: async (
       token: string,
       forPlayerId: string,
-      actionType: string,
+      actionType: ActionType,
       targetPlayerId?: string
     ): Promise<ActionResult> => {
       return apiClient.submitAction(token, {
@@ -180,6 +185,12 @@ export function createHttpGameService(): GameService {
         ...(targetPlayerId && { targetPlayerId }),
       });
     },
+
+    setTimer: async (token: string, durationSeconds: number) => {
+      return apiClient.setTimer(token, durationSeconds);
+    },
+
+    clearTimer: apiClient.clearTimer,
 
     createMission: async (
       token: string,

@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withApiHandlerNoToken } from "@/lib/api/handler";
+import { withApiHandler } from "@/lib/api/handler";
 import { getRanking } from "@/db/queries/ranking";
 
-export const GET = withApiHandlerNoToken(async (req: NextRequest, { db }) => {
-  const token = req.nextUrl.searchParams.get("token");
-  if (!token) {
-    return NextResponse.json({ error: "Podaj token" }, { status: 400 });
-  }
-
+export const GET = withApiHandler(async (_req: NextRequest, { db, token }) => {
   const result = await getRanking(db, token);
   if (!result) {
     return NextResponse.json({ error: "Nie znaleziono sesji" }, { status: 404 });

@@ -585,6 +585,7 @@ export async function getGameState(
       phase: gameRow.phase as GamePhase,
       round: gameRow.round,
       winner: gameRow.winner,
+      phaseDeadline: gameRow.phase_deadline,
       config: gameConfig,
     },
     currentPlayer: {

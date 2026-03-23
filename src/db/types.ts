@@ -127,6 +127,7 @@ export interface GameStateResponse {
     phase: GamePhase;
     round: number;
     winner: string | null;
+    phaseDeadline: string | null;
     config: {
       secretVoting?: boolean;
     };
