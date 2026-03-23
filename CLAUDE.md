@@ -40,8 +40,8 @@ src/
 │       │   ├── EndScreen.tsx, GameHeader.tsx, NightActionPanel.tsx, VotePanel.tsx
 │       │   └── index.ts
 │       ├── containers/        # Smart containers (DayContainer, NightContainer, etc.)
-│       ├── hooks/             # useOnboarding, usePlayerState, useCurrentPhase, etc.
-│       ├── store/             # Zustand gameStore + slices/
+│       ├── hooks/             # useOnboarding, usePlayerState, useCurrentPhase, etc. (+ colocated *.test.ts)
+│       ├── store/             # Zustand gameStore + slices/ (+ colocated *.test.ts)
 │       ├── service.ts         # GameService (transport abstraction)
 │       ├── types.ts           # Game-specific UI types
 │       └── index.ts           # Barrel for the feature
@@ -53,8 +53,11 @@ src/
 │   ├── client.ts              # ClientConfig — async, called in layout.tsx, passed via React Context
 │   ├── ConfigContext.tsx       # ClientConfigProvider + useClientConfig() hook
 │   └── index.ts               # Barrel re-export
+├── __tests__/
+│   └── helpers/               # Shared test infra (mockD1, sqliteD1, setupStorage)
 ├── db/
 │   ├── queries/               # 8 domain modules (game, player, actions, phase, etc.)
+│   │   └── __tests__/         # DB integration tests (span multiple query modules)
 │   ├── types.ts               # All DB + API types
 │   ├── helpers.ts             # Utility functions (nanoid, now, generateSessionCode, buildRoles)
 │   └── index.ts               # Barrel re-export
@@ -180,8 +183,11 @@ pnpm build            # Production build (@opennextjs/cloudflare)
 ## Testing
 - **Framework:** Vitest with mock D1 (SQLite via better-sqlite3)
 - **Coverage:** statements/branches/lines ≥60%, functions ≥55%
-- Test files in `src/__tests__/`
-- Mock helpers in `src/__tests__/helpers/`
+- **Convention:** colocated tests — `*.test.ts` files next to the module they test
+  - `src/lib/constants.test.ts` tests `src/lib/constants.ts`
+  - `src/features/game/store/processStateUpdate.test.ts` tests `processStateUpdate.ts`
+- **DB integration tests** in `src/db/queries/__tests__/` (span multiple query modules)
+- **Shared test helpers** in `src/__tests__/helpers/` (mockD1, sqliteD1, setupStorage)
 - Focus: DB query integration tests, business logic edge cases
 
 ## Design System

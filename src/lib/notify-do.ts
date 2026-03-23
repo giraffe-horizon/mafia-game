@@ -1,3 +1,17 @@
+import type { D1Database } from "@/db";
+
+/**
+ * Resolve game_id from a player token and notify the DO.
+ * Convenience wrapper for routes that only have the token available.
+ */
+export async function notifyByToken(db: D1Database, token: string): Promise<void> {
+  const row = await db
+    .prepare("SELECT game_id FROM game_players WHERE token = ?")
+    .bind(token)
+    .first<{ game_id: string }>();
+  if (row?.game_id) await notifyDO(row.game_id);
+}
+
 /**
  * Best-effort notification to the Durable Object WebSocket worker.
  * Used by API routes (timer, phase transitions) to trigger immediate

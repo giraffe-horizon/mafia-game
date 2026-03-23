@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createSqliteD1, SqliteD1Database } from "./helpers/sqliteD1";
+import { createSqliteD1, SqliteD1Database } from "@/__tests__/helpers/sqliteD1";
 import * as db from "@/db";
 
 vi.mock("nanoid", () => {
