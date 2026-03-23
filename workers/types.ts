@@ -29,4 +29,6 @@ export interface Env {
   GAME_ROOM: DurableObjectNamespace;
   DB: D1Database;
   NOTIFY_SECRET: string;
+  /** Comma-separated allowed origins for CORS. Falls back to hardcoded defaults. */
+  ALLOWED_ORIGINS?: string;
 }

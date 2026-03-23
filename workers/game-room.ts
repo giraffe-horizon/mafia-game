@@ -98,7 +98,13 @@ export class GameRoom extends DurableObject<Env> {
         connections: this.ctx.getWebSockets().length,
       });
 
-      // NOTE: No setTimeout — auth timeout is checked in webSocketMessage
+      // Schedule alarm to clean up if client never authenticates (5s)
+      // If an alarm is already scheduled (e.g. timer broadcast), it will fire first
+      // and the auth check happens on every message anyway — this is a safety net.
+      const existingAlarm = await this.ctx.storage.getAlarm();
+      if (!existingAlarm) {
+        await this.ctx.storage.setAlarm(Date.now() + 6000);
+      }
 
       return new Response(null, {
         status: 101,
@@ -236,26 +242,37 @@ export class GameRoom extends DurableObject<Env> {
     this.metric("ws_error", { gameId, code: "WS_ERROR", message: msg });
   }
 
-  // Alarm handler — periodic timer broadcast (every 5s while deadline is active)
+  // Alarm handler — cleans stale connections + periodic timer broadcast
   async alarm(): Promise<void> {
     const sockets = this.ctx.getWebSockets();
     if (sockets.length === 0) return;
 
-    // Find gameId from any authenticated connection
+    const now = Date.now();
+    const AUTH_TIMEOUT_MS = 6000;
+
+    // Clean up unauthenticated connections that exceeded the auth timeout
     let gameId: string | null = null;
     for (const ws of sockets) {
       const state = this.getState(ws);
-      if (state?.authenticated && state.gameId) {
+      if (!state) continue;
+
+      if (!state.authenticated && now - state.connectedAt > AUTH_TIMEOUT_MS) {
+        this.metric("ws_auth_timeout_alarm", { gameId: state.gameId });
+        ws.close(1008, "Authentication timeout");
+        continue;
+      }
+
+      if (state.authenticated && state.gameId && !gameId) {
         gameId = state.gameId;
-        break;
       }
     }
+
     if (!gameId) return;
 
+    // Periodic timer broadcast
     const timerMsg = await this.getTimerMessage(gameId);
     if (!timerMsg) return;
 
-    // Broadcast timer to all authenticated clients
     for (const ws of sockets) {
       const state = this.getState(ws);
       if (state?.authenticated && state.gameId === gameId) {
@@ -301,7 +318,10 @@ export class GameRoom extends DurableObject<Env> {
       state.authenticated = true;
       this.setState(ws, state);
 
-      console.log(`Player ${playerRow.nickname} authenticated in game ${state.gameId}`);
+      this.metric("ws_auth_success", {
+        gameId: state.gameId,
+        playerId: playerRow.player_id,
+      });
 
       const seq = await this.nextSeq();
       this.sendMessage(ws, { type: "refresh", seq });

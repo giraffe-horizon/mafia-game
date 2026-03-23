@@ -115,7 +115,7 @@ export function useWebSocket({
     };
 
     ws.onmessage = (event: MessageEvent) => {
-      let msg: WsServerMessage & { code?: string };
+      let msg: WsServerMessage;
       try {
         msg = JSON.parse(String(event.data));
       } catch {

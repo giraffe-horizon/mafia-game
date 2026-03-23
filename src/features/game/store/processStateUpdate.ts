@@ -28,8 +28,7 @@ export function processStateUpdate(
   // Clear phase timer and shown-ID sets on phase change (new phase starts fresh)
   if (phaseChanged) {
     get().clearPhaseDeadline();
-    get()._shownMessageIds.clear();
-    get()._shownMissionIds.clear();
+    set({ _shownMessageIds: new Set(), _shownMissionIds: new Set() });
   }
 
   // Set transition BEFORE updating state so the overlay blocks the view

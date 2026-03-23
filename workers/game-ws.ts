@@ -8,7 +8,9 @@ import type { Env } from "./types";
 export { GameRoom };
 
 const WORKER_START = Date.now();
-const WORKER_VERSION = "1.11.0";
+// Keep in sync with package.json version — CF Workers can't import package.json at runtime.
+// TODO: Use wrangler `define` to inject version at build time.
+const WORKER_VERSION = "1.10.0";
 
 // Per-IP WS connection rate limiting (TTL-based, cleaned every 5 minutes)
 const MAX_WS_PER_IP = 5;
@@ -41,10 +43,11 @@ function checkIpRateLimit(ip: string): boolean {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
 
     // Origin validation
     const origin = request.headers.get("Origin");
-    if (origin && !isAllowedOrigin(origin)) {
+    if (origin && !allowedOrigins.has(origin)) {
       return new Response("Forbidden", { status: 403 });
     }
 
@@ -53,7 +56,7 @@ export default {
       return new Response(null, {
         status: 204,
         headers: {
-          "Access-Control-Allow-Origin": getAllowedOrigin(origin),
+          "Access-Control-Allow-Origin": getAllowedOrigin(origin, allowedOrigins),
           "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Notify-Secret",
           "Access-Control-Max-Age": "86400",
@@ -98,12 +101,12 @@ export default {
           status: 101,
           webSocket: response.webSocket,
           headers: {
-            "Access-Control-Allow-Origin": getAllowedOrigin(origin),
+            "Access-Control-Allow-Origin": getAllowedOrigin(origin, allowedOrigins),
           },
         });
       }
 
-      return addCorsHeaders(response, origin);
+      return addCorsHeaders(response, origin, allowedOrigins);
     }
 
     // HTTP notification route: /notify?gameId=XXX
@@ -134,7 +137,7 @@ export default {
       });
 
       const response = await stub.fetch(doRequest);
-      return addCorsHeaders(response, origin);
+      return addCorsHeaders(response, origin, allowedOrigins);
     }
 
     // Health check
@@ -152,7 +155,8 @@ export default {
             headers: { "Content-Type": "application/json" },
           }
         ),
-        origin
+        origin,
+        allowedOrigins
       );
     }
 
@@ -177,7 +181,8 @@ export default {
             }),
             { headers: { "Content-Type": "application/json" } }
           ),
-          origin
+          origin,
+          allowedOrigins
         );
       } catch (error) {
         return addCorsHeaders(
@@ -189,7 +194,8 @@ export default {
             }),
             { status: 500, headers: { "Content-Type": "application/json" } }
           ),
-          origin
+          origin,
+          allowedOrigins
         );
       }
     }
@@ -198,33 +204,47 @@ export default {
   },
 };
 
-// Origin validation - adjust these URLs for your domains
-function isAllowedOrigin(origin: string): boolean {
-  const allowed = [
-    "http://localhost:3000",
-    "https://localhost:3000",
-    "https://mafia-game.pages.dev",
-    "https://mafia-game-staging.pages.dev",
-  ];
+// Default origins used when ALLOWED_ORIGINS env var is not set
+const DEFAULT_ORIGINS = [
+  "http://localhost:3000",
+  "https://localhost:3000",
+  "https://mafia-game.pages.dev",
+  "https://mafia-game-staging.pages.dev",
+  "https://mafia-game-staging.liske.workers.dev",
+];
 
-  return allowed.includes(origin);
+function parseAllowedOrigins(envValue?: string): Set<string> {
+  if (!envValue) return new Set(DEFAULT_ORIGINS);
+  return new Set(
+    envValue
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean)
+  );
 }
 
-function getAllowedOrigin(requestOrigin: string | null): string {
-  if (requestOrigin && isAllowedOrigin(requestOrigin)) {
+function getAllowedOrigin(requestOrigin: string | null, allowedOrigins: Set<string>): string {
+  if (requestOrigin && allowedOrigins.has(requestOrigin)) {
     return requestOrigin;
   }
   return "https://mafia-game.pages.dev"; // fallback
 }
 
-function addCorsHeaders(response: Response, requestOrigin: string | null): Response {
+function addCorsHeaders(
+  response: Response,
+  requestOrigin: string | null,
+  allowedOrigins: Set<string>
+): Response {
   const newResponse = new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
     headers: response.headers,
   });
 
-  newResponse.headers.set("Access-Control-Allow-Origin", getAllowedOrigin(requestOrigin));
+  newResponse.headers.set(
+    "Access-Control-Allow-Origin",
+    getAllowedOrigin(requestOrigin, allowedOrigins)
+  );
   newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   newResponse.headers.set(
     "Access-Control-Allow-Headers",

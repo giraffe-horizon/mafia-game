@@ -39,7 +39,7 @@ export const POST = withApiHandler(async (req, { db, token }) => {
     .bind(deadline, playerRow.game_id)
     .run();
 
-  notifyDO(playerRow.game_id);
+  await notifyDO(playerRow.game_id);
 
   return NextResponse.json({ success: true, deadline });
 });
@@ -59,7 +59,7 @@ export const DELETE = withApiHandler(async (_req, { db, token }) => {
     .bind(playerRow.game_id)
     .run();
 
-  notifyDO(playerRow.game_id);
+  await notifyDO(playerRow.game_id);
 
   return NextResponse.json({ success: true });
 });
